@@ -1,0 +1,276 @@
+/*
+ * Formulário de cadastro (T06).
+ *
+ * Restrições que ditam quase tudo aqui:
+ *  - RNF-18: tela de celular, nenhuma rolagem horizontal em 360px, alvos de
+ *    toque de no mínimo 44px. Por isso coluna única e nada de grade lateral.
+ *  - RNF-04: rede móvel congestionada. Sem fonte externa, sem imagem, sem
+ *    animação — o custo de cada byte aqui é multiplicado por 2000 pessoas.
+ *  - RNF-15: dois minutos de preenchimento. O que separa campo de campo é
+ *    espaço, não moldura: contorno em tudo cansa a leitura e não ajuda ninguém.
+ */
+
+.pagina {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+  /*
+   * O texto do termo tem palavras longas e o participante digita e-mails
+   * longos. Sem isto, uma única palavra que não cabe em 360px estende a página
+   * e cria a rolagem horizontal que RNF-18 proíbe.
+   */
+  overflow-wrap: anywhere;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.subtitulo {
+  color: #555;
+  margin: 0 0 1.5rem;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.secao {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.legenda {
+  font-size: 1.125rem;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 0.25rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rotulo {
+  font-weight: 600;
+}
+
+.entrada {
+  /* 48px: acima do mínimo de 44px de RNF-18, com folga para dedo em movimento. */
+  min-height: 48px;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  /*
+   * 16px é o piso, não uma preferência: abaixo disso o Safari do iPhone dá zoom
+   * ao focar o campo, a página sai de enquadramento e o participante perde
+   * tempo reposicionando a cada campo (RNF-15).
+   */
+  font-size: 1rem;
+  font-family: inherit;
+  color: #111;
+  background: #fff;
+  border: 1px solid #767676;
+  border-radius: 6px;
+}
+
+/* Foco sempre visível: o formulário também é preenchido por teclado. */
+.entrada:focus-visible,
+.opcao:focus-within,
+.aceite:focus-within {
+  outline: 3px solid #111;
+  outline-offset: 2px;
+}
+
+.entradaInvalida {
+  border-color: #b00020;
+  border-width: 2px;
+}
+
+.erro {
+  color: #b00020;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.dica {
+  color: #555;
+  font-size: 0.9375rem;
+}
+
+/* --- Escolha de pista (RF-03) --- */
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.opcao {
+  flex: 1 1 8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 56px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #767676;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.opcaoMarcada {
+  border-color: #111;
+  border-width: 2px;
+  background: #f4f4f4;
+}
+
+.caixa {
+  /* O controle nativo em tamanho utilizável: RNF-18 vale para ele também. */
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  accent-color: #111;
+}
+
+/* --- Aceites (RF-08, RF-09, D-23) --- */
+
+.aceites {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.aceite {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/*
+ * A caixa opcional precisa parecer opcional. Fundo diferente e a etiqueta
+ * explícita existem porque D-23 depende de a pessoa perceber que pode deixar
+ * desmarcada — um opcional que parece obrigatório é obrigatório na prática.
+ */
+.aceiteOpcional {
+  background: #fafafa;
+  border-style: dashed;
+}
+
+.etiqueta {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.textoAceite {
+  font-size: 0.9375rem;
+}
+
+.destaque {
+  border-left: 6px solid #111;
+  background: #fafafa;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+}
+
+.link {
+  color: #111;
+}
+
+/* --- Avisos --- */
+
+.aviso {
+  border: 1px solid #d4d4d4;
+  border-left: 6px solid #111;
+  background: #fff8e1;
+  padding: 0.875rem 1rem;
+}
+
+.avisoErro {
+  border-left-color: #b00020;
+  background: #fdf0f2;
+}
+
+.resumo {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* --- Envio --- */
+
+.botao {
+  min-height: 52px;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: #111;
+  border: 2px solid #111;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.botao:disabled {
+  background: #767676;
+  border-color: #767676;
+  cursor: progress;
+}
+
+.botaoSecundario {
+  composes: botao;
+  color: #111;
+  background: #fff;
+}
+
+.botao:focus-visible {
+  outline: 3px solid #111;
+  outline-offset: 3px;
+}
+
+/*
+ * Armadilha para robô (RNF-12).
+ *
+ * Fora da tela, e não `display: none` nem `type="hidden"` — os dois são
+ * reconhecidos por qualquer preenchedor automático minimamente sério, que os
+ * pula. Precisa parecer um campo comum para quem lê o HTML e ser invisível
+ * para quem lê a tela. `aria-hidden` e `tabindex="-1"` mantêm leitor de tela e
+ * navegação por teclado longe dele.
+ */
+.armadilha {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* --- Confirmação (RF-10) --- */
+
+.confirmacao {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.pitchesConfirmados {
+  font-size: 1.125rem;
+  font-weight: 600;
+}

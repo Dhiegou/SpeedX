@@ -1,0 +1,81 @@
+# dependências
+node_modules/
+
+# build
+.next/
+out/
+build/
+next-env.d.ts
+
+# ------------------------------------------------------------------
+# Ambiente — segredo nunca entra no repositório.
+#
+# `.env*` com exceção do exemplo, e não uma lista de nomes conhecidos: a lista
+# anterior cobria `.env`, `.env.local` e `.env.*.local`, e deixava passar
+# `.env.production` e `.env.development` — que são exatamente os arquivos onde a
+# credencial de produção vai morar quando T19 escolher a hospedagem.
+# ------------------------------------------------------------------
+.env*
+!.env.example
+
+# ------------------------------------------------------------------
+# Dado pessoal de participante. Este bloco não é higiene, é RNF-08.
+#
+# O evento coleta nome, e-mail, telefone e idade de 2000 pessoas, boa parte
+# menor de idade, com dados de Responsável. Três artefatos deste projeto
+# carregam essa base inteira em claro:
+#
+#   - a Exportação de T14 (CSV com tudo, restrito a Operador autenticado);
+#   - o snapshot do banco que T19 manda tirar antes do evento começar;
+#   - qualquer dump feito para depurar um problema no dia.
+#
+# Um `git add .` distraído com qualquer um deles na pasta publica a base do
+# evento no GitHub, e o expurgo de T15 não alcança o que já foi para fora.
+# ------------------------------------------------------------------
+exportacao/
+exportacoes/
+*.csv
+*.sql.gz
+*.dump
+*.backup
+*.bak
+dump*.sql
+
+# testes e ferramentas
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# resultados de teste de carga (T18) — podem conter amostras da massa
+perf/resultados/
+perf/*.json
+
+# logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# plataformas de deploy (T19)
+.vercel/
+.turbo/
+.wrangler/
+
+# editores
+.vscode/
+.idea/
+*.swp
+
+# sistema
+.DS_Store
+Thumbs.db
+# O projeto vive dentro do OneDrive, que semeia estes arquivos por pasta.
+desktop.ini
+
+# configuração local do agente (permissões da máquina, não do projeto).
+# Atenção: `.claude/tasks/` e `.claude/skills/` SÃO versionados de propósito —
+# são o plano de execução e as regras de processo do projeto, e o `CONTEXT.md`
+# depende deles para fazer sentido.
+.claude/settings.local.json

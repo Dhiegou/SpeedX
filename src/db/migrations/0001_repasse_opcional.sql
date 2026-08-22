@@ -1,0 +1,1 @@
+ALTER TABLE "consentimento" ADD COLUMN "aceite_compartilhamento" boolean DEFAULT false NOT NULL;

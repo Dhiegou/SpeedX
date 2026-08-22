@@ -1,0 +1,669 @@
+{
+  "id": "66dffd14-1a1a-49ae-988d-1fbd9126e4f2",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.chave_idempotencia": {
+      "name": "chave_idempotencia",
+      "schema": "",
+      "columns": {
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escopo": {
+          "name": "escopo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resposta": {
+          "name": "resposta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "chave_idempotencia_criado_em_idx": {
+          "name": "chave_idempotencia_criado_em_idx",
+          "columns": [
+            {
+              "expression": "criado_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "chave_idempotencia_escopo_idx": {
+          "name": "chave_idempotencia_escopo_idx",
+          "columns": [
+            {
+              "expression": "chave",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "escopo",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.consentimento": {
+      "name": "consentimento",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "participante_id": {
+          "name": "participante_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "versao_termo": {
+          "name": "versao_termo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aceite_participante": {
+          "name": "aceite_participante",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aceite_responsavel": {
+          "name": "aceite_responsavel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registrado_em": {
+          "name": "registrado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "consentimento_participante_id_participante_id_fk": {
+          "name": "consentimento_participante_id_participante_id_fk",
+          "tableFrom": "consentimento",
+          "tableTo": "participante",
+          "columnsFrom": ["participante_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "consentimento_participante_id_unique": {
+          "name": "consentimento_participante_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["participante_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "consentimento_aceite_verdadeiro": {
+          "name": "consentimento_aceite_verdadeiro",
+          "value": "\"consentimento\".\"aceite_participante\" = true"
+        },
+        "consentimento_responsavel_nunca_falso": {
+          "name": "consentimento_responsavel_nunca_falso",
+          "value": "\"consentimento\".\"aceite_responsavel\" is null or \"consentimento\".\"aceite_responsavel\" = true"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.lancamento": {
+      "name": "lancamento",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "tentativa_id": {
+          "name": "tentativa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_lancamento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tempo_ms_anterior": {
+          "name": "tempo_ms_anterior",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tempo_ms_novo": {
+          "name": "tempo_ms_novo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "operador_id": {
+          "name": "operador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocorrido_em": {
+          "name": "ocorrido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "lancamento_tentativa_idx": {
+          "name": "lancamento_tentativa_idx",
+          "columns": [
+            {
+              "expression": "tentativa_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocorrido_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "lancamento_tentativa_id_tentativa_id_fk": {
+          "name": "lancamento_tentativa_id_tentativa_id_fk",
+          "tableFrom": "lancamento",
+          "tableTo": "tentativa",
+          "columnsFrom": ["tentativa_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "lancamento_operador_id_operador_id_fk": {
+          "name": "lancamento_operador_id_operador_id_fk",
+          "tableFrom": "lancamento",
+          "tableTo": "operador",
+          "columnsFrom": ["operador_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "lancamento_valores_coerentes_com_tipo": {
+          "name": "lancamento_valores_coerentes_com_tipo",
+          "value": "\n        (\"lancamento\".\"tipo\" = 'registro'  and \"lancamento\".\"tempo_ms_novo\" is not null and \"lancamento\".\"tempo_ms_anterior\" is null) or\n        (\"lancamento\".\"tipo\" = 'correcao'  and \"lancamento\".\"tempo_ms_novo\" is not null and \"lancamento\".\"tempo_ms_anterior\" is not null) or\n        (\"lancamento\".\"tipo\" = 'ausencia'  and \"lancamento\".\"tempo_ms_novo\" is null     and \"lancamento\".\"tempo_ms_anterior\" is null)\n      "
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.operador": {
+      "name": "operador",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "usuario": {
+          "name": "usuario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "senha_hash": {
+          "name": "senha_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "operador_usuario_unique": {
+          "name": "operador_usuario_unique",
+          "nullsNotDistinct": false,
+          "columns": ["usuario"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.participante": {
+      "name": "participante",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sobrenome": {
+          "name": "sobrenome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefone": {
+          "name": "telefone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idade": {
+          "name": "idade",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "participante_nome_idx": {
+          "name": "participante_nome_idx",
+          "columns": [
+            {
+              "expression": "lower(\"nome\") text_pattern_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "participante_sobrenome_idx": {
+          "name": "participante_sobrenome_idx",
+          "columns": [
+            {
+              "expression": "lower(\"sobrenome\") text_pattern_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "participante_idade_minima": {
+          "name": "participante_idade_minima",
+          "value": "\"participante\".\"idade\" >= 13"
+        },
+        "participante_idade_plausivel": {
+          "name": "participante_idade_plausivel",
+          "value": "\"participante\".\"idade\" <= 120"
+        },
+        "participante_telefone_digitos": {
+          "name": "participante_telefone_digitos",
+          "value": "\"participante\".\"telefone\" ~ '^[0-9]{10,11}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.responsavel": {
+      "name": "responsavel",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "participante_id": {
+          "name": "participante_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sobrenome": {
+          "name": "sobrenome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefone": {
+          "name": "telefone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "responsavel_participante_id_participante_id_fk": {
+          "name": "responsavel_participante_id_participante_id_fk",
+          "tableFrom": "responsavel",
+          "tableTo": "participante",
+          "columnsFrom": ["participante_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "responsavel_participante_id_unique": {
+          "name": "responsavel_participante_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["participante_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "responsavel_telefone_digitos": {
+          "name": "responsavel_telefone_digitos",
+          "value": "\"responsavel\".\"telefone\" ~ '^[0-9]{10,11}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.tentativa": {
+      "name": "tentativa",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "participante_id": {
+          "name": "participante_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pitch": {
+          "name": "pitch",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_tentativa",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pendente'"
+        },
+        "tempo_ms": {
+          "name": "tempo_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "inscrito_em": {
+          "name": "inscrito_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolvido_em": {
+          "name": "resolvido_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "operador_id": {
+          "name": "operador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "tentativa_fila_idx": {
+          "name": "tentativa_fila_idx",
+          "columns": [
+            {
+              "expression": "pitch",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "estado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "inscrito_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tentativa_classificacao_idx": {
+          "name": "tentativa_classificacao_idx",
+          "columns": [
+            {
+              "expression": "tempo_ms",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "resolvido_em",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tentativa_participante_id_participante_id_fk": {
+          "name": "tentativa_participante_id_participante_id_fk",
+          "tableFrom": "tentativa",
+          "tableTo": "participante",
+          "columnsFrom": ["participante_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "tentativa_operador_id_operador_id_fk": {
+          "name": "tentativa_operador_id_operador_id_fk",
+          "tableFrom": "tentativa",
+          "tableTo": "operador",
+          "columnsFrom": ["operador_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "tentativa_participante_pitch_unica": {
+          "name": "tentativa_participante_pitch_unica",
+          "nullsNotDistinct": false,
+          "columns": ["participante_id", "pitch"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "tentativa_pitch_valido": {
+          "name": "tentativa_pitch_valido",
+          "value": "\"tentativa\".\"pitch\" in (1, 2)"
+        },
+        "tentativa_tempo_coerente_com_estado": {
+          "name": "tentativa_tempo_coerente_com_estado",
+          "value": "(\"tentativa\".\"estado\" = 'valida') = (\"tentativa\".\"tempo_ms\" is not null)"
+        },
+        "tentativa_tempo_positivo": {
+          "name": "tentativa_tempo_positivo",
+          "value": "\"tentativa\".\"tempo_ms\" is null or \"tentativa\".\"tempo_ms\" > 0"
+        },
+        "tentativa_autoria_coerente_com_estado": {
+          "name": "tentativa_autoria_coerente_com_estado",
+          "value": "(\"tentativa\".\"estado\" = 'pendente') = (\"tentativa\".\"operador_id\" is null)"
+        },
+        "tentativa_resolucao_coerente_com_estado": {
+          "name": "tentativa_resolucao_coerente_com_estado",
+          "value": "(\"tentativa\".\"estado\" = 'pendente') = (\"tentativa\".\"resolvido_em\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_tentativa": {
+      "name": "estado_tentativa",
+      "schema": "public",
+      "values": ["pendente", "valida", "ausente"]
+    },
+    "public.tipo_lancamento": {
+      "name": "tipo_lancamento",
+      "schema": "public",
+      "values": ["registro", "correcao", "ausencia"]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

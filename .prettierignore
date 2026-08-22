@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+package-lock.json
+PRD.md
+SDD.md
+CONTEXT.md
+README.md
+.claude/tasks
+.claude/skills

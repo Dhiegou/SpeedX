@@ -1,0 +1,26 @@
+# Fim de linha, decidido aqui e em nenhum outro lugar.
+#
+# Sem este arquivo, o `core.autocrlf=true` do Windows entrega CRLF no diretório
+# de trabalho, e o Prettier deste projeto exige `endOfLine: "lf"`
+# (.prettierrc.json). O resultado é um `npm run check` que **reprova num clone
+# recém-feito**, sem que ninguém tenha escrito uma linha — e o CI da T01 roda
+# exatamente esse comando.
+#
+# `eol=lf` força LF em disco em qualquer sistema, o que também é o que o
+# servidor Linux de T19 vai receber. Editor moderno lida com LF sem reclamar.
+* text=auto eol=lf
+
+# Binários: nunca normalizar, senão o conteúdo corrompe.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# O `package-lock.json` é gerado; conflito nele se resolve regerando, não
+# lendo linha a linha.
+package-lock.json linguist-generated=true merge=binary

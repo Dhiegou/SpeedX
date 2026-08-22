@@ -1,0 +1,32 @@
+/* Base mínima. O sistema visual do cadastro entra em T06. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color: #111;
+  background: #fff;
+}
+
+/* RNF-18: nenhuma rolagem horizontal em 360px. */
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}

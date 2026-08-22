@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Uma execução por branch: PR atualizado cancela a anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, tipos e testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint, typecheck e formatação
+        run: npm run check
+
+      - name: Testes
+        run: npm run test
+
+      # Variáveis sintéticas: o build precisa passar pela validação de ambiente
+      # (instrumentation.ts) sem depender de segredo real.
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          SESSION_SECRET: ci-secret-com-mais-de-trinta-e-dois-caracteres
+          APP_URL: http://localhost:3000

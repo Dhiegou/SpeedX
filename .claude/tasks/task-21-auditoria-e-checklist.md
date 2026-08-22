@@ -1,0 +1,60 @@
+# T21 — Auditoria de privacidade e checklist pré-evento
+
+**Contexto SDD:** §6 (verificações prévias)
+**Depende de:** todas as anteriores
+**Bloqueia:** o evento
+**Requisitos:** RNF-08, RNF-09, RNF-10 + checklist do SDD §6
+
+---
+
+## Objetivo
+
+Última porta antes do evento. Confirmar, por leitura de código e por verificação executada, que nenhum dado pessoal escapa e que as premissas de infraestrutura do SDD se confirmaram.
+
+## Parte 1 — Auditoria de privacidade
+
+Método: **leitura do código produzido**, não inspeção pelo navegador (restrição 1 do anexo).
+
+- [ ] Listar **todas** as rotas públicas (sem autenticação) e, para cada uma, ler o serializador e confirmar quais campos saem.
+- [ ] Confirmar que o tipo `LinhaClassificacao` (T12) não ganhou nenhum campo pessoal ao longo do desenvolvimento.
+- [ ] Confirmar que `paraNomePublico` é a única função que toca sobrenome no caminho público, e que nenhuma resposta pública carrega sobrenome completo de menor de 18 (RNF-09, revisado em D-21). Avaliar também a inferência aceita naquela decisão: o formato abreviado sinaliza que a pessoa é menor de idade.
+- [ ] Confirmar ausência de e-mail, telefone, idade e qualquer dado de responsável em toda resposta pública (RNF-08).
+- [ ] Confirmar que nenhuma consulta a dados parte do navegador do usuário final (restrição 3) — buscar no bundle do cliente por credencial, string de conexão ou chamada direta a banco.
+- [ ] Confirmar que dados pessoais completos exigem autenticação (RNF-10): painel e exportação testados sem cookie.
+- [ ] Confirmar que logs e telemetria não carregam dado pessoal.
+- [ ] Confirmar que o cruzamento pessoal × resultado existe **somente** em `contexts/custodia/` (BC-05).
+- [ ] Rodar o teste automatizado de vazamento (T17) contra o ambiente de homologação com massa realista.
+
+## Parte 2 — Checklist do SDD §6
+
+- [ ] Hospedagem anuncia **HTTP/3** (T19) — sob pena de FL-02 e FL-07 caírem para TCP e RNF-04 ficar em risco.
+- [ ] **Idempotência** de FL-03 e FL-06 validada sob reenvio deliberado (T05, T09).
+- [ ] **Sincronia de relógio** do servidor confirmada, e o instante de Lançamento é o do servidor (T19).
+- [ ] **Teste de carga** de FL-07 com 500 acessos concorrentes executado, com relatório (T18).
+- [ ] **Termo oficial** confirmado com o organizador: *Pitch* ou *Pista* — e a interface reflete a decisão (T06, T11, T13).
+- [ ] **Ausência de campo pessoal** em toda resposta pública verificada (Parte 1).
+
+## Parte 3 — Prontidão operacional
+
+- [ ] Contas de Operador criadas e testadas por cada pessoa que vai operar, **antes** do dia.
+- [ ] Sessão testada para durar a janela inteira do evento.
+- [ ] Termo de consentimento aprovado por escrito pelo organizador (T03).
+- [ ] Prazo de retenção acordado e registrado (T15).
+- [ ] Material de contingência impresso e no local, com ensaio feito (T20).
+- [ ] Monitoramento ativo, alertas chegando no canal certo, com teste real de disparo (T16).
+- [ ] Snapshot manual do banco tirado no início do evento (T19).
+- [ ] Deploys congelados; plano de reversão distribuído (T19).
+- [ ] QR code impresso, testado com três leitores e posicionado (T07).
+- [ ] Relatório de tentativas não resolvidas acessível ao organizador durante o evento (T14).
+
+## Critérios de aceitação
+
+- [ ] Todos os itens acima marcados, com evidência registrada (comando executado, arquivo, print de relatório ou nome de quem confirmou).
+- [ ] Resultado consolidado em `docs/checklist-pre-evento.md`, datado e assinado pelo responsável técnico.
+- [ ] Riscos que permanecerem abertos estão explicitamente aceitos por escrito, com plano de mitigação no dia.
+
+---
+
+## Acrescentado por T09 — 2026-08-23
+
+- [ ] **Decidir com o organizador se a inclusão de Tentativa (RF-24) precisa de rastro de autoria.** Hoje não tem: a constraint `tentativa_autoria_coerente_com_estado` exige `operador_id` nulo enquanto o estado é `pendente`, e o enum `tipo_lancamento` não tem valor para "inclusão". RF-23 cobre gravação e alteração de **Tempo**, então a ausência está dentro do requisito — mas se alguém for incluído no Pitch errado, não há como saber quem incluiu. Custo de mudar: um valor no enum, ajuste na constraint de `lancamento` e uma migração.
