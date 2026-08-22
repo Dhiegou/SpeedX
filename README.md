@@ -108,6 +108,10 @@ app/                  # rotas
   painel/
     login/            #   tela de login — fora do grupo protegido, senão dá laço
     (protegido)/      #   grupo invisível na URL cujo layout exige sessão (RF-11)
+      fluxo.ts        #     a máquina de estados do lançamento; RF-18 é provada nela
+      mascaraDeTempo.ts #   `12345` vira `01:23.45` sem tirar a mão do teclado
+      api.ts          #     chamadas a T10; rede caída ≠ recusa do servidor
+      Painel.tsx      #     a tela que o Operador usa por dez horas
   api/painel/sessao/  #   POST entra, DELETE sai, GET diz quem está logado
 tests/                # testes que atravessam módulos (ex.: fronteiras de contexto)
 perf/                 # scripts de carga (T18)
@@ -209,7 +213,7 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 | `/termo` | Público | Texto integral do consentimento — estático, aberto em aba nova pelo formulário |
 | `/classificacao` | Público | Classificação, com filtro por Pitch e busca por nome |
 | `/api/classificacao` | Público, em cache | Projeção completa, revalidação de 15 s |
-| `/painel` | Autenticado | Fila, lançamento, correção, ausência (provisória até T11) |
+| `/painel` | Autenticado | Fila, lançamento, correção, ausência e histórico — tudo por teclado |
 | `/painel/login` | Público | Autenticação de Operador |
 | `/api/painel/sessao` | Misto | `POST` login, `DELETE` logout, `GET` autenticado |
 | `/api/inscricao` | Público, com limite de taxa | Recebe o cadastro |
@@ -341,7 +345,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Cronometragem | T08 | **Concluído** — login, sessão no banco, guardas de rota e criação de contas por CLI |
 | Cronometragem | T09 | **Concluído** — máquina de estados, três transições com trava e auditoria, Fila e histórico |
 | Cronometragem | T10 | **Concluído** — sete endpoints do painel, busca por trecho sem acento, 409 pronto para exibição |
-| Cronometragem | T11 | Não iniciado |
+| Cronometragem | T11 | **Concluído** — painel por teclado, confirmação obrigatória, robustez de rede. Falta cronometrar os 15 s com o supervisor (RNF-16) |
 | Classificação | T12, T13 | Não iniciado |
 | Custódia | T14, T15 | Não iniciado |
 | Qualidade e operação | T16–T21 | Não iniciado |

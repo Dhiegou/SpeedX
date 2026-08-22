@@ -8,19 +8,32 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Dez tarefas entregues (T01–T10), rodando contra um PostgreSQL 18.6 local com massa de 2000 participantes. **430 testes passam**; `npm run check` e o build de produção também.
+**2026-08-23.** Onze tarefas entregues (T01–T11) e **458 testes passando**. `npm run check` e o build de produção limpos. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**O projeto está publicado**: https://github.com/Dhiegou/SpeedX — commit inicial `2bb071d`, 156 arquivos. Até aqui não havia commit nenhum; daqui em diante o histórico é real e commitado por task.
+**A trilha de Cronometragem fechou (T08–T11):** o Operador entra, vê a Fila do Pitch, busca por nome, lança o tempo, corrige, marca ausência e inclui alguém no outro Pitch — tudo pelo teclado, com confirmação obrigatória antes de qualquer gravação.
 
-**T10 entregue:** sete endpoints sob `/api/painel` — fila, lançamento, correção, ausência, inclusão em Pitch adicional, busca global e histórico. Todos exigem sessão, todos respondem `no-store`, e o 409 de conflito chega pronto para exibição ("Tempo 01:23.45 já registrado por Marina Costa às 14:32").
+**T11 entregue com um critério aberto por natureza:** RNF-16 mede uma pessoa com cronômetro, não um programa. Fica para o ensaio pré-evento, junto com os três leitores de QR (T07) e o ensaio de preenchimento (T06).
 
-A decisão que a T02 tinha adiado para a T10 — busca no meio do nome — foi resolvida por medição (D-50): trecho acento-insensível custa **menos** que prefixo com índice nesta escala, e 34% dos nomes têm acento.
-
-Próximo passo: T11 (UI do painel). Restam duas pendências abertas (seção 5).
+Próximo passo: T12 (projeção da Classificação). Restam duas pendências abertas (seção 5) e três critérios que dependem de ensaio com pessoas.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-23 — Sessão 14: execução da T11
+
+**Pedido:** iniciar a T11 (UI do painel).
+
+**Entregue:** a tela de trabalho do Operador — abas de Pitch, Fila com contagem, busca, campo de tempo com máscara, confirmação obrigatória, correção, ausência, inclusão em Pitch adicional, histórico, atualização periódica e indicador de conexão. 31 testes novos, 458 no total.
+
+**A decisão que organiza tudo** foi tirar o fluxo de dentro do componente (D-53). O critério de RF-18 pede verificar "por leitura do código" que nada é gravado fora da confirmação — e leitura confere o código de hoje, não o de depois que alguém acrescenta um atalho com pressa. Com o fluxo num redutor puro, a verificação virou um teste que percorre todos os pares de estado e evento.
+
+**Dois defeitos que só o teste pegaria:**
+
+1. **A máscara se realimentava.** O campo exibe o texto formatado, então o `onChange` recebia de volta os zeros que a própria máscara colocou: digitar `1`, `2`, `3` produzia `000:00.12`, empurrando o dígito mais antigo para fora. O Operador digitaria `12345` e gravaria outro tempo, sem nenhum sinal de erro na tela.
+2. **O atalho que a task pede não funciona como está** (D-54). Ela diz `1` e `2` para trocar de Pitch, mas o foco vive no campo de busca durante toda a navegação da Fila, e `1` e `2` são os dígitos que mais se digita no campo de tempo.
+
+**Aberto:** RNF-16 — quinze segundos por lançamento, cronometrado com o supervisor. É o terceiro critério do projeto que depende de gente, e todos estão no checklist de T21.
 
 ### 2026-08-23 — Sessão 13: T10 e a publicação do repositório
 
@@ -784,6 +797,28 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 **Decidido:** a inclusão em Pitch adicional (RF-24) não pede `chave`, ao contrário das três transições de Tempo.
 
 **Por quê:** a unicidade `(participante_id, pitch)` no banco já torna a operação idempotente por construção. O reenvio esbarra na constraint e volta como `409 tentativa_ja_existe` — que é exatamente a informação que uma chave de idempotência devolveria. Exigir a chave seria cerimônia sem efeito, e cerimônia sem efeito ensina a ignorá-la onde ela importa.
+
+---
+
+### D-53 — O fluxo do painel é um redutor puro, para que RF-18 vire prova
+
+**Decidido:** a máquina de estados do lançamento mora em `fluxo.ts`, fora do componente, e o componente só despacha eventos.
+
+**Por quê:** o critério de aceitação de RF-18 diz "verificado por leitura do código: não existe caminho de gravação fora do fluxo de confirmação". Leitura humana verifica o código de hoje. Com a decisão espalhada por `useState` e `onClick`, o dia em que alguém acrescentar um atalho de teclado com pressa ninguém relerá tudo — e a etapa que impede gravar o tempo na pessoa errada é justamente a que atrapalha quem tem pressa.
+
+**O que o teste prova**, percorrendo todos os pares de estado e evento: nenhum evento leva `lista` ou `tempo` direto a `gravando`; `falhou` só vem de `gravando`; e a partir de `confirmar` só o evento `confirmar` grava. Por indução, toda gravação passou por uma confirmação.
+
+**Do lado do componente**, o disparo da escrita está amarrado à etapa `gravando` num efeito, não a um clique. Um botão novo que despache `confirmar` passa pela mesma porta; um que tente gravar direto não tem porta.
+
+### D-54 — `Alt+1` / `Alt+2` no lugar de `1` / `2`
+
+**Decidido:** trocar de Pitch é `Alt+1` e `Alt+2`. As teclas sozinhas continuam valendo quando o foco não está num campo de texto.
+
+**Por quê:** a T11 pede `1` e `2` literalmente, e o atalho literal é inutilizável. O foco vive no campo de busca durante toda a navegação da Fila — é o que RF-19 e RF-20 exigem — e `1` e `2` são exatamente os dígitos que mais se digita no campo de tempo. Sem modificador, ou o atalho nunca dispara, ou dispara a cada tecla do tempo.
+
+**Descartado:** teclas de função para o Pitch. `F2` e `F3` já cuidam de ausência e busca global, e mais teclas de função afastariam a mão da posição de digitação, que é o que o atalho existia para evitar.
+
+**Reversível:** um ensaio com o supervisor pode mostrar que `Alt` atrapalha mais que ajuda. A troca é uma linha em `Painel.tsx`.
 
 ---
 

@@ -1,19 +1,19 @@
 import type { Metadata } from 'next'
 import BotaoSair from './BotaoSair'
+import Painel from './Painel'
 import { exigirOperador } from '@/contexts/identidade/servico'
 
 /**
- * `/painel` — provisório.
+ * `/painel` — a tela de trabalho do Operador (T11).
  *
- * A T08 entrega identidade e acesso, não o painel: fila, lançamento e correção
- * são T10 e T11. Esta página existe porque uma guarda sem nada atrás dela não
- * pode ser verificada de ponta a ponta — é ela que dá o que o `curl` sem cookie
- * tem de **não** conseguir ler.
+ * Server Component. Faz duas coisas que o navegador não pode fazer: conferir a
+ * sessão antes de montar qualquer coisa (RF-11) e passar o nome do Operador
+ * para a interface sem que ela precise perguntar quem é.
  *
- * Chama `exigirOperador` mesmo estando sob o layout que já chamou: a chamada é
- * memoizada por requisição, então não custa consulta nova, e uma página que
- * depende do Operador deve dizer isso no próprio arquivo em vez de confiar em
- * um layout que alguém pode reorganizar.
+ * A Fila **não** é carregada aqui. Ela vem da API a cada dez segundos e muda o
+ * tempo todo durante o evento; renderizá-la no servidor só produziria uma lista
+ * obsoleta no primeiro quadro, que é exatamente o que a T10 proíbe com
+ * `no-store`.
  */
 
 export const metadata: Metadata = {
@@ -21,17 +21,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function Painel() {
+export default async function PainelDoOperador() {
   const operador = await exigirOperador()
 
   return (
-    <main style={{ maxWidth: '40rem', margin: '0 auto', padding: '2rem 1rem' }}>
-      <h1>Painel do Operador</h1>
-      <p>
-        Sessão aberta como <strong>{operador.nome}</strong>.
-      </p>
-      <p>A fila, o lançamento de tempos e a correção chegam em T10 e T11.</p>
-      <BotaoSair />
-    </main>
+    <>
+      <Painel operador={operador.nome} pitchInicial={1} />
+      <div style={{ maxWidth: '60rem', margin: '0 auto', padding: '0 1rem 2rem' }}>
+        <BotaoSair />
+      </div>
+    </>
   )
 }

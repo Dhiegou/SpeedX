@@ -1,0 +1,310 @@
+/*
+ * Painel do Operador (T11).
+ *
+ * Quem usa esta tela está de pé, com fila de gente na frente, por dez horas, a
+ * ~3 lançamentos por minuto. Tudo aqui decorre disso:
+ *
+ *  - **Tipografia grande e contraste alto** (escopo 5): tablet ao sol, e o
+ *    Operador lê de relance, não estuda a tela.
+ *  - **Foco sempre visível** e espesso: numa tela operada por teclado, não
+ *    saber onde o cursor está custa mais que qualquer enfeite.
+ *  - **Nada de animação e nada de fonte externa**: o que não é baixado não
+ *    falha na rede do local do evento.
+ *  - **Alvos de toque grandes**, porque o mouse é exceção mas o dedo acontece.
+ */
+
+.pagina {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 2px solid #d4d4d4;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.titulo {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.identidade {
+  color: #444;
+  font-size: 0.95rem;
+}
+
+/* Indicador de conectividade (escopo 4): sempre visível, nunca discreto. */
+.conexao {
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.online {
+  background: #e6f4ea;
+  color: #14532d;
+}
+
+.offline {
+  background: #fdf3f4;
+  color: #7a1c20;
+}
+
+.abas {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.aba {
+  font: inherit;
+  font-size: 1.125rem;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  min-height: 3rem;
+  border: 2px solid #12306b;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #12306b;
+  cursor: pointer;
+}
+
+.abaAtiva {
+  background: #12306b;
+  color: #fff;
+}
+
+/* A contagem de pendentes, "em fonte grande o suficiente para leitura rápida". */
+.contagem {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.contagemRotulo {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 400;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.rotulo {
+  font-weight: 600;
+}
+
+.entrada {
+  font: inherit;
+  font-size: 1.25rem;
+  padding: 0.75rem;
+  min-height: 3rem;
+  border: 2px solid #767676;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: inherit;
+}
+
+/* O campo de tempo é o que mais se olha: número grande e tabular. */
+.entradaTempo {
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.entrada:focus-visible,
+.aba:focus-visible,
+.item:focus-visible,
+.botao:focus-visible {
+  outline: 4px solid #1a4ed8;
+  outline-offset: 2px;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #d4d4d4;
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 1.125rem;
+  padding: 0.85rem 0.5rem;
+  min-height: 3rem;
+  border: 0;
+  border-bottom: 1px solid #d4d4d4;
+  background: #fff;
+  cursor: pointer;
+}
+
+.itemSelecionado {
+  background: #eaf0fb;
+  box-shadow: inset 4px 0 0 #12306b;
+}
+
+.nome {
+  font-weight: 600;
+}
+
+/* Os quatro dígitos são o que separa dois homônimos (RF-15): não podem ser
+   um detalhe cinza pequeno. */
+.digitos {
+  font-variant-numeric: tabular-nums;
+  color: #333;
+  white-space: nowrap;
+}
+
+.vazio {
+  padding: 2rem 0.5rem;
+  color: #444;
+}
+
+.botao {
+  font: inherit;
+  font-weight: 600;
+  min-height: 3rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid #12306b;
+  border-radius: 0.25rem;
+  background: #12306b;
+  color: #fff;
+  cursor: pointer;
+}
+
+.botaoSecundario {
+  background: #fff;
+  color: #12306b;
+}
+
+.botao:disabled {
+  background: #6b7280;
+  border-color: #6b7280;
+  cursor: progress;
+}
+
+/* ---------------------------------------------------------------------
+ * Confirmação (RF-18). Ocupa a tela porque é a etapa que impede um Enter
+ * distraído de gravar o tempo na pessoa errada.
+ * ------------------------------------------------------------------ */
+
+.fundo {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 55%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialogo {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 32rem;
+  width: 100%;
+}
+
+.dialogoTitulo {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #444;
+  margin: 0 0 0.5rem;
+}
+
+/* O nome em destaque que RF-18 exige. */
+.nomeDestaque {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.25rem;
+}
+
+.tempoDestaque {
+  font-size: 2.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 0.75rem 0;
+}
+
+.anterior {
+  color: #444;
+  text-decoration: line-through;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.acoesDialogo {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.dica {
+  margin-top: 1rem;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.aviso {
+  padding: 0.85rem;
+  border: 2px solid #a4262c;
+  border-left-width: 6px;
+  border-radius: 0.25rem;
+  background: #fdf3f4;
+  color: #7a1c20;
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+.sucesso {
+  padding: 0.85rem;
+  border: 2px solid #14532d;
+  border-left-width: 6px;
+  border-radius: 0.25rem;
+  background: #e6f4ea;
+  color: #14532d;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.historico {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.historico li {
+  padding: 0.25rem 0;
+}
+
+.rodape {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #d4d4d4;
+  color: #444;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}

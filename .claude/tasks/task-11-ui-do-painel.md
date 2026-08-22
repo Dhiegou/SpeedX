@@ -66,3 +66,84 @@ Sequência-alvo, sem tocar no mouse:
 - [ ] Dois homônimos são distinguíveis apenas pelo que a lista mostra (RF-15).
 - [ ] Um lançamento completo é concluído em ≤ 15 s, cronometrado com o supervisor do evento (RNF-16).
 - [ ] Erro de rede não apaga o tempo digitado, e repetir não duplica o lançamento.
+
+---
+
+## Resultado da execução — 2026-08-23
+
+| Arquivo | Papel |
+|---|---|
+| `fluxo.ts` | A máquina de estados do lançamento, pura — é onde RF-18 vira prova |
+| `mascaraDeTempo.ts` | `12345` → `01:23.45`, e a leitura do que foi de fato teclado |
+| `api.ts` | As chamadas a T10, com rede caída separada de recusa do servidor |
+| `Painel.tsx` | A tela: abas, fila, campo de tempo, confirmação, erros, atualização |
+| `painel.module.css` | Tipografia grande, contraste alto, foco espesso |
+| `page.tsx` | Server Component: guarda a sessão e passa o nome do Operador |
+| `tests/fluxoDoPainel.test.ts` | 20 testes puros |
+| `tests/painelDoOperador.test.tsx` | 11 testes de tela, todos por teclado |
+
+### RF-18 deixou de depender de leitura
+
+O critério pedia verificar **por leitura do código** que não existe caminho de
+gravação fora da etapa de confirmação. Leitura confere o código de hoje; não
+confere o de depois que alguém acrescentar um atalho com pressa.
+
+O fluxo virou um redutor puro, e a verificação virou um teste que percorre
+**todos** os pares de estado e evento e prova três coisas:
+
+1. nenhum evento leva `lista` ou `tempo` direto a `gravando`;
+2. `falhou` só é alcançável a partir de `gravando`;
+3. a partir de `confirmar`, só o evento `confirmar` chega a `gravando`.
+
+Juntas, elas fecham por indução: toda gravação passou por uma confirmação. Do
+lado do componente, o único disparo de escrita está amarrado à etapa `gravando`
+num efeito — não a um `onClick`. Um botão novo que despache `confirmar` passa
+pela mesma porta; um que tente gravar direto não tem porta.
+
+### Dois defeitos que o teste pegou e a leitura não pegaria
+
+**A máscara se realimentava.** O campo exibe o texto formatado, então o
+`onChange` recebe de volta os zeros que a própria máscara colocou. Digitar `1`,
+`2`, `3` produzia `000:00.12` — o dígito mais antigo era empurrado para fora do
+campo. Um Operador digitando `12345` gravaria um tempo errado, e a tela mostraria
+o valor errado sem nenhum sinal de erro. Corrigido em `digitosDoCampo`, com um
+teste que digita tecla a tecla e confere os cinco passos.
+
+**O atalho que a task pede é inutilizável como está** (D-54). A T11 diz `1` e
+`2` para trocar de Pitch. Só que o foco vive no campo de busca durante toda a
+navegação da Fila, e `1` e `2` são justamente os dígitos que mais se digita no
+campo de tempo — o atalho literal ou não funciona, ou troca de aba a cada tecla
+do tempo. Ficou `Alt+1` / `Alt+2`, com as teclas sozinhas ainda valendo quando o
+foco não está num campo de texto.
+
+### Critérios de aceitação
+
+- [x] Cinco lançamentos consecutivos concluídos **sem tocar no mouse** (RF-19). — teste que não chama `click` uma vez sequer e confere as cinco escritas.
+- [x] Nenhum lançamento é gravado sem a confirmação com o nome em destaque (RF-18). — provado sobre o redutor, e conferido na tela: com o diálogo aberto, nada saiu para a rede.
+- [x] Após gravar, os campos estão limpos e o foco está no campo de busca (RF-20).
+- [x] Alternar Pitch altera a lista (RF-13); a lista inicial não traz lançados nem ausentes (RF-14). — o segundo vem da API, e T10 já o prova.
+- [x] Dois homônimos são distinguíveis apenas pelo que a lista mostra (RF-15). — duas "Marina Costa", separadas por `4321` e `8765`.
+- [x] Erro de rede não apaga o tempo digitado, e repetir não duplica. — a retentativa reenvia a **mesma chave**.
+- [ ] **Um lançamento completo em ≤ 15 s, cronometrado com o supervisor (RNF-16).** Depende de gente e cronômetro; nenhum teste substitui.
+
+### O que fica aberto, e por quê
+
+RNF-16 é o único critério que não fecha aqui, e não por falta de implementação:
+ele mede uma pessoa, não um programa. O fluxo foi desenhado para caber nos
+quinze segundos — busca com foco automático, seta, Enter, cinco dígitos, Enter,
+Enter — mas quanto disso o Operador leva depende do teclado do tablet, da luz e
+de quanto ele já usou a tela antes. Entra no ensaio pré-evento junto com o teste
+dos três leitores de QR (T07) e o ensaio de preenchimento (T06), todos reunidos
+no checklist de T21.
+
+Um efeito colateral do ensaio: se os quinze segundos não fecharem, o suspeito
+mais provável é a etapa de confirmação, que é obrigatória por RF-18. A saída
+nesse caso **não** é remover a confirmação — é reduzir o que vem antes dela.
+
+## Estado
+
+**Concluída em 2026-08-23**, com o critério de RNF-16 aberto por depender de
+ensaio com pessoas. 31 testes novos, 458 no total.
+
+Com isto a trilha de Cronometragem (T08–T11) fecha. Restam Classificação
+(T12, T13), Custódia (T14, T15) e as tarefas de qualidade e operação (T16–T21).

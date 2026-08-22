@@ -58,3 +58,6 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 ## Acrescentado por T09 — 2026-08-23
 
 - [ ] **Decidir com o organizador se a inclusão de Tentativa (RF-24) precisa de rastro de autoria.** Hoje não tem: a constraint `tentativa_autoria_coerente_com_estado` exige `operador_id` nulo enquanto o estado é `pendente`, e o enum `tipo_lancamento` não tem valor para "inclusão". RF-23 cobre gravação e alteração de **Tempo**, então a ausência está dentro do requisito — mas se alguém for incluído no Pitch errado, não há como saber quem incluiu. Custo de mudar: um valor no enum, ajuste na constraint de `lancamento` e uma migração.
+
+- [ ] **Cronometrar um lançamento completo com o supervisor (RNF-16, vindo de T11).** Alvo: ≤ 15 s de ponta a ponta — buscar, selecionar, digitar o tempo, confirmar. O fluxo foi desenhado para caber, mas o número depende do teclado do tablet, da luz e de quanto o Operador já usou a tela. **Se não fechar, o suspeito mais provável é a etapa de confirmação — e a saída não é removê-la (RF-18 a exige), é encurtar o que vem antes dela.**
+- [ ] **Confirmar com o supervisor os atalhos do painel:** `Alt+1`/`Alt+2` troca de Pitch, `F2` ausência, `F3` busca global, `Esc` cancela. O `Alt` foi decisão nossa (D-54), não da task — vale ver se atrapalha na prática.
