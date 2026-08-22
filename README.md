@@ -213,7 +213,12 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 | `/painel/login` | Público | Autenticação de Operador |
 | `/api/painel/sessao` | Misto | `POST` login, `DELETE` logout, `GET` autenticado |
 | `/api/inscricao` | Público, com limite de taxa | Recebe o cadastro |
-| `/api/painel/*` | Autenticado | Operações de cronometragem |
+| `/api/painel/fila` | Autenticado | `GET` — pendentes do Pitch, com busca (RF-13, RF-14, RF-16) |
+| `/api/painel/tempo` | Autenticado | `POST` registra, `PATCH` corrige (RF-17, RF-22) |
+| `/api/painel/ausencia` | Autenticado | `POST` — marca ausente (RF-21) |
+| `/api/painel/tentativa` | Autenticado | `POST` — inclui em Pitch adicional (RF-24) |
+| `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22, RF-24) |
+| `/api/painel/tentativa/:id/historico` | Autenticado | `GET` — trilha de auditoria (RF-23) |
 | `/api/exportacao` | Autenticado | Exportação completa em CSV |
 | `/api/saude` | Público | Health check do monitor externo |
 
@@ -335,7 +340,8 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Inscrição | T07 | **Concluído** — raiz sem redirecionamento, QR nível H vetorial, orçamento de peso verificável. Falta testar com três leitores reais |
 | Cronometragem | T08 | **Concluído** — login, sessão no banco, guardas de rota e criação de contas por CLI |
 | Cronometragem | T09 | **Concluído** — máquina de estados, três transições com trava e auditoria, Fila e histórico |
-| Cronometragem | T10, T11 | Não iniciado |
+| Cronometragem | T10 | **Concluído** — sete endpoints do painel, busca por trecho sem acento, 409 pronto para exibição |
+| Cronometragem | T11 | Não iniciado |
 | Classificação | T12, T13 | Não iniciado |
 | Custódia | T14, T15 | Não iniciado |
 | Qualidade e operação | T16–T21 | Não iniciado |

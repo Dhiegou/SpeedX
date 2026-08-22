@@ -8,21 +8,39 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Nove tarefas entregues (T01–T09), rodando contra um PostgreSQL 18.6 local com massa de 2000 participantes. 390 testes passam; `npm run check` e o build de produção também.
+**2026-08-23.** Dez tarefas entregues (T01–T10), rodando contra um PostgreSQL 18.6 local com massa de 2000 participantes. **430 testes passam**; `npm run check` e o build de produção também.
 
-**T09 entregue:** o domínio de Cronometragem existe. Máquina de estados da Tentativa escrita como tabela, as três transições de Tempo com trava de linha e trilha de auditoria append-only, inclusão de Tentativa em Pitch adicional, e as duas leituras do contexto — a Fila e o histórico. Nenhuma dependência nova, nenhuma migração: o esquema de T02 já previa tudo.
+**O projeto está publicado**: https://github.com/Dhiegou/SpeedX — commit inicial `2bb071d`, 156 arquivos. Até aqui não havia commit nenhum; daqui em diante o histórico é real e commitado por task.
 
-A idempotência mudou de casa no caminho (D-46), pelo mesmo motivo que o limite de taxa mudou em T08: Cronometragem precisa dela e não pode importar Inscrição. `src/infra/` agora reúne os dois mecanismos comuns que falam com o banco.
+**T10 entregue:** sete endpoints sob `/api/painel` — fila, lançamento, correção, ausência, inclusão em Pitch adicional, busca global e histórico. Todos exigem sessão, todos respondem `no-store`, e o 409 de conflito chega pronto para exibição ("Tempo 01:23.45 já registrado por Marina Costa às 14:32").
 
-**Duas verificações que a suíte não consegue fazer** foram feitas à mão contra o Postgres nativo: a concorrência de dois Operadores com **duas conexões de verdade** (o PGlite tem uma só, e o `Promise.all` apenas serializa), e o `EXPLAIN` da busca da Fila, que fecha o alerta deixado por D-45 — os dois índices `text_pattern_ops` são usados.
+A decisão que a T02 tinha adiado para a T10 — busca no meio do nome — foi resolvida por medição (D-50): trecho acento-insensível custa **menos** que prefixo com índice nesta escala, e 34% dos nomes têm acento.
 
-Próximo passo: T10 (API do painel), que já tem casos de uso, consultas e porta de entrada em `cronometragem/servico.ts`. Restam duas pendências abertas (seção 5).
-
-Repositório git inicializado, ainda **sem commit** — os arquivos estão preparados no índice, aguardando o primeiro commit do usuário.
+Próximo passo: T11 (UI do painel). Restam duas pendências abertas (seção 5).
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-23 — Sessão 13: T10 e a publicação do repositório
+
+**Pedido:** iniciar a T10; no meio do caminho, revisar o `.gitignore` e publicar no repositório recém-criado.
+
+**Entregue:** os sete endpoints do painel, 28 testes de borda, e o primeiro commit da história do projeto — 156 arquivos, 31.890 linhas, em https://github.com/Dhiegou/SpeedX.
+
+**Duas confirmações do usuário:** o evento é em **São Paulo**, o que valida o fuso fixo de `formatHoraDoEvento`; e o repositório foi criado por ele, vazio.
+
+**Sobre a divisão dos commits, uma correção do que eu tinha oferecido:** propus dividir por task e voltei atrás. Todos os arquivos estão no estado final de hoje — um "commit da T01" conteria o README que já descreve a T10. Seria um histórico fabricado. Um commit único corresponde ao que de fato existe; daqui pra frente a divisão por task é honesta porque o histórico passa a ser real.
+
+**Dois problemas achados ao preparar a publicação, nenhum deles da T10:**
+
+1. **O `.gitignore` deixava passar `.env.production`.** O padrão era uma lista de nomes conhecidos (`.env`, `.env.local`, `.env.*.local`), e `.env.production` — onde a credencial de produção vai morar quando T19 escolher a hospedagem — não estava nela. Trocado por `.env*` com `!.env.example`. Aproveitei para acrescentar o bloco que **não é higiene, é RNF-08**: a Exportação CSV de T14, o snapshot de banco que T19 manda tirar e qualquer dump de depuração carregam a base de 2000 pessoas em claro, e um `git add .` distraído publicaria tudo.
+
+2. **Um clone novo no Windows quebraria o `npm run check`.** O Prettier deste projeto exige `endOfLine: "lf"`, o git local está com `core.autocrlf=true` e não havia `.gitattributes` — os arquivos viriam com CRLF e o `format:check` reprovaria, com o CI rodando exatamente esse comando. Criado o `.gitattributes` antes do commit.
+
+**Um erro meu, registrado porque a lição é geral:** o teste de RF-15 assertava que a string `34` — a idade — não aparecia no corpo da resposta. Dois dígitos colidem por acaso com UUIDs e ISO 8601: passou rodando o arquivo sozinho, reprovou na suíte completa. Teste que reprova conforme o identificador sorteado é pior que teste nenhum. Trocado pela asserção de chaves, que já era exaustiva.
+
+**Aberto:** T11 em diante. PE-05 segue pela metade — falta onde hospedar.
 
 ### 2026-08-23 — Sessão 12: execução da T09
 
@@ -732,6 +750,43 @@ Levantadas na entrega da T08 e revisadas com a definição do banco na mão.
 
 ---
 
+### D-50 — Busca por trecho e sem acento, sem índice, decidida por medição
+
+**Decidido:** a busca do painel (RF-16) casa **trecho** em qualquer posição, sem distinção de acento nem de caixa, com `translate(lower(coluna), ...)` e `like '%termo%'`. Sem índice novo, sem `pg_trgm`.
+
+**Por quê, com os números.** A T02 tinha adiado esta decisão para cá, quando o banco estivesse escolhido. Medido contra os 2000 participantes reais:
+
+| forma | custo |
+|---|---|
+| prefixo, usando os índices `text_pattern_ops` | 77 buffers |
+| trecho, sem índice nenhum | **73 buffers** |
+
+Nesta escala o índice economiza duas páginas de índice e paga as outras vinte e oito no heap de qualquer jeito. `pg_trgm` seria uma extensão a instalar e um índice GIN a manter, no dia do evento, para ganhar nada mensurável.
+
+**E acento não era detalhe:** 677 dos 2000 nomes têm acento. Sem normalizar, um terço da massa fica inalcançável para quem digita sem acento — que é como se digita com pressa, em tablet, de pé.
+
+**`translate` e não `unaccent`:** `unaccent` é extensão, não vem no PGlite e não é `IMMUTABLE` sem embrulho. `translate` é função de núcleo, roda igual nos dois motores e caberia num índice se um dia precisar. O mapa de acentos mora em `busca.ts`, escrito uma vez e usado pelos dois lados — divergir as duas cadeias faria a busca falhar exatamente nos nomes acentuados.
+
+**O que se paga:** a Fila deixou de usar `participante_nome_idx` e `participante_sobrenome_idx`. Eles ficam, porque removê-los custa uma migração para ganhar nada, e são o remédio imediato se a massa crescer. **Quando isto deixa de valer:** uma ordem de grandeza a mais de participantes. T18 mede; o upgrade nesse dia é GIN sobre a mesma expressão.
+
+**Relação com D-45:** o aviso deixado no cabeçalho da T10 mandava conferir o `EXPLAIN` da busca por prefixo. Foi atendido de forma mais forte — medindo as duas formas antes de escolher, em vez de confirmar a escolhida.
+
+### D-51 — A guarda de sessão é repetida em cada rota, de propósito
+
+**Decidido:** cada `route.ts` do painel chama `exigirOperadorNaApi()` nas próprias linhas. Não existe `withAuth` embrulhando o handler.
+
+**Por quê:** o embrulho é mais limpo de escrever e faz a proteção **sumir do arquivo que ela protege**. `tests/painelGuarda.test.ts` afirma, lendo cada rota, que a guarda está lá — é assim que uma rota nova de T11 que esqueça a proteção falha o teste em vez de ir para produção aberta. Duas linhas repetidas por arquivo compram uma verificação estrutural que cobre código que ainda não foi escrito.
+
+**Descartado:** confiar num `proxy.ts` para cobrir tudo sob `/api/painel`. Mesmo motivo de T08: a documentação do Next é explícita que proxy serve para conferência otimista, não como única defesa.
+
+### D-52 — `POST /tentativa` dispensa chave de idempotência
+
+**Decidido:** a inclusão em Pitch adicional (RF-24) não pede `chave`, ao contrário das três transições de Tempo.
+
+**Por quê:** a unicidade `(participante_id, pitch)` no banco já torna a operação idempotente por construção. O reenvio esbarra na constraint e volta como `409 tentativa_ja_existe` — que é exatamente a informação que uma chave de idempotência devolveria. Exigir a chave seria cerimônia sem efeito, e cerimônia sem efeito ensina a ignorá-la onde ela importa.
+
+---
+
 ## 4. Premissas assumidas
 
 | # | Premissa | Se cair |
@@ -755,7 +810,7 @@ Levantadas na entrega da T08 e revisadas com a definição do banco na mão.
 | PE-03 | ~~Canal para solicitação de exclusão de dados (RF-09)~~ — **resolvida em 2026-08-19**: presencial, no ponto de inscrição durante o evento; sem canal remoto (D-20). Já escrito na `v0.2` do termo | — | — |
 | PE-04 | ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — **resolvida em 2026-08-19**: `v1.0-2026-08-19` aprovada por Dhiego, registro em `docs/aprovacao-termo.md`. Se o organizador formal do NEXT for outra pessoa, cabe contra-assinar, sem custo de versão | — | — |
 | PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07 |
-| PE-06 | Data do evento e janela de operação | Organizador | T15 (data-base da retenção), T19 (congelamento de deploy) |
+| PE-06 | Data do evento e janela de operação. **O local foi confirmado em 2026-08-23: São Paulo**, o que fixa o fuso de `formatHoraDoEvento` (`America/Sao_Paulo`). Falta a **data** | Organizador | T15 (data-base da retenção), T19 (congelamento de deploy) |
 
 ---
 

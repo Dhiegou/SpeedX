@@ -39,7 +39,7 @@ T21 Auditoria de privacidade e checklist pré-evento  (última)
 
 Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13).
 
-**Concluídas:** T01 a T09. A trilha de Inscrição está fechada, o Operador tem acesso autenticado e o domínio de Cronometragem existe; falta a API e a tela do painel (T10, T11).
+**Concluídas:** T01 a T10. A trilha de Inscrição está fechada, o Operador tem acesso autenticado, o domínio de Cronometragem existe e a API do painel está no ar; falta a tela (T11).
 
 ---
 
@@ -56,7 +56,7 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 | [T07](task-07-rota-de-entrada-qr.md) ✅ | Rota de entrada e QR code | BC-01 | RF-01, RNF-04 |
 | [T08](task-08-identidade-e-acesso.md) ✅ | Identidade e Acesso | BC-04 | RF-11, RF-12, RNF-14 |
 | [T09](task-09-dominio-cronometragem.md) ✅ | Domínio de Cronometragem | BC-02 | RF-17, RF-21 a RF-25 |
-| [T10](task-10-api-do-painel.md) | API do painel do Operador | BC-02 | RF-12 a RF-16, RF-21 a RF-25 |
+| [T10](task-10-api-do-painel.md) ✅ | API do painel do Operador | BC-02 | RF-12 a RF-16, RF-21 a RF-25 |
 | [T11](task-11-ui-do-painel.md) | UI do painel do Operador | BC-02 | RF-13 a RF-22, RF-24, RNF-16 |
 | [T12](task-12-projecao-classificacao.md) | Projeção e endpoint da Classificação | BC-03 | RF-26 a RF-33, RNF-01, RNF-03, RNF-08, RNF-09 |
 | [T13](task-13-ui-classificacao.md) | UI pública da Classificação | BC-03 | RF-27 a RF-33, RNF-18 |
