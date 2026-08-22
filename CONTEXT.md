@@ -8,17 +8,33 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Onze tarefas entregues (T01–T11) e **458 testes passando**. `npm run check` e o build de produção limpos. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-23.** Doze tarefas entregues (T01–T12) e **480 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**A trilha de Cronometragem fechou (T08–T11):** o Operador entra, vê a Fila do Pitch, busca por nome, lança o tempo, corrige, marca ausência e inclui alguém no outro Pitch — tudo pelo teclado, com confirmação obrigatória antes de qualquer gravação.
+**T12 entregue:** a Classificação pública existe como modelo de leitura próprio. O documento inteiro vai para o dispositivo de uma vez, cacheado 15 s na borda, com ETag para revalidação barata. Medido contra a massa real: **62,7 KB brutos, 10,9 KB em gzip, consulta de 5,3 ms** — menos da metade do que o SDD estimou.
 
-**T11 entregue com um critério aberto por natureza:** RNF-16 mede uma pessoa com cronômetro, não um programa. Fica para o ensaio pré-evento, junto com os três leitores de QR (T07) e o ensaio de preenchimento (T06).
+É a tarefa onde a privacidade deixou de ser convenção: o modelo público não tem campo para e-mail, telefone, idade nem sobrenome, e o teste que mais importa varre o documento serializado procurando o sobrenome de cada menor da massa semeada.
 
-Próximo passo: T12 (projeção da Classificação). Restam duas pendências abertas (seção 5) e três critérios que dependem de ensaio com pessoas.
+Próximo passo: T13 (a página pública). Restam duas pendências abertas (seção 5); PE-05 agora trava também dois critérios de T12, que dependem de borda de verdade.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-23 — Sessão 15: execução da T12
+
+**Pedido:** iniciar a T12 (projeção e endpoint da Classificação).
+
+**Entregue:** a projeção, o formato de transmissão, o endpoint público com cache de borda e ETag. 22 testes novos, 480 no total. `modelo.ts` e `nomePublico.ts` já existiam desde T02/T03 e não precisaram mudar — o tipo fechado e a função de fronteira eram exatamente o que faltava implementar em volta.
+
+**O lint recusou o `servico.ts` que eu ia criar, e estava certo.** A regra diz que só `projecao.ts` alcança o banco neste contexto; abrir uma segunda exceção enfraqueceria justamente a invariante que `tests/fronteiras.test.ts` guarda. A composição foi para dentro da própria fronteira, e este é o único contexto do projeto sem arquivo de composição separado — de propósito.
+
+**O dimensionamento saiu de estimativa para número.** O SDD supunha ~200 KB e ~40 KB comprimidos para 4.000 tentativas. Medido com 2.422 Válidas reais: 62,7 KB brutos, 10,9 KB em gzip, 26,5 bytes por linha. Extrapolando, ~106 KB e ~18 KB no pior caso. O formato posicional é a razão.
+
+**Um cuidado com medição, registrado porque quase virou conclusão errada:** a primeira medida acusou 405 ms de consulta. Era partida do `tsx` e abertura de conexão. O `EXPLAIN ANALYZE` contra o servidor dá **5,3 ms**.
+
+**E um padrão que já apareceu duas vezes** (D-56): o índice `tentativa_classificacao_idx`, criado em T02 "para cobrir a leitura da projeção", não é usado — a projeção lê 81% da tabela e nessa seletividade o índice só acrescenta indireção. É o mesmo que aconteceu com os índices de nome em D-50. T02 criou índices por raciocínio; a medição em escala real mostra que nesta escala eles não pagam.
+
+**Aberto:** dois critérios de T12 dependem de borda de verdade — a segunda requisição servida pelo cache e os 30 s de ponta a ponta de RNF-03. Os dois esperam PE-05.
 
 ### 2026-08-23 — Sessão 14: execução da T11
 
@@ -819,6 +835,31 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 **Descartado:** teclas de função para o Pitch. `F2` e `F3` já cuidam de ausência e busca global, e mais teclas de função afastariam a mão da posição de digitação, que é o que o atalho existia para evitar.
 
 **Reversível:** um ensaio com o supervisor pode mostrar que `Alt` atrapalha mais que ajuda. A troca é uma linha em `Painel.tsx`.
+
+---
+
+### D-56 — Os índices de T02 foram criados por raciocínio; a medição diz outra coisa
+
+**Constatado, não decidido.** Dois índices criados em T02 com justificativa escrita não são usados na escala real do evento:
+
+| índice | criado para | o que a medição mostra |
+|---|---|---|
+| `participante_nome_idx` / `_sobrenome_idx` | a busca do painel (RF-16) | a busca virou por trecho em D-50, e nem o prefixo pagava: 77 buffers com índice contra 73 sem |
+| `tentativa_classificacao_idx` | a leitura da projeção pública | não usado: a projeção lê 81% da tabela, e o planejador prefere varredura + quicksort — 76 buffers, 5,3 ms |
+
+**Por que ficam:** removê-los custa uma migração para ganhar nada mensurável, e são o remédio imediato se a massa crescer uma ordem de grandeza. Um índice não usado custa escrita no `INSERT`, e as inserções deste sistema acontecem 2.000 vezes num dia — não é onde o desempenho aperta.
+
+**O que isto ensina para o resto do projeto:** índice criado por raciocínio precisa de medição antes de virar premissa. T18 é o lugar de reavaliar os três com número, não com intuição. Se a decisão for remover, é uma migração e um teste de esquema a menos.
+
+### D-57 — O modelo interno tem mais campos que o documento transmitido
+
+**Decidido:** `LinhaClassificacao` tem `id` e `registradoEm`; `LinhaCompacta`, que é o que atravessa a rede, não tem nenhum dos dois.
+
+**Por quê o `id` fica de fora:** é um UUID de 36 caracteres que a tela não usa para nada. A ordem do array já é a classificação e a posição já serve de chave de renderização. São 144 KB economizados nas 4.000 linhas do pior caso — mais que o documento inteiro custa hoje.
+
+**Por quê o `registradoEm` fica de fora, e este é o motivo que importa:** ele serve ao desempate de RF-31, que o servidor **já resolveu** ao ordenar. Publicá-lo diria a que horas uma pessoa nomeada esteve num lugar — e para os menores de 18 essa é exatamente a exposição que RNF-09 existe para evitar, só que entrando por outra porta. Menos campo na rede é menos superfície, e aqui também é menos risco.
+
+**Descartado:** mandar objetos com chaves curtas em vez de arrays posicionais. Ganharia legibilidade do corpo cru e pagaria com as chaves repetidas 4.000 vezes. O comentário em `documento.ts` e o tipo nomeado cobrem a legibilidade a custo zero de rede.
 
 ---
 

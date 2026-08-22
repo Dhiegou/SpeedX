@@ -60,3 +60,10 @@ Popular ambiente de homologação com **2000 participantes e 4000 tentativas** (
 - [ ] Página de cadastro interativa em ≤ 3 s em 3G simulado (RNF-04).
 - [ ] Pico de 100 cadastros simultâneos do mesmo IP não bloqueia participantes legítimos.
 - [ ] Relatório publicado no repositório com números, não com impressões.
+
+---
+
+## Acrescentado por T12 — 2026-08-23
+
+- [ ] **Reavaliar os três índices que a medição mostrou não serem usados** (D-56): `participante_nome_idx`, `participante_sobrenome_idx` e `tentativa_classificacao_idx`. Todos foram criados em T02 por raciocínio; nas medições de T10 e T12, com a massa real, o planejador não os escolhe. Decidir com número: ou some justificativa medida, ou eles saem numa migração.
+- [ ] **Confirmar o dimensionamento do documento público sob carga.** Medido em T12 contra o banco local: 2.422 linhas → 62,7 KB brutos, 10,9 KB gzip, consulta de 5,3 ms. Extrapolado para 4.000 linhas: ~106 KB / ~18 KB. Verificar com 500 acessos simultâneos (RNF-01) e com a borda de verdade no meio.

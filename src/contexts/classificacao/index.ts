@@ -15,9 +15,13 @@
  * O lint impede que este diretório importe qualquer outro contexto ou o banco;
  * a única exceção é `projecao.ts`, a fronteira onde a tradução acontece.
  *
- * Implementação em T12.
+ * Implementado em T12: `projecao.ts` constrói o documento e `documento.ts`
+ * decide o que dele atravessa a rede — que é menos do que o modelo interno tem,
+ * por tamanho e por privacidade.
  */
 
-export type { LinhaClassificacao } from './modelo'
+export type { DocumentoClassificacao, LinhaClassificacao, Pitch } from './modelo'
+export type { DocumentoTransmitido, LinhaCompacta } from './documento'
+export { compactar, etiquetaDe } from './documento'
 export type { OpcoesNomePublico } from './nomePublico'
 export { deveAbreviarSobrenome, IDADE_MAIORIDADE, paraNomePublico } from './nomePublico'

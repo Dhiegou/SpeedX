@@ -75,7 +75,9 @@ src/
     classificacao/    # BC-03 — modelo SEM e-mail, telefone, idade ou dado de responsável
       modelo.ts       #   tipo fechado da linha pública
       nomePublico.ts  #   maior: "Dhiego Ferreira"; menor de 18: "Lucas M." (RNF-09)
-      projecao.ts     #   único ponto do contexto autorizado a ler o banco
+      documento.ts    #   o que atravessa a rede: menos campos que o modelo (D-57)
+      projecao.ts     #   único ponto do contexto autorizado a ler o banco —
+                      #     e, por isso, também o que compõe: não há servico.ts aqui
     identidade/       # BC-04 — autenticação de Operador (T08)
       modelo.ts       #   `{ id, nome }`: tudo o que os outros contextos conhecem
       senha.ts        #   scrypt; recusa e acerto custam o mesmo tempo
@@ -212,7 +214,7 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 | `/` | Público | Formulário de inscrição — destino do QR code, sem redirecionamento |
 | `/termo` | Público | Texto integral do consentimento — estático, aberto em aba nova pelo formulário |
 | `/classificacao` | Público | Classificação, com filtro por Pitch e busca por nome |
-| `/api/classificacao` | Público, em cache | Projeção completa, revalidação de 15 s |
+| `/api/classificacao` | Público, em cache | Documento completo (62,7 KB / 10,9 KB gzip com 2.422 linhas); `s-maxage=15`, ETag |
 | `/painel` | Autenticado | Fila, lançamento, correção, ausência e histórico — tudo por teclado |
 | `/painel/login` | Público | Autenticação de Operador |
 | `/api/painel/sessao` | Misto | `POST` login, `DELETE` logout, `GET` autenticado |
@@ -346,7 +348,8 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Cronometragem | T09 | **Concluído** — máquina de estados, três transições com trava e auditoria, Fila e histórico |
 | Cronometragem | T10 | **Concluído** — sete endpoints do painel, busca por trecho sem acento, 409 pronto para exibição |
 | Cronometragem | T11 | **Concluído** — painel por teclado, confirmação obrigatória, robustez de rede. Falta cronometrar os 15 s com o supervisor (RNF-16) |
-| Classificação | T12, T13 | Não iniciado |
+| Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
+| Classificação | T13 | Não iniciado |
 | Custódia | T14, T15 | Não iniciado |
 | Qualidade e operação | T16–T21 | Não iniciado |
 
