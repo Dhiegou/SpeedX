@@ -88,6 +88,29 @@ describe('fronteiras entre bounded contexts', () => {
     expect(await erros(`import '@/contexts/classificacao'`, arquivo)).toHaveLength(1)
   })
 
+  it('a Exportação alcança os dois lados — é a autorização de BC-05', async () => {
+    // A exportação de T14 é o único documento do sistema que reúne telefone e
+    // dado de Responsável com resultado de corrida. Essa autorização precisa
+    // ser um lugar nomeado, e este teste é o que a mantém nomeada: se ela
+    // aparecer em outro contexto, o lint recusa lá e não recusa aqui.
+    const arquivo = 'src/contexts/custodia/exportacao.ts'
+
+    expect(await erros(`import '@/contexts/inscricao/idades'`, arquivo)).toHaveLength(0)
+    expect(await erros(`import '@/db/schema'`, arquivo)).toHaveLength(0)
+  })
+
+  it('ninguém fora de Custódia consegue montar o mesmo cruzamento', async () => {
+    // Não é uma regra escrita para Custódia: é consequência das outras. Nenhum
+    // outro contexto alcança os dois lados, então o documento completo só pode
+    // nascer ali.
+    expect(
+      await erros(`import '@/contexts/inscricao/idades'`, 'src/contexts/cronometragem/teste.ts'),
+    ).toHaveLength(1)
+    expect(
+      await erros(`import '@/contexts/cronometragem'`, 'src/contexts/inscricao/teste.ts'),
+    ).toHaveLength(1)
+  })
+
   it('Inscrição é upstream: não importa ninguém', async () => {
     const arquivo = 'src/contexts/inscricao/teste.ts'
 

@@ -8,17 +8,33 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Treze tarefas entregues (T01–T13) e **511 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-23.** Quatorze tarefas entregues (T01–T14) e **537 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**Três das cinco trilhas estão fechadas:** Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13). O participante se inscreve pelo QR, o Operador lança o tempo pelo teclado, e qualquer pessoa acha a própria posição sem perguntar a ninguém.
+**T14 entregue:** a Exportação, que é o oposto de tudo o que a Classificação faz — ali o modelo não tem campo para dado pessoal, aqui o documento é a base inteira, com telefone e dados de Responsável de menores. Medida contra o banco real: 2.973 linhas, 673 KB, 663 ms; lista de repasse com 1.267 pessoas; 292 pendências.
 
-Restam **Custódia** (T14 exportação, T15 retenção) e **qualidade e operação** (T16–T21).
+Falta **T15** (retenção e exclusão) para fechar a Custódia, e depois só qualidade e operação (T16–T21).
 
-Quatro critérios do projeto dependem de ensaio com pessoas ou de aparelho, e estão reunidos no checklist de T21: os 15 s do painel (RNF-16), os três leitores de QR (T07), o ensaio de preenchimento (T06) e os 360px da Classificação (RNF-18).
+Cinco critérios do projeto dependem de gente, aparelho ou programa externo, todos no checklist de T21.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-23 — Sessão 17: execução da T14
+
+**Pedido:** iniciar a T14 (exportação de dados).
+
+**Entregue:** as três saídas da Custódia — base completa em fluxo, lista de repasse filtrada e relatório de pendências —, com sessão obrigatória e rastro de quem exportou. 24 testes novos, 537 no total.
+
+**Um risco que a task não menciona e que estava aberto** (D-60): injeção de fórmula em CSV. Um Participante digita o próprio nome num formulário público sem autenticação; se alguém se cadastrar como `=1+1`, o Excel do organizador executa aquilo ao abrir o arquivo. O caminho está inteiro montado neste sistema — entrada pública, saída em planilha, aberta por alguém de confiança numa máquina de trabalho.
+
+**Onde o rastro da exportação foi parar, e por quê** (D-61): no log estruturado, não numa tabela. A T15 vai apagar o banco, e um registro de auditoria que desaparece junto com o dado que ele auditava não é auditoria.
+
+**Duas vezes o mesmo tropeço de medição, registrado porque é uma armadilha real:** o BOM do CSV "sumia" nas duas formas de conferir que eu usei. `Response.text()` descarta BOM inicial por especificação, e `new TextDecoder()` também. Os bytes estavam certos o tempo todo; quem mentia era o instrumento. O teste passou a olhar `arrayBuffer()` e comparar `EF BB BF`.
+
+**E o BOM como literal cru sumiu do código-fonte** ao ser escrito, do mesmo jeito que o byte nulo de `log.ts` em T08. Virou escape `\uFEFF`, com o motivo anotado no arquivo: caractere invisível sobrevive mal a cópia entre editores, e o sintoma apareceria meses depois como "AssumpÃ§Ã£o" na planilha do organizador.
+
+**Aberto:** abrir o arquivo no Excel de verdade. Separador, BOM e escape foram escritos para o Excel pt-BR e conferidos byte a byte, mas "abre corretamente em Excel" é afirmação sobre um programa que não está aqui.
 
 ### 2026-08-23 — Sessão 16: execução da T13
 
@@ -902,6 +918,28 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 **Mas o TLS era o sintoma.** O problema é o acoplamento: pré-renderizar amarra o **build** à disponibilidade do banco. O CI de T01 não tem banco nenhum; o deploy de T19 passaria a precisar de credencial de produção só para compilar; e a tabela embutida no artefato seria a do dia do deploy — quer dizer, vazia, servida a quem abrisse a página antes da primeira revalidação.
 
 **O que não se perde:** a primeira pintura continua trazendo a tabela, porque o Server Component lê a projeção na requisição. O que muda é quando a leitura acontece.
+
+---
+
+### D-60 — O CSV precisa se defender do Excel
+
+**Decidido:** `escapar` prefixa com apóstrofo qualquer campo que comece com `=`, `+`, `-` ou `@`.
+
+**Por quê:** injeção de fórmula em CSV. O Excel trata um campo iniciado por esses caracteres como fórmula e o **executa** ao abrir o arquivo. Neste sistema o caminho está todo montado: o nome é digitado num formulário público sem autenticação, e o arquivo é aberto pelo organizador numa máquina de trabalho.
+
+**A T14 não pede isso.** Pedir seria supor que quem escreveu a task conhecia o ataque; não tratar seria supor que ninguém vai tentar. Entre as duas suposições, a segunda é a cara.
+
+**O que se paga:** um telefone `+55…` aparece como `'+55…` num editor de texto. Na planilha — que é onde ele vai ser lido — aparece certo, porque o Excel consome o apóstrofo ao exibir.
+
+### D-61 — O rastro da exportação vai para o log, não para o banco
+
+**Decidido:** `custodia.exportacao` é registrado no log estruturado (stdout → agregador), com identificador do Operador e instante. Não há tabela de auditoria de exportação.
+
+**Por quê:** a T15 vai apagar o banco dez dias depois do evento (PE-02). Um registro de auditoria gravado numa tabela desapareceria junto com o dado que ele auditava — e auditoria que some com o auditado não é auditoria. O log sobrevive ao expurgo, como já está escrito em `log.ts` desde T05.
+
+**Detalhe que decorre do fluxo:** o rastro sai **antes** do corpo. Uma exportação em fluxo pode ser interrompida no meio, e o que precisa ficar registrado é que alguém pediu a base, não que conseguiu baixá-la inteira.
+
+**O que fica no log e o que não fica:** o identificador do Operador, não o nome. A forma fechada de `EntradaDeLog` não carrega nome de pessoa (RNF-08), e quem precisar do nome cruza com a tabela de Operadores enquanto ela existir.
 
 ---
 

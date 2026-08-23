@@ -56,3 +56,84 @@ Incluir uma segunda exportação/relatório: **Tentativas sem tempo e sem marca�
 - [ ] Toda exportação deixa registro de autor e instante.
 - [ ] A lista de repasse não contém **nenhum** participante com `aceite_compartilhamento = false` — teste com massa que tem os dois casos (o seed já gera).
 - [ ] Nenhum módulo fora de `custodia/` importa simultaneamente dados pessoais e resultados (verificado por lint e por leitura).
+
+---
+
+## Resultado da execução — 2026-08-23
+
+| Arquivo | Papel |
+|---|---|
+| `csv.ts` | Separador, BOM, escape — e a proteção contra fórmula |
+| `consultas.ts` | O cruzamento autorizado, lido em lotes por cursor estável |
+| `exportacao.ts` | Os três documentos e o fluxo da exportação completa |
+| `servico.ts` | Composição |
+| `app/api/exportacao/route.ts` | `GET ?tipo=completa\|repasse\|pendencias`, com sessão e rastro |
+| `tests/exportacao.test.ts` | 24 testes |
+
+### Medido contra o banco real
+
+| | valor |
+|---|---|
+| Exportação completa | 2.973 linhas · **673,2 KB** · 663 ms |
+| Colunas | 21, conforme o escopo |
+| Lista de repasse | 1.267 pessoas (de 2.000) |
+| Pendências | 292 |
+
+### Um risco que a task não menciona e que estava aberto
+
+**Injeção de fórmula em CSV.** Um Participante digita o próprio nome num
+formulário público, sem autenticação. Se alguém se cadastrar como `=1+1` — ou
+como algo bem menos inocente —, o Excel do organizador **executa** aquilo ao
+abrir o arquivo. O caminho está todo montado neste sistema: entrada pública,
+saída em planilha, aberta por alguém de confiança numa máquina de trabalho.
+
+`escapar` prefixa com apóstrofo qualquer campo que comece com `=`, `+`, `-` ou
+`@`. O Excel consome o apóstrofo ao exibir. O custo é que um telefone `+55…`
+aparece como `'+55…` num editor de texto — e como `+55…` na planilha, que é
+onde ele vai ser lido.
+
+Não tratar seria supor que ninguém vai tentar. Pedir que a task previsse seria
+supor que quem a escreveu conhecia o ataque.
+
+### As três saídas são separadas porque a promessa exige
+
+A lista de repasse podia ser uma coluna da exportação completa, filtrada na
+planilha do outro lado. Aí o telefone de quem **recusou** já teria saído daqui —
+e o termo promete que ele só vai para quem autorizou (D-23). A promessa só se
+cumpre com o filtro **na consulta**.
+
+`aceite_compartilhamento` continua na exportação completa, mas como registro de
+auditoria: serve para conferir, não para filtrar à mão.
+
+### O rastro vai para o log, não para o banco
+
+O escopo pede registro persistente de quem exportou. Foi para o log estruturado
+(stdout → agregador), e não para uma tabela — **porque T15 vai apagar o banco**.
+Um registro de auditoria que desaparece junto com o dado que ele auditava não é
+auditoria. O log sobrevive ao expurgo.
+
+E o rastro sai **antes** do corpo: uma exportação em fluxo pode ser interrompida
+no meio, e o que precisa ficar registrado é que alguém pediu a base — não que
+conseguiu baixá-la inteira.
+
+### Critérios de aceitação
+
+- [x] Acesso anônimo é negado (RF-35, RNF-10). — as três saídas, e o teste confere que nenhum telefone aparece no corpo do 401.
+- [x] O arquivo contém todos os registros, inclusive ausentes e pendentes (RF-34). — 2.973 linhas contra 2.973 Tentativas no banco, com a massa passando do tamanho do lote para provar que o cursor não pula nem repete.
+- [x] Dados de Responsável aparecem para menores e ficam vazios para maiores.
+- [x] Nenhum caractere acentuado quebra na abertura em Excel. — BOM conferido nos **bytes**; `Response.text()` descarta BOM inicial por especificação e a primeira versão do teste caiu nessa.
+- [x] O relatório de pendências lista exatamente as Tentativas não resolvidas. — Ausente **é** desfecho e sai da métrica.
+- [x] Toda exportação deixa registro de autor e instante. — inclusive a tentativa recusada por falta de sessão.
+- [x] A lista de repasse não contém nenhum participante que recusou. — varredura sobre 300 semeados, com os dois casos.
+- [x] Nenhum módulo fora de `custodia/` monta o mesmo cruzamento. — dois testes novos de fronteira: um confirma que a Custódia alcança os dois lados, outro que mais ninguém alcança.
+
+### Aberto
+
+- [ ] **Abrir o arquivo no Excel de verdade.** Separador, BOM e escape foram escritos para o Excel pt-BR e conferidos byte a byte, mas "abre corretamente em Excel" é afirmação sobre um programa que não está aqui. Entra no checklist de T21, junto com um teste de um nome que comece com `=`.
+- [ ] **XLSX**, se o organizador pedir. O escopo diz "oferecer também se houver demanda"; não houve.
+
+## Estado
+
+**Concluída em 2026-08-23.** 24 testes novos, 537 no total. Desbloqueia **T15**
+(retenção e exclusão), que agora tem a exportação como a saída a preservar antes
+de apagar.

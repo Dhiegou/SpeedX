@@ -87,6 +87,9 @@ src/
       criarOperador.ts#   criação e desativação — sem rota, só CLI (RNF-14)
       servico.ts      #   composição: banco, cookie e as duas guardas de acesso
     custodia/         # BC-05 — único autorizado a cruzar dado pessoal com resultado
+      csv.ts          #   separador, BOM e escape — inclusive contra fórmula (D-60)
+      consultas.ts    #   o cruzamento autorizado, lido em lotes por cursor
+      exportacao.ts   #   os três documentos: completa, repasse e pendências
   infra/            # abaixo dos contextos: fala com o banco, não conhece domínio
     limiteDeTaxa.ts   # janela deslizante; Inscrição e Identidade passam a política
     idempotencia.ts   # chave + digestão do envio; Inscrição e Cronometragem usam
@@ -226,7 +229,7 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 | `/api/painel/tentativa` | Autenticado | `POST` — inclui em Pitch adicional (RF-24) |
 | `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22, RF-24) |
 | `/api/painel/tentativa/:id/historico` | Autenticado | `GET` — trilha de auditoria (RF-23) |
-| `/api/exportacao` | Autenticado | Exportação completa em CSV |
+| `/api/exportacao?tipo=` | Autenticado | `completa` (base inteira), `repasse` (só quem autorizou) ou `pendencias` (métrica do PRD §7) |
 | `/api/saude` | Público | Health check do monitor externo |
 
 Nenhuma resposta pública expõe e-mail, telefone, idade, dado de responsável, nem o sobrenome completo de participante menor de 18 anos.
@@ -351,7 +354,8 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Cronometragem | T11 | **Concluído** — painel por teclado, confirmação obrigatória, robustez de rede. Falta cronometrar os 15 s com o supervisor (RNF-16) |
 | Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
 | Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
-| Custódia | T14, T15 | Não iniciado |
+| Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
+| Custódia | T15 | Não iniciado |
 | Qualidade e operação | T16–T21 | Não iniciado |
 
 **Pendências que bloqueiam:** nenhuma. O termo oficial (Pitch ou Pista) continua indefinido, mas deixou de bloquear: a palavra vive em `src/shared/vocabulario.ts` e trocá-la custa uma linha. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).

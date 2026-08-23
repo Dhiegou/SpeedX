@@ -63,3 +63,5 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] **Confirmar com o supervisor os atalhos do painel:** `Alt+1`/`Alt+2` troca de Pitch, `F2` ausência, `F3` busca global, `Esc` cancela. O `Alt` foi decisão nossa (D-54), não da task — vale ver se atrapalha na prática.
 
 - [ ] **Abrir a Classificação em 360px de largura real e confirmar que não há rolagem horizontal (RNF-18, vindo de T13).** O CSS foi escrito para isso — coluna de nome elástica com `overflow-wrap`, números tabulares, controles fixos —, mas a confirmação depende de aparelho. Testar com o sobrenome mais longo da massa real.
+
+- [ ] **Abrir as três exportações no Excel de verdade, em português (vindo de T14).** Separador `;`, BOM UTF-8 e escape foram escritos para o Excel pt-BR e conferidos byte a byte, mas "abre corretamente em Excel" é afirmação sobre um programa que não está no repositório. Conferir: acento legível, colunas separadas, e **um participante cujo nome comece com `=`** — o apóstrofo de proteção (D-60) deve sumir na exibição e a célula não pode virar fórmula.
