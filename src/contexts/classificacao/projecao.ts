@@ -99,11 +99,59 @@ export async function projetarClassificacao(
  * A rota chama isto; `projetarClassificacao` continua recebendo o banco por
  * parâmetro, que é o que permite testá-la contra Postgres de verdade.
  */
-export async function documentoDaClassificacao(): Promise<{
-  documento: DocumentoTransmitido
-  etiqueta: string
-}> {
-  const documento = compactar(await projetarClassificacao(db()))
+type Pronto = { documento: DocumentoTransmitido; etiqueta: string }
 
-  return { documento, etiqueta: etiquetaDe(documento) }
+/**
+ * Memo de processo, com validade curta.
+ *
+ * A borda de T12 guarda por 15 s e é a primeira linha de defesa — mas ela
+ * depende da hospedagem estar configurada (PE-05), e a página de T13 é
+ * renderizada por requisição, sem passar por ela. Sem isto, 500 pessoas
+ * abrindo a página ao mesmo tempo (RNF-01) produziriam 500 consultas.
+ *
+ * **A conta do orçamento de RNF-03:** trinta segundos entre o lançamento e a
+ * aparição pública. A borda gasta 15; este memo gasta 5; sobram 10 para a
+ * consulta, a rede e o intervalo de polling da tela. Por isso cinco, e não
+ * quinze: dois caches de quinze segundos em série gastariam o orçamento
+ * inteiro antes do primeiro byte sair do servidor.
+ */
+const VALIDADE_DO_MEMO_MS = 5_000
+
+/**
+ * O que é guardado é a **promessa**, não o resultado.
+ *
+ * A primeira versão guardava o valor pronto, e um teste de cinquenta leituras
+ * simultâneas mostrou que ela produzia cinquenta consultas: nenhuma das
+ * chamadas paralelas encontrava o memo preenchido, porque a primeira ainda não
+ * tinha terminado. O memo protegia leituras **sequenciais** — inútil no único
+ * cenário para o qual foi escrito, que é 500 pessoas abrindo a página no mesmo
+ * segundo (RNF-01).
+ *
+ * Guardando a promessa, quem chega durante a consulta espera a mesma consulta.
+ */
+let memo: { em: number; valor: Promise<Pronto> } | null = null
+
+export function documentoDaClassificacao(agora: number = Date.now()): Promise<Pronto> {
+  if (memo !== null && agora - memo.em < VALIDADE_DO_MEMO_MS) return memo.valor
+
+  const promessa = projetarClassificacao(db()).then((projecao) => {
+    const documento = compactar(projecao)
+    return { documento, etiqueta: etiquetaDe(documento) }
+  })
+
+  memo = { em: agora, valor: promessa }
+
+  // Falha não fica guardada. Cachear a indisponibilidade por cinco segundos
+  // seria o pior momento possível para fazê-lo — a próxima leitura deve tentar
+  // de novo, e é ela que decide se ainda está fora do ar.
+  promessa.catch(() => {
+    if (memo?.valor === promessa) memo = null
+  })
+
+  return promessa
+}
+
+/** Descarta o memo. Existe para o teste; a aplicação nunca chama. */
+export function esquecerDocumento(): void {
+  memo = null
 }

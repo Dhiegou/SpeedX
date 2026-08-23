@@ -70,3 +70,9 @@ Uma tela simples (pode ser o painel do provedor) reunindo: inscritos por hora, t
 - [ ] Todas as métricas do PRD §7 têm origem definida e são consultáveis durante o evento.
 - [ ] Nenhum evento de telemetria carrega dado pessoal (verificado por leitura do código de emissão).
 - [ ] `/api/saude` responde em ≤ 300 ms e não expõe detalhe interno de infraestrutura.
+
+---
+
+## Acrescentado por T13 — 2026-08-23
+
+- [ ] **Derivar a métrica de uso da busca da Classificação a partir do log do servidor**, e não de telemetria do navegador. A T13 pedia instrumentar o uso da busca para a métrica secundária do PRD (≥ 30% das sessões); não foi implementado de propósito, porque seria o único evento emitido pelo navegador em todo o sistema — D-33 tirou a métrica do cadastro do cliente justamente para evitar isso, e reintroduzir aqui exigiria uma URL de coletor exposta na página mais pública do evento. O log de `classificacao.leitura` já traz volume e razão entre 200 e 304; combinado com o número de leituras únicas, responde à mesma pergunta sem nada sair do aparelho de ninguém.

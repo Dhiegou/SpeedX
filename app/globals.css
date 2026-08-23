@@ -30,3 +30,22 @@ video {
   max-width: 100%;
   height: auto;
 }
+
+/*
+ * Rótulo lido por leitor de tela e invisível para quem enxerga.
+ *
+ * O campo de busca da Classificação já traz `placeholder`, que some ao digitar
+ * e não é lido de forma confiável — um `<label>` de verdade é o que garante
+ * que a pessoa saiba o que está no campo depois de preenchê-lo.
+ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

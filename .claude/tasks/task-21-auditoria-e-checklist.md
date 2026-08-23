@@ -61,3 +61,5 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 
 - [ ] **Cronometrar um lançamento completo com o supervisor (RNF-16, vindo de T11).** Alvo: ≤ 15 s de ponta a ponta — buscar, selecionar, digitar o tempo, confirmar. O fluxo foi desenhado para caber, mas o número depende do teclado do tablet, da luz e de quanto o Operador já usou a tela. **Se não fechar, o suspeito mais provável é a etapa de confirmação — e a saída não é removê-la (RF-18 a exige), é encurtar o que vem antes dela.**
 - [ ] **Confirmar com o supervisor os atalhos do painel:** `Alt+1`/`Alt+2` troca de Pitch, `F2` ausência, `F3` busca global, `Esc` cancela. O `Alt` foi decisão nossa (D-54), não da task — vale ver se atrapalha na prática.
+
+- [ ] **Abrir a Classificação em 360px de largura real e confirmar que não há rolagem horizontal (RNF-18, vindo de T13).** O CSS foi escrito para isso — coluna de nome elástica com `overflow-wrap`, números tabulares, controles fixos —, mas a confirmação depende de aparelho. Testar com o sobrenome mais longo da massa real.

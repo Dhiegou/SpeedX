@@ -8,17 +8,35 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Doze tarefas entregues (T01–T12) e **480 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-23.** Treze tarefas entregues (T01–T13) e **511 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**T12 entregue:** a Classificação pública existe como modelo de leitura próprio. O documento inteiro vai para o dispositivo de uma vez, cacheado 15 s na borda, com ETag para revalidação barata. Medido contra a massa real: **62,7 KB brutos, 10,9 KB em gzip, consulta de 5,3 ms** — menos da metade do que o SDD estimou.
+**Três das cinco trilhas estão fechadas:** Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13). O participante se inscreve pelo QR, o Operador lança o tempo pelo teclado, e qualquer pessoa acha a própria posição sem perguntar a ninguém.
 
-É a tarefa onde a privacidade deixou de ser convenção: o modelo público não tem campo para e-mail, telefone, idade nem sobrenome, e o teste que mais importa varre o documento serializado procurando o sobrenome de cada menor da massa semeada.
+Restam **Custódia** (T14 exportação, T15 retenção) e **qualidade e operação** (T16–T21).
 
-Próximo passo: T13 (a página pública). Restam duas pendências abertas (seção 5); PE-05 agora trava também dois critérios de T12, que dependem de borda de verdade.
+Quatro critérios do projeto dependem de ensaio com pessoas ou de aparelho, e estão reunidos no checklist de T21: os 15 s do painel (RNF-16), os três leitores de QR (T07), o ensaio de preenchimento (T06) e os 360px da Classificação (RNF-18).
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-23 — Sessão 16: execução da T13
+
+**Pedido:** iniciar a T13 (página pública da Classificação).
+
+**Entregue:** a tabela pública com filtro por Pitch, busca com destaque, paginação e atualização. 29 testes novos, 511 no total. Fecha a trilha de Classificação.
+
+**`normalizar` mudou de casa** — de Cronometragem para `shared/texto.ts`. É o terceiro mecanismo a fazer esse caminho, depois do limite de taxa (D-38) e da idempotência (D-46), e pelo mesmo motivo: dois contextos precisam da mesma regra e não podem se importar. Aqui o risco é específico: no painel a comparação roda no Postgres com `translate`, na Classificação roda no navegador em JavaScript. Divergir faria o mesmo nome achar a pessoa num lugar e não achar no outro.
+
+**Dois defeitos meus, os dois encontrados por teste ou build:**
+
+1. **O build quebrou, e o sintoma escondia o problema.** Com `revalidate = 15` na página, o `next build` falhou com "The server does not support SSL connections" — o build roda com `NODE_ENV=production` e o pool exige TLS. O sintoma era o TLS; o problema é que pré-renderizar a página **amarra o build ao banco**: o CI não tem banco, o deploy de T19 precisaria de credencial de produção para compilar, e a tabela embutida seria a do dia do deploy, vazia. A página virou `force-dynamic`.
+
+2. **O memo que eu escrevi para proteger o banco não protegia nada** (D-58). Um teste de cinquenta leituras **simultâneas** mostrou cinquenta consultas: o memo guardava o resultado, então nenhuma chamada paralela encontrava algo pronto. Ele protegia leituras sequenciais — inútil no único cenário para o qual foi escrito.
+
+**Um item de escopo não implementado, de propósito:** a instrumentação do uso da busca. Seria o único evento de telemetria emitido pelo navegador em todo o sistema, e D-33 tirou a métrica do cadastro do cliente justamente para não ter isso. A alternativa que responde à mesma pergunta está no log do servidor, e foi anotada em T16.
+
+**Aberto:** RNF-18 (360px sem rolagem horizontal) precisa de aparelho. Quarto critério de ensaio, todos em T21.
 
 ### 2026-08-23 — Sessão 15: execução da T12
 
@@ -860,6 +878,30 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 **Por quê o `registradoEm` fica de fora, e este é o motivo que importa:** ele serve ao desempate de RF-31, que o servidor **já resolveu** ao ordenar. Publicá-lo diria a que horas uma pessoa nomeada esteve num lugar — e para os menores de 18 essa é exatamente a exposição que RNF-09 existe para evitar, só que entrando por outra porta. Menos campo na rede é menos superfície, e aqui também é menos risco.
 
 **Descartado:** mandar objetos com chaves curtas em vez de arrays posicionais. Ganharia legibilidade do corpo cru e pagaria com as chaves repetidas 4.000 vezes. O comentário em `documento.ts` e o tipo nomeado cobrem a legibilidade a custo zero de rede.
+
+---
+
+### D-58 — Cache de leitura tem de guardar a promessa, não o resultado
+
+**Decidido:** `documentoDaClassificacao` memoiza a **promessa** da consulta, com validade de 5 s, e descarta o memo se a consulta falhar.
+
+**Como o defeito apareceu.** A primeira versão guardava o valor pronto. Um teste de cinquenta leituras simultâneas — que é o cenário de RNF-01, 500 pessoas abrindo a página no mesmo segundo — mostrou **cinquenta consultas**: nenhuma das chamadas paralelas encontrava o memo preenchido, porque a primeira ainda não tinha terminado. O memo protegia leituras sequenciais, que são exatamente as que não precisavam de proteção.
+
+**Por que 5 s e não 15.** O orçamento de RNF-03 é de trinta segundos entre o lançamento e a aparição pública. A borda de T12 gasta 15; este memo gasta 5; sobram 10 para a consulta, a rede e o intervalo de polling da tela. Dois caches de quinze segundos em série gastariam o orçamento inteiro antes do primeiro byte sair do servidor.
+
+**Falha não fica guardada.** Cachear a indisponibilidade por cinco segundos seria o pior momento possível para fazê-lo — todo mundo recarregando ao mesmo tempo receberia o erro.
+
+**Vale além desta função:** qualquer cache de leitura sob concorrência tem esse mesmo buraco, e ele é invisível em teste sequencial. T16 e T18 devem procurar o padrão em outros lugares.
+
+### D-59 — A página pública não é pré-renderizada, e o motivo não é o TLS
+
+**Decidido:** `/classificacao` é `force-dynamic`. Quem protege o banco é o memo de D-58 somado ao cache de borda de T12.
+
+**Como a decisão apareceu:** com `revalidate = 15`, o `next build` passou a falhar com "The server does not support SSL connections". O build roda com `NODE_ENV=production`, e `src/db/index.ts` exige TLS nesse ambiente (SDD FL-09) — coisa que um Postgres de desenvolvimento não oferece.
+
+**Mas o TLS era o sintoma.** O problema é o acoplamento: pré-renderizar amarra o **build** à disponibilidade do banco. O CI de T01 não tem banco nenhum; o deploy de T19 passaria a precisar de credencial de produção só para compilar; e a tabela embutida no artefato seria a do dia do deploy — quer dizer, vazia, servida a quem abrisse a página antes da primeira revalidação.
+
+**O que não se perde:** a primeira pintura continua trazendo a tabela, porque o Server Component lê a projeção na requisição. O que muda é quando a leitura acontece.
 
 ---
 

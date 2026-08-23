@@ -1,5 +1,6 @@
 import { sql, type SQL } from 'drizzle-orm'
 import type { PgColumn } from 'drizzle-orm/pg-core'
+import { COM_ACENTO, normalizar, SEM_ACENTO } from '@/shared/texto'
 
 /**
  * Normalização de nome para busca (RF-16).
@@ -35,33 +36,14 @@ import type { PgColumn } from 'drizzle-orm/pg-core'
  */
 
 /**
- * O mapa de acentos, escrito uma vez.
- *
- * As duas cadeias precisam ter o mesmo comprimento e a mesma ordem, e é por
- * isso que elas ficam aqui juntas em vez de repetidas no SQL e no TypeScript:
- * uma divergência entre os dois lados faria a busca falhar exatamente nos
- * nomes acentuados, que são 34% da massa.
+ * O mapa de acentos e a normalização em JavaScript vivem em `@/shared/texto`
+ * desde T13, quando a Classificação passou a precisar da mesma regra do outro
+ * lado do fio — no navegador, sobre o documento já baixado — e não pôde
+ * importar este contexto. Divergir as duas implementações faria o mesmo nome
+ * achar a pessoa num lugar e não achar no outro.
  */
-const COM_ACENTO = 'áàâãäéèêëíìîïóòôõöúùûüçñ'
-const SEM_ACENTO = 'aaaaaeeeeiiiiooooouuuucn'
 
-/** Falha alto no boot se alguém editar uma cadeia e esquecer a outra. */
-if (COM_ACENTO.length !== SEM_ACENTO.length) {
-  throw new Error('busca.ts: os mapas de acento têm comprimentos diferentes.')
-}
-
-/** Normaliza no lado do TypeScript. Precisa casar com `normalizarNoBanco`. */
-export function normalizar(texto: string): string {
-  const minusculo = texto.toLowerCase()
-  let saida = ''
-
-  for (const caractere of minusculo) {
-    const posicao = COM_ACENTO.indexOf(caractere)
-    saida += posicao === -1 ? caractere : SEM_ACENTO[posicao]
-  }
-
-  return saida
-}
+export { normalizar }
 
 /** A mesma normalização, do lado do banco. */
 export function normalizarNoBanco(coluna: PgColumn): SQL<string> {

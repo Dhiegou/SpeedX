@@ -95,6 +95,7 @@ src/
     ambienteCli.ts    # carrega o .env nos comandos de terminal (tsx não faz sozinho)
     tempo.ts          # única conversão entre `mm:ss.cc` e milissegundos
     log.ts            # registro estruturado; forma fechada e texto livre saneado
+    texto.ts          # normalização de acento; o painel e a classificação usam a mesma
     requisicao.ts     # leitura de Content-Type e do endereço de origem
     vocabulario.ts    # "Pitch" numa constante só, com gênero (PE-01, D-31)
     qr.ts             # tamanho mínimo de impressão do QR por distância de leitura
@@ -213,7 +214,7 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 |---|---|---|
 | `/` | Público | Formulário de inscrição — destino do QR code, sem redirecionamento |
 | `/termo` | Público | Texto integral do consentimento — estático, aberto em aba nova pelo formulário |
-| `/classificacao` | Público | Classificação, com filtro por Pitch e busca por nome |
+| `/classificacao` | Público | Tabela com filtro por Pitch, busca com destaque e atualização a cada 15 s — filtro e busca rodam no dispositivo |
 | `/api/classificacao` | Público, em cache | Documento completo (62,7 KB / 10,9 KB gzip com 2.422 linhas); `s-maxage=15`, ETag |
 | `/painel` | Autenticado | Fila, lançamento, correção, ausência e histórico — tudo por teclado |
 | `/painel/login` | Público | Autenticação de Operador |
@@ -349,7 +350,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Cronometragem | T10 | **Concluído** — sete endpoints do painel, busca por trecho sem acento, 409 pronto para exibição |
 | Cronometragem | T11 | **Concluído** — painel por teclado, confirmação obrigatória, robustez de rede. Falta cronometrar os 15 s com o supervisor (RNF-16) |
 | Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
-| Classificação | T13 | Não iniciado |
+| Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
 | Custódia | T14, T15 | Não iniciado |
 | Qualidade e operação | T16–T21 | Não iniciado |
 

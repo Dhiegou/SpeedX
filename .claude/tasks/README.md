@@ -39,7 +39,7 @@ T21 Auditoria de privacidade e checklist pré-evento  (última)
 
 Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13).
 
-**Concluídas:** T01 a T12. Inscrição (T03–T07) e Cronometragem (T08–T11) fechadas; a Classificação já serve o documento público (T12), falta a tela (T13). Restam Custódia (T14, T15) e qualidade/operação (T16–T21).
+**Concluídas:** T01 a T13. Três trilhas fechadas — Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13). Restam Custódia (T14, T15) e qualidade/operação (T16–T21).
 
 ---
 
@@ -59,7 +59,7 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 | [T10](task-10-api-do-painel.md) ✅ | API do painel do Operador | BC-02 | RF-12 a RF-16, RF-21 a RF-25 |
 | [T11](task-11-ui-do-painel.md) ✅ | UI do painel do Operador | BC-02 | RF-13 a RF-22, RF-24, RNF-16 |
 | [T12](task-12-projecao-classificacao.md) ✅ | Projeção e endpoint da Classificação | BC-03 | RF-26 a RF-33, RNF-01, RNF-03, RNF-08, RNF-09 |
-| [T13](task-13-ui-classificacao.md) | UI pública da Classificação | BC-03 | RF-27 a RF-33, RNF-18 |
+| [T13](task-13-ui-classificacao.md) ✅ | UI pública da Classificação | BC-03 | RF-27 a RF-33, RNF-18 |
 | [T14](task-14-exportacao.md) | Exportação de dados | BC-05 | RF-34, RF-35, RNF-10 |
 | [T15](task-15-retencao-e-exclusao.md) | Retenção e exclusão de dados | BC-05 | RNF-11 |
 | [T16](task-16-observabilidade.md) | Observabilidade, métricas e alertas | — | RNF-05, métricas do PRD §7 |

@@ -1,0 +1,201 @@
+/*
+ * Classificação pública (T13).
+ *
+ * Quem abre esta página está de pé na arquibancada, com o celular na mão e sol
+ * na tela, procurando o próprio nome numa lista de milhares. Tudo aqui decorre
+ * disso:
+ *
+ *  - **360px sem rolagem horizontal** (RNF-18): a tabela tem quatro colunas e
+ *    nenhuma pode ser cortada.
+ *  - **Números tabulares** nos tempos e nas posições: sem isso as colunas
+ *    dançam e comparar duas linhas exige parar para ler.
+ *  - **Controles fixos no topo**: quem rolou até a posição 400 e quer trocar de
+ *    Pitch não deve ter de voltar ao começo.
+ *  - **Sem fonte externa, sem imagem**: mesma rede congestionada do cadastro.
+ */
+
+.pagina {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem 0.75rem 4rem;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+.subtitulo {
+  color: #444;
+  margin: 0 0 1rem;
+}
+
+/* Controles fixos: o filtro acompanha a rolagem (escopo 6). */
+.controles {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+  padding: 0.75rem 0;
+  border-bottom: 2px solid #d4d4d4;
+  margin-bottom: 0.5rem;
+}
+
+.abas {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.aba {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.6rem 0.5rem;
+  min-height: 2.75rem;
+  border: 2px solid #12306b;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #12306b;
+  cursor: pointer;
+}
+
+.abaAtiva {
+  background: #12306b;
+  color: #fff;
+}
+
+.entrada {
+  width: 100%;
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 0.7rem;
+  min-height: 2.75rem;
+  border: 2px solid #767676;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: inherit;
+}
+
+.entrada:focus-visible,
+.aba:focus-visible,
+.botao:focus-visible {
+  outline: 3px solid #1a4ed8;
+  outline-offset: 2px;
+}
+
+.estado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #444;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.botao {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+  border: 2px solid #12306b;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #12306b;
+  cursor: pointer;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.tabela th {
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #444;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 2px solid #d4d4d4;
+}
+
+.tabela td {
+  padding: 0.65rem 0.4rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* Posição e tempo alinham por dígito; sem isto as colunas dançam. */
+.posicao,
+.tempo {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.posicao {
+  font-weight: 700;
+  width: 3.5rem;
+}
+
+.tempo {
+  font-weight: 600;
+}
+
+.pitch {
+  width: 4.5rem;
+  color: #333;
+  white-space: nowrap;
+}
+
+/*
+ * O nome é a coluna elástica. `overflow-wrap` porque sobrenome composto em
+ * 360px estenderia a página e criaria a rolagem horizontal que RNF-18 proíbe.
+ */
+.nome {
+  overflow-wrap: anywhere;
+}
+
+/* A linha que a pessoa procurava. Contraste, não só cor: quem não distingue
+   as duas ainda enxerga a borda e o peso. */
+.destacada {
+  background: #fff8db;
+  box-shadow: inset 4px 0 0 #a16207;
+}
+
+.destacada .nome {
+  font-weight: 700;
+}
+
+.lacuna td {
+  padding: 0.5rem 0.4rem;
+  color: #666;
+  font-size: 0.85rem;
+  background: #fafafa;
+  text-align: center;
+}
+
+.vazio {
+  padding: 2.5rem 0.5rem;
+  color: #444;
+  text-align: center;
+}
+
+.aviso {
+  padding: 0.7rem;
+  border: 1px solid #a16207;
+  border-left-width: 5px;
+  border-radius: 0.25rem;
+  background: #fffbeb;
+  color: #713f12;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.rodape {
+  margin-top: 1.5rem;
+  text-align: center;
+}

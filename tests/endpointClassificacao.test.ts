@@ -19,6 +19,7 @@ const estado = vi.hoisted(() => ({ db: undefined as unknown }))
 vi.mock('@/db', () => ({ db: () => estado.db }))
 
 const { GET } = await import('@/../app/api/classificacao/route')
+const { esquecerDocumento } = await import('@/contexts/classificacao/projecao')
 
 const AGORA = new Date('2026-09-12T14:00:00Z')
 const URL_BASE = 'http://localhost:3000/api/classificacao'
@@ -47,6 +48,11 @@ beforeEach(async () => {
     .returning({ id: schema.operador.id })
 
   operadorId = op?.id ?? ''
+
+  // O memo de `documentoDaClassificacao` sobrevive entre casos de teste, como
+  // sobrevive entre requisições — é justamente o ponto dele. Sem esta linha,
+  // cada teste veria a classificação do teste anterior.
+  esquecerDocumento()
 })
 
 async function corredor(
@@ -141,6 +147,7 @@ describe('cache e revalidação (RNF-01, RNF-03, FL-08)', () => {
     const etiqueta = (await pedir()).headers.get('ETag') ?? ''
 
     await corredor('Bruno', 'Souza', 30, 90_000)
+    esquecerDocumento()
 
     const depois = await pedir({ 'if-none-match': etiqueta })
 
@@ -174,6 +181,7 @@ describe('quando o banco não responde', () => {
         throw new Error('conexão recusada')
       },
     }
+    esquecerDocumento()
 
     const resposta = await pedir()
 
@@ -183,5 +191,55 @@ describe('quando o banco não responde', () => {
     expect(resposta.headers.get('Cache-Control')).toBe('no-store')
 
     estado.db = original
+    esquecerDocumento()
+  })
+})
+
+describe('o memo que protege o banco do pico (RNF-01)', () => {
+  it('leituras seguidas produzem uma consulta só', async () => {
+    await corredor('Marina', 'Costa', 30, 83_450)
+    esquecerDocumento()
+
+    let consultas = 0
+    const real = banco.db.select.bind(banco.db)
+    estado.db = {
+      ...banco.db,
+      select: (...args: unknown[]) => {
+        consultas += 1
+        return (real as (...a: unknown[]) => unknown)(...args)
+      },
+    }
+
+    // Cinquenta pessoas abrindo a página no mesmo segundo.
+    await Promise.all(Array.from({ length: 50 }, () => pedir()))
+
+    expect(consultas).toBe(1)
+
+    estado.db = banco.db
+    esquecerDocumento()
+  })
+
+  it('passada a validade, a leitura seguinte consulta de novo', async () => {
+    // Sem isto o memo não seria cache, seria congelamento — e um tempo lançado
+    // nunca chegaria à página (RNF-03).
+    const { documentoDaClassificacao } = await import('@/contexts/classificacao/projecao')
+
+    await corredor('Marina', 'Costa', 30, 83_450)
+    esquecerDocumento()
+
+    const inicio = Date.now()
+    const primeiro = await documentoDaClassificacao(inicio)
+
+    await corredor('Bruno', 'Souza', 30, 90_000)
+
+    // Dentro da validade: ainda a versão antiga.
+    expect((await documentoDaClassificacao(inicio + 1_000)).documento.total).toBe(
+      primeiro.documento.total,
+    )
+
+    // Passados os 5 s: a nova.
+    expect((await documentoDaClassificacao(inicio + 6_000)).documento.total).toBe(2)
+
+    esquecerDocumento()
   })
 })
