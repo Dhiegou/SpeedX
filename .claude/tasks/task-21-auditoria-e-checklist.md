@@ -45,7 +45,8 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] **Decidir sobre a métrica de uso da busca por nome** (PRD §7, ≥ 30%): ela **não é mensurável** neste desenho, porque a busca roda no navegador e não gasta rede (D-69). Ou cai do PRD, ou alguém aceita telemetria de navegador na página mais pública do evento. Decisão do organizador, não do código.
 - [ ] Snapshot manual do banco tirado no início do evento (T19).
 - [ ] Deploys congelados; plano de reversão distribuído (T19).
-- [ ] QR code impresso, testado com três leitores e posicionado (T07).
+- [ ] QR code impresso, testado com três leitores e posicionado (T07) — é o resíduo de RF-01: a parte automatizável já tem teste, e o ato de escanear precisa dos aparelhos.
+- [ ] **Os quatro requisitos sem verificação automática**, com as justificativas escritas em `tests/rastreabilidade.test.ts`: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (cinco pessoas cronometradas em cada perfil). O teste falha se a lista mudar sem alguém escrever o porquê.
 - [ ] Relatório de tentativas não resolvidas acessível ao organizador durante o evento (T14).
 - [ ] Quem executa o expurgo sabe que **apagar o banco não tira o site do ar** — o passo 5 de `docs/retencao.md` depende de T19, e o termo prometeu os dois (T15, T19).
 

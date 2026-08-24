@@ -40,3 +40,58 @@ jobs:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
           SESSION_SECRET: ci-secret-com-mais-de-trinta-e-dois-caracteres
           APP_URL: http://localhost:3000
+
+  ponta-a-ponta:
+    name: Testes de ponta a ponta
+    runs-on: ubuntu-latest
+
+    # Postgres de verdade, e não um contêiner de conveniência: as invariantes
+    # deste sistema moram em constraints (D-05), e o e2e roda as migrações de
+    # produção contra o motor de produção. O usuário aqui é superusuário, então
+    # a suíte cria o banco `speedx_e2e` sozinha (ver e2e/apoio/preparar.ts).
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: speedx
+          POSTGRES_PASSWORD: speedx
+          POSTGRES_DB: speedx
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://speedx:speedx@localhost:5432/speedx
+      SESSION_SECRET: ci-secret-com-mais-de-trinta-e-dois-caracteres
+      APP_URL: http://localhost:3100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # Só o Chromium. Três motores triplicariam o tempo para responder às
+      # mesmas perguntas: RF-18, RF-19 e RNF-18 são sobre teclado e largura de
+      # tela, não sobre diferença entre navegadores.
+      - name: Instalar o navegador
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes de ponta a ponta
+        run: npm run test:e2e
+
+      - name: Guardar o relatório quando falhar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

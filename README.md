@@ -127,6 +127,8 @@ app/                  # rotas
       Painel.tsx      #     a tela que o Operador usa por dez horas
   api/painel/sessao/  #   POST entra, DELETE sai, GET diz quem está logado
 tests/                # testes que atravessam módulos (ex.: fronteiras de contexto)
+  rastreabilidade.test.ts # lê o PRD e exige um teste, ou uma justificativa, por requisito
+e2e/                  # ponta a ponta com Playwright: teclado, confirmação, 360 px (T17)
 perf/                 # scripts de carga (T18)
 scripts/
   gerar-qr.ts         # QR do ponto de inscrição, nível H, vetorial (T07)
@@ -140,6 +142,7 @@ docs/
   aprovacao-termo.md  # checklist de RF-09 e registro da aprovação do organizador (T03)
   retencao.md         # prazo, quem executa e o passo a passo do expurgo (T15)
   monitoramento.md    # o que observar no dia, limiares e canal de alerta (T16)
+  testes.md           # o mapa da suíte e o que só se verifica com gente (T17)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
@@ -213,10 +216,12 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run db:seed [n]` | Popula a massa de desenvolvimento (padrão: 2000 participantes) |
 | `npm run db:studio` | Abre o Drizzle Studio para inspecionar o banco |
 | `npm run criar-operador` | Cria conta de Operador; `-- --desativar <usuario>` tira do ar; `-- --destravar <usuario>` zera o limite de login |
+| `npm run test:e2e` | Testes de ponta a ponta com Playwright. Precisa de Postgres de pé: cria e recria o banco `speedx_e2e` sozinho, sem tocar no de desenvolvimento |
+| `npm run test:e2e:ui` | O mesmo, com o inspetor do Playwright |
 | `npm run metricas` | Relatório de métricas e alertas a partir do log; `-- --arquivo <caminho>` ou pelo cano. Sai com código 1 se algum alerta disparar |
 | `npm run expurgar` | Retenção e exclusão. Sem argumento, mostra a ajuda; `-- --evento AAAA-MM-DD` ensaia o expurgo total; `-- --email <endereço>` acha um pedido de exclusão; `-- --higiene` faz a faxina das tabelas de mecanismo |
 
-Ainda não existem, chegam com suas tarefas: `test:e2e` (T17) e `test:carga` (T18).
+Ainda não existe, chega com sua tarefa: `test:carga` (T18).
 
 O `expurgar` é o único comando que apaga dados. Por padrão ele **ensaia**: conta e mostra, sem tocar em nada. O procedimento completo, com a ordem dos passos e o que fazer com o comprovante, está em [docs/retencao.md](docs/retencao.md).
 
@@ -326,7 +331,7 @@ funcionar sem JavaScript, o que exige repensar a idempotência do lado do client
 npm run test          # unidade + integração (Postgres real via PGlite, não mock)
 ```
 
-`test:e2e` (T17) e `test:carga` (T18) entram com suas tarefas.
+`test:carga` (T18) entra com sua tarefa.
 
 Dois testes cuidam de coisas que nenhuma revisão de código pega a olho nu, e ambos já pagaram o próprio custo:
 
@@ -373,7 +378,8 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
 | Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. Falta a data do evento (PE-06) e tirar o site do ar (T19) |
 | Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. Falta contratar o monitor externo (T19) |
-| Qualidade e operação | T17–T21 | Não iniciado |
+| Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
+| Qualidade e operação | T18–T21 | Não iniciado |
 
 **Pendências que bloqueiam:** nenhuma. O termo oficial (Pitch ou Pista) continua indefinido, mas deixou de bloquear: a palavra vive em `src/shared/vocabulario.ts` e trocá-la custa uma linha. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
 

@@ -79,3 +79,11 @@ desktop.ini
 # são o plano de execução e as regras de processo do projeto, e o `CONTEXT.md`
 # depende deles para fazer sentido.
 .claude/settings.local.json
+
+# Playwright: relatórios e rastros de execução (T17). Nenhum deles é fonte, e
+# o rastro de uma falha carrega captura de tela da página — que num teste de
+# cadastro é uma tela com dado de participante, ainda que inventado.
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -8,21 +8,37 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-24.** Dezesseis tarefas entregues (T01–T16) e **589 testes passando**. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-24.** Dezessete tarefas entregues (T01–T17) e **613 testes passando** — 594 de unidade e integração em 79 s, mais 19 de ponta a ponta em 42 s. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**As cinco trilhas de produto estão fechadas**, e o dia do evento agora é observável. T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia em `/api/metricas` e o relatório de métricas a partir do log, com os quatro alertas do escopo avaliados e testados (`docs/monitoramento.md`).
+**As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
 
-Restam T17 a T21. **Nada mais bloqueia código**; o que falta é medição de carga, deploy, contingência em papel e o ensaio no mundo físico.
+Restam T18 a T21: carga, deploy, contingência em papel e o ensaio no mundo físico.
 
-O que falta em T16 não é código: o **monitor externo** precisa ser contratado, porque só algo de fora distingue "aplicação caiu" de "está tranquilo" — a aplicação caída não escreve log. Depende de PE-05.
+**Quatro requisitos continuam sem verificação automática**, cada um com justificativa escrita que um teste obriga a existir: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (gente com cronômetro). **RNF-18 saiu dessa lista em T17** — 360 px é uma largura, e um navegador sabe ser 360 px.
 
-Duas pendências do organizador continuam abertas, com consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o expurgo recusa rodar; **PE-05** (onde hospedar) decide o desligamento do site prometido no termo e o monitor externo.
-
-Seis critérios do projeto dependem de gente, aparelho ou serviço externo, todos no checklist de T21 — o mais novo é a métrica de uso da busca, que **não é mensurável** neste desenho e precisa de decisão explícita.
+Duas pendências do organizador continuam abertas, com consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o expurgo recusa rodar; **PE-05** (onde hospedar) decide o desligamento do site prometido no termo e o monitor externo de T16.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-24 — Sessão 20: execução da T17
+
+**Pedido:** iniciar a T17 (testes automatizados).
+
+**Entregue:** `tests/rastreabilidade.test.ts`, quatro arquivos de ponta a ponta com Playwright, um job de e2e no CI e `docs/testes.md`. 24 testes novos, 613 no total.
+
+**A T17 não era escrever testes; era provar que eles existem** (D-71). O PRD já tinha escrito a suíte, e a maior parte já estava coberta desde T04. O que não existia era algo que **percebesse a ausência** — e esse algo pagou por si na primeira execução: recusou duas justificativas minhas (RF-01 e RF-09 já tinham teste) e apontou RNF-18 como o único requisito de fato descoberto entre os 53.
+
+**RNF-18 deixou de depender de aparelho** (D-72). Era um critério que o projeto carregava como "precisa de celular" desde T06. Não precisa: 360 px é uma largura. O que depende de aparelho é o toque, a rede e a leitura sob sol.
+
+**O banco do e2e custou duas tentativas descartadas** (D-73): criar o banco com o papel da aplicação (permissão negada, e está certo assim) e isolar por esquema com `search_path` (o SQL do drizzle-kit é qualificado com `public`, então as migrações o ignoram). Ficou o banco separado, com um privilégio a conceder uma vez. **Nesta máquina o usuário criou o banco à mão**, sem conceder `CREATEDB` — a suíte roda, mas não se recria sozinha aqui.
+
+**Três defeitos meus que a primeira execução do e2e revelou** (D-74), todos no teste e nenhum no produto: a busca da Fila é do servidor e o Enter agia sobre a lista anterior; gravar limpa a busca, então o laço precisava redigitar a cada volta; e `click` **não é evento de mouse** — `Enter` num botão focado emite um `click` confiável, e contá-lo tornaria RF-19 impossível de passar justamente operando por teclado.
+
+**Aberto:** o e2e roda contra `next dev` e não contra o artefato de produção — reavaliar em T19, quando existir alvo publicado.
+
+---
 
 ### 2026-08-24 — Sessão 19: execução da T16
 
@@ -1096,6 +1112,62 @@ O erro apareceu no relatório rodando contra o log de um `next dev` real: a **pr
 **Onde o painel mora, e por quê:** em `custodia/metricas.ts`. A consulta atravessa BC-01 e BC-02 no mesmo documento, e BC-05 é o único lugar autorizado a isso (SDD §1). A alternativa — meia consulta em Inscrição, meia em Cronometragem, soma na rota — move o cruzamento para fora do lugar onde ele é auditável, que é exatamente o que a fronteira existe para impedir.
 
 **Uma exceção de lint, com um arquivo de largura:** `/api/saude` é a única rota que alcança o banco sem passar por um caso de uso, no mesmo feitio da exceção de `classificacao/projecao.ts`. Não há caso de uso a contornar — não é regra de negócio "o banco está de pé" —, e um inventado só para atravessar a sondagem seria uma camada que não decide nada. `tests/fronteiras.test.ts` falha se a exceção crescer.
+
+---
+
+### D-71 — A rastreabilidade PRD → teste é verificada por teste, não por leitura
+
+**Decidido:** `tests/rastreabilidade.test.ts` lê o `PRD.md`, extrai os 53 códigos de requisito e varre os **nomes** de todos os testes procurando cada um. Falha quando um requisito não é citado nem consta de um registro de verificação manual com justificativa escrita.
+
+**Por quê:** a cobertura já existia; o que não existia era algo que percebesse quando ela deixasse de existir. Um requisito entra no PRD, ninguém escreve o teste, e nada reclama até a auditoria de T21 achar o buraco tarde demais. Uma planilha de rastreabilidade teria o mesmo problema com passo a mais: ela envelhece em silêncio.
+
+**Três detalhes que o tornam útil em vez de decorativo:**
+
+1. **Conta o nome do teste, não o arquivo.** Um comentário citando RF-22 no topo de um arquivo faria o requisito parecer coberto sem nenhuma asserção. O que vale é o título que aparece no relatório quando o teste falha, porque é ele que diz a quem está consertando qual promessa do produto quebrou.
+2. **Justificativa manual não sobrevive à automação.** Assim que existe teste citando o código, o registro **tem** de perder a linha. Sem isso ele vira depósito de dispensas que ninguém revisita, e T21 leria "verificado à mão" sobre algo que a suíte verifica em três segundos.
+3. **Justificativa curta é recusada**, e justificativa órfã — de requisito que saiu do PRD — também.
+
+**Pagou por si na primeira execução:** recusou minhas justificativas para RF-01 e RF-09, que já tinham teste para a parte automatizável, e apontou RNF-18 como o único requisito descoberto.
+
+---
+
+### D-72 — RNF-18 não depende de aparelho, e não dependia desde o começo
+
+**Decidido:** a verificação de "360 px sem rolagem horizontal" é um teste de ponta a ponta, num projeto do Playwright com essa largura. Saiu da lista de critérios que esperam o mundo físico.
+
+**Por quê:** 360 px é uma largura, e um navegador sabe ser 360 px de largura. O projeto vinha carregando isso como "precisa de celular" desde T06, e o que de fato precisa de celular é o toque, a rede e a leitura sob sol — esses continuam em T21.
+
+**Como é medido:** a sobra de largura do documento (`scrollWidth - clientWidth`), e não uma captura de tela. Imagem exige alguém para olhar, e ninguém olha na terça depois do deploy. Quando falha, o teste **nomeia o elemento** que estourou, para o conserto começar no lugar certo.
+
+**Cobre também o pior caso**, que é o formulário com o bloco do Responsável aberto — três campos e um aceite a mais. Conferir só a tela inicial deixaria de fora justamente a versão mais larga.
+
+---
+
+### D-73 — O e2e tem banco próprio, e duas alternativas foram descartadas
+
+**Decidido:** os testes de ponta a ponta usam o banco `speedx_e2e`, derivado da `DATABASE_URL` com o nome trocado, recriado do zero a cada execução.
+
+**Por quê não o banco de desenvolvimento:** o e2e apaga e reescreve tudo. A massa de 2000 que T18 vai medir sumiria na primeira execução distraída.
+
+**Descartado 1 — criar o banco com o papel da aplicação.** "Permissão negada ao criar banco de dados", e está certo assim: é o mesmo papel que vai para produção, e ele não deve poder criar banco. Pedir `CREATEDB` seria elevar o privilégio do processo do evento por conveniência da suíte — mas conceder **ao papel local**, uma vez, é aceitável e é o que a mensagem de erro recomenda.
+
+**Descartado 2 — isolar por esquema, com `search_path`**, o que dispensaria privilégio nenhum. Morreu em `CREATE TYPE "public"."estado_tentativa"`: o SQL gerado pelo drizzle-kit é **qualificado com `public`**, então as migrações ignoram o `search_path` e insistem em escrever no esquema de desenvolvimento. Reescrever o SQL em tempo de execução resolveria e trocaria a coisa que mais importa aqui — exercitar as migrações exatas de produção — por conveniência de ambiente.
+
+**Estado nesta máquina:** o usuário criou o banco à mão, sem conceder `CREATEDB`. A suíte roda; em máquina nova o comando precisa ser repetido. Registrado em `docs/testes.md`.
+
+---
+
+### D-74 — Três armadilhas do e2e, e o que cada uma ensina
+
+Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em qualquer suíte de navegador.
+
+**1. Esperar o elemento certo não é esperar o estado certo.** A busca da Fila é do servidor. Eu digitava e apertava Enter em seguida; o Enter seleciona `itens[indice]` da lista **em memória naquele instante**, ainda a anterior. O teste selecionava outra pessoa. Esperar a linha certa aparecer não bastaria — ela aparece enquanto a lista antiga ainda está lá. O que prova que o filtro chegou é a **quantidade**.
+
+**2. O fluxo real não é o fluxo que se imagina.** Gravar limpa a busca (é metade do que RF-20 pede), e a Fila volta sem filtro. Meu laço digitava o termo uma vez e esperava a lista continuar filtrada nas cinco voltas. Corrigir para redigitar a cada lançamento **fortaleceu** o teste: ele passou a conferir o campo vazio a cada volta.
+
+**3. `click` não é evento de mouse.** O vigia de ponteiro acusou seis eventos numa execução em que o mouse não foi tocado: `Enter` num botão focado **ativa** o botão, e o navegador emite um `click` com `isTrusted` verdadeiro. `click` é evento de **ativação**, e o teclado o dispara por desenho. Contá-lo tornaria RF-19 impossível de passar justamente operando por teclado. O que denuncia o ponteiro são `pointerdown`, `mousedown` e `mouseup` — mais um `click` com `detail` maior que zero, porque ativação por teclado traz `detail` zero.
+
+**Vale além destes testes:** as três falhas passariam despercebidas como "teste instável" e seriam resolvidas com um `waitForTimeout`. Nenhuma delas era instabilidade; as três eram o teste medindo a coisa errada.
 
 ---
 

@@ -22,7 +22,9 @@
     "orcamento": "node scripts/orcamento.mjs",
     "criar-operador": "tsx scripts/criar-operador.ts",
     "expurgar": "tsx scripts/expurgar.ts",
-    "metricas": "tsx scripts/metricas.ts"
+    "metricas": "tsx scripts/metricas.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "engines": {
     "node": ">=20.9.0"
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.5",
+    "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.5",
     "@types/node": "^26.2.0",

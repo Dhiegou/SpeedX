@@ -73,3 +73,115 @@ Transformar cada linha de *Verificação* do PRD em teste executável. O PRD já
 - [ ] Toda *Verificação* do PRD §5 tem teste correspondente, ou justificativa registrada quando só puder ser verificada manualmente (ex.: RNF-15, teste cronometrado com pessoas).
 - [ ] O teste de vazamento de dado pessoal roda em CI.
 - [ ] A suíte completa roda em menos de 10 minutos.
+
+---
+
+## Resultado da execução — 2026-08-24
+
+| Arquivo | Papel |
+| --- | --- |
+| `tests/rastreabilidade.test.ts` | Lê o PRD, varre os nomes de teste, exige justificativa escrita para o que sobra |
+| `playwright.config.ts` | Dois projetos: desktop e celular de 360 px |
+| `e2e/apoio/preparar.ts` | Banco próprio do e2e, recriado do zero |
+| `e2e/apoio/dados.ts` | Massa nomeada: cinco pendentes, uma menor, uma adulta classificada |
+| `e2e/painel.spec.ts` | RF-11, RF-18, RF-19, RF-20 — com vigia de ponteiro |
+| `e2e/cadastro.spec.ts` | RF-02, RF-03, RF-05, RF-07, RF-08, RF-10 |
+| `e2e/classificacao.spec.ts` | RF-26, RF-27, RF-30 e o teste de vazamento |
+| `e2e/telaPequena.spec.ts` | RNF-18, em 360 px |
+| `docs/testes.md` | O mapa da suíte e o que só se verifica com gente |
+
+### A T17 não era escrever testes; era provar que eles existem
+
+O PRD já tinha escrito a suíte — cada RF e RNF traz a linha *Verificação*, e a
+maior parte já estava coberta desde T04. O que não existia era **algo que
+percebesse a ausência**: um requisito entra no PRD, ninguém escreve o teste, e
+nada no mundo reclama até a auditoria de T21 achar o buraco tarde.
+
+`rastreabilidade.test.ts` é esse algo, e ele pagou por si na primeira execução:
+
+- **recusou duas justificativas minhas.** Eu havia registrado RF-01 e RF-09 como
+  verificação manual. Os dois já tinham teste — a parte automatizável de cada um
+  —, e o resíduo (escanear com três leitores, assinatura do organizador) é item
+  de checklist, não ausência de teste. A trava que recusa justificativa para
+  requisito coberto existe justamente para o registro não virar depósito de
+  dispensas que ninguém revisita;
+- **apontou RNF-18 como o único requisito de fato descoberto** entre os 53.
+
+### RNF-18 deixou de depender de aparelho
+
+Era um dos critérios que o projeto vinha carregando como "precisa de celular".
+Não precisa: 360 px é uma largura, e um navegador sabe ser 360 px de largura. O
+que depende de aparelho é o toque, a rede e a leitura sob sol — esses continuam
+em T21.
+
+O teste mede a sobra de largura do documento e, quando falha, **nomeia o
+elemento que estourou**. Uma captura de tela exigiria alguém para olhar, e
+ninguém olha na terça depois do deploy.
+
+### O banco do e2e: duas tentativas descartadas antes da que ficou
+
+1. **Criar `speedx_e2e` com o papel da aplicação.** "Permissão negada ao criar
+   banco de dados" — e está certo assim: é o mesmo papel que vai para produção,
+   e ele não deve poder criar banco.
+2. **Isolar por esquema, com `search_path`**, para não precisar de privilégio
+   nenhum. Morreu em `CREATE TYPE "public"."estado_tentativa"`: o SQL gerado
+   pelo drizzle-kit é **qualificado com `public`**, então as migrações ignoram o
+   `search_path`. Reescrever o SQL em execução resolveria e trocaria a coisa que
+   mais importa — exercitar as migrações exatas de produção — por conveniência.
+
+Ficou o banco separado, com um privilégio a conceder uma vez, e a mensagem de
+erro diz isso por extenso para quem esbarrar nela daqui a seis meses. No CI o
+serviço de Postgres já sobe com superusuário e nada disso é necessário.
+
+### Três defeitos meus que a primeira execução do e2e revelou
+
+Nenhum era do produto; os três eram do teste, e os três valem registro porque
+são armadilhas que se repetem.
+
+**1. A busca da Fila é do servidor.** Eu digitava e apertava Enter em seguida; o
+Enter seleciona `itens[indice]` da lista **em memória naquele instante**, que
+ainda era a anterior. O teste selecionava outra pessoa e falhava dizendo que o
+campo de tempo de Alice não existia — quando o que existia era o campo de tempo
+de outra. Esperar a linha certa aparecer não bastaria: ela aparece enquanto a
+lista antiga ainda está lá. O que prova que o filtro chegou é a **quantidade**.
+
+**2. Gravar limpa a busca — é metade do que RF-20 pede.** Meu laço digitava o
+termo uma vez e esperava a Fila continuar filtrada nas cinco voltas. A sequência
+real é redigitar a cada lançamento, e escrevê-la de outro jeito testaria um
+fluxo que não existe. O teste passou a conferir o campo vazio a cada volta, o
+que **fortaleceu** a cobertura de RF-20.
+
+**3. `click` não é evento de mouse.** O vigia de ponteiro acusou seis eventos
+numa execução em que o mouse não foi tocado: `Enter` num botão focado **ativa**
+o botão, e o navegador emite um `click` com `isTrusted` verdadeiro. Contá-lo
+tornaria RF-19 impossível de passar justamente operando por teclado. O que
+denuncia o ponteiro são `pointerdown`, `mousedown` e `mouseup` — mais um
+`click` com `detail` maior que zero, porque ativação por teclado traz zero.
+
+### Medições
+
+| | resultado |
+| --- | --- |
+| Unidade e integração | **594 testes em 79 s** (critério: 10 min) |
+| Ponta a ponta | **19 testes em 42 s**, um worker, em série |
+| Requisitos do PRD | 53 — 48 com teste que os cita, 4 com justificativa escrita |
+| Navegador | só Chromium; três motores triplicariam o tempo pelas mesmas perguntas |
+
+### Critérios de aceitação
+
+- [x] Existe ao menos um teste nomeado por requisito, citando o código no nome. — e agora isso é **verificado por teste**, não por leitura: `rastreabilidade.test.ts` falha se um requisito ficar descoberto.
+- [x] Toda *Verificação* do PRD §5 tem teste, ou justificativa registrada. — quatro justificativas (RNF-04, RNF-05, RNF-06, RNF-15), todas com o porquê por extenso e todas no checklist de T21. O teste recusa justificativa curta, órfã ou obsoleta.
+- [x] O teste de vazamento roda em CI. — nas duas pontas: sobre a resposta de `/api/classificacao` na suíte de integração, e sobre o **HTML inteiro** da página no e2e, que é onde o estado de hidratação do React apareceria.
+- [x] A suíte completa roda em menos de 10 minutos. — 79 s de unidade e integração, mais 42 s de e2e num job separado.
+
+### Aberto
+
+- [ ] **RNF-04, RNF-05, RNF-06 e RNF-15** continuam dependendo de rede real, do dia do evento, de T20 e de gente com cronômetro. As justificativas estão em `rastreabilidade.test.ts`, onde o teste as obriga a existir, e todas no checklist de T21.
+- [ ] **O e2e roda contra `next dev`.** Contra o artefato de produção seria mais fiel e mais lento; a diferença que importa para RF-18, RF-19 e RNF-18 é nenhuma. Reavaliar em T19, quando existir um alvo publicado para apontar.
+- [ ] **Um privilégio a conceder em máquina nova:** `alter role speedx createdb`. Nesta máquina o banco foi criado à mão, então a suíte roda mas não se recria sozinha.
+
+## Estado
+
+**Concluída em 2026-08-24.** 5 testes de rastreabilidade e 19 de ponta a ponta;
+613 no total (594 + 19). Desbloqueia **T21**, que agora tem a lista de
+verificações manuais escrita e mantida por um teste.
