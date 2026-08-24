@@ -18,9 +18,31 @@
  * o telefone só vai para quem autorizou (D-23); a promessa só se cumpre se o
  * filtro estiver na consulta.
  *
- * Exportação implementada em T14; retenção e exclusão em T15.
+ * Exportação implementada em T14; retenção e exclusão em T15 — e a ordem
+ * entre as duas é obrigatória, não cronológica: o expurgo apaga o que a
+ * exportação preserva, e depois dele não há segunda chance. O procedimento
+ * está em `docs/retencao.md`.
  */
 
 export { ehTipoValido, nomeDe, TIPOS, type TipoDeExportacao } from './exportacao'
 
 export type { LinhaDaExportacao, LinhaDeRepasse, Pendencia } from './consultas'
+
+export {
+  DIAS_DE_RETENCAO,
+  DataDoEventoInvalidaError,
+  diasRestantes,
+  lerDiaDoEvento,
+  prazoVencido,
+  vencimentoDaRetencao,
+  type DiaDoEvento,
+} from './retencao'
+
+export type {
+  CandidatoAExclusao,
+  ContagemDaBase,
+  ContagemDaHigiene,
+  ResultadoDaExclusao,
+  ResultadoDoExpurgo,
+  ResumoAnonimo,
+} from './expurgo'

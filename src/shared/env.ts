@@ -42,7 +42,11 @@ const esquema = z.object({
   // que é o custo mais caro que este sistema pode pagar (RNF-15, PRD §7).
   // Calibrar em T18, decidir em T21 — ver D-27 no CONTEXT.md.
   RATE_LIMIT_CADASTROS_POR_JANELA: z.coerce.number().int().positive().default(30),
-  RATE_LIMIT_JANELA_SEGUNDOS: z.coerce.number().int().positive().default(600),
+  // Teto de um dia: `infra/higiene.ts` apaga marcas de limite com mais de 48 h,
+  // e uma janela configurada acima disso faria a faxina remover contagem que o
+  // limite ainda usaria. Um dia já é folgado para conter cadastro; dois dias
+  // seriam um limite que não protege e se apaga sozinho.
+  RATE_LIMIT_JANELA_SEGUNDOS: z.coerce.number().int().positive().max(86_400).default(600),
   RATE_LIMIT_CADASTROS_POR_HORA: z.coerce.number().int().positive().default(100),
 
   // Desligamento de emergência. Se no dia o limite começar a recusar gente de
@@ -77,7 +81,7 @@ const esquema = z.object({
   // não o alcança — destravar a fila de inscrição não pode destravar força
   // bruta contra o painel.
   LOGIN_TENTATIVAS_POR_JANELA: z.coerce.number().int().positive().default(10),
-  LOGIN_JANELA_SEGUNDOS: z.coerce.number().int().positive().default(900),
+  LOGIN_JANELA_SEGUNDOS: z.coerce.number().int().positive().max(43_200).default(900),
 
   TELEMETRY_URL: z.union([z.url(), z.literal('')]).default(''),
 })

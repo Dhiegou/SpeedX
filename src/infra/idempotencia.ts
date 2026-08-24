@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from '@/db/schema'
+import { agendarHigiene } from './higiene'
 
 /**
  * Idempotência de escrita — infraestrutura, não domínio (SDD §4.3, FL-03 e FL-06).
@@ -110,6 +111,12 @@ export async function consultarEfeito<T>(
   escopo: string,
   digestao: string,
 ): Promise<ConsultaDeEfeito<T>> {
+  // A faxina das linhas velhas pega carona aqui: toda escrita idempotente do
+  // sistema passa por esta função, e é ela que cria as linhas que precisam ser
+  // apagadas. Não é aguardada e roda no máximo uma vez por hora por processo —
+  // ver `higiene.ts`, que explica por que o gatilho é este e não um agendador.
+  agendarHigiene(db)
+
   const [linha] = await db
     .select({
       escopo: schema.chaveIdempotencia.escopo,

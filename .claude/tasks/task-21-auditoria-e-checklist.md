@@ -39,13 +39,14 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] Contas de Operador criadas e testadas por cada pessoa que vai operar, **antes** do dia.
 - [ ] Sessão testada para durar a janela inteira do evento.
 - [ ] Termo de consentimento aprovado por escrito pelo organizador (T03).
-- [ ] Prazo de retenção acordado e registrado (T15).
+- [ ] Prazo de retenção acordado e registrado (T15) — o procedimento está escrito em `docs/retencao.md`; o que falta marcar aqui é a **data-base** preenchida (PE-06) e o ensaio do expurgo total contra o banco real, que T15 deixou aberto para não apagar a massa de T18.
 - [ ] Material de contingência impresso e no local, com ensaio feito (T20).
 - [ ] Monitoramento ativo, alertas chegando no canal certo, com teste real de disparo (T16).
 - [ ] Snapshot manual do banco tirado no início do evento (T19).
 - [ ] Deploys congelados; plano de reversão distribuído (T19).
 - [ ] QR code impresso, testado com três leitores e posicionado (T07).
 - [ ] Relatório de tentativas não resolvidas acessível ao organizador durante o evento (T14).
+- [ ] Quem executa o expurgo sabe que **apagar o banco não tira o site do ar** — o passo 5 de `docs/retencao.md` depende de T19, e o termo prometeu os dois (T15, T19).
 
 ## Critérios de aceitação
 

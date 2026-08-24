@@ -37,6 +37,17 @@ export type EntradaDeLog = {
   /** **Nomes** de campo recusados, nunca os valores. */
   readonly campos?: readonly string[]
   readonly status?: number
+  /**
+   * Quantas linhas a operação tocou, por tabela — o registro de execução que o
+   * expurgo de T15 precisa deixar.
+   *
+   * **Só números, e é isso que preserva a primeira barreira deste arquivo.** A
+   * forma continua fechada: um `Record<string, number>` não tem onde caber um
+   * e-mail interpolado, e por isso este campo não passa pelo saneamento — não
+   * há o que sanear. As chaves são nomes de tabela escritos no código, nunca
+   * texto vindo de requisição.
+   */
+  readonly contagens?: Readonly<Record<string, number>>
 }
 
 export type RegistroDeLog = EntradaDeLog & { readonly instante: string }

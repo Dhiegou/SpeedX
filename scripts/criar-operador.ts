@@ -10,6 +10,7 @@ import { destravarLogin } from '@/contexts/identidade/destravarLogin'
 import { SenhaFracaError, TAMANHO_MINIMO_SENHA } from '@/contexts/identidade/senha'
 import * as schema from '@/db/schema'
 import { carregarAmbienteDoTerminal } from '@/shared/ambienteCli'
+import { lerArgumentos } from '@/shared/argumentos'
 import { env } from '@/shared/env'
 
 carregarAmbienteDoTerminal()
@@ -32,29 +33,6 @@ carregarAmbienteDoTerminal()
  * gravar a senha do painel nos dois seria desfazer o trabalho de `scrypt` antes
  * mesmo dele começar.
  */
-
-type Argumentos = { readonly [chave: string]: string | true }
-
-function lerArgumentos(argv: readonly string[]): Argumentos {
-  const resultado: Record<string, string | true> = {}
-
-  for (let i = 0; i < argv.length; i += 1) {
-    const atual = argv[i]
-    if (atual === undefined || !atual.startsWith('--')) continue
-
-    const chave = atual.slice(2)
-    const seguinte = argv[i + 1]
-
-    if (seguinte !== undefined && !seguinte.startsWith('--')) {
-      resultado[chave] = seguinte
-      i += 1
-    } else {
-      resultado[chave] = true
-    }
-  }
-
-  return resultado
-}
 
 /**
  * Pergunta sem devolver eco ao terminal.

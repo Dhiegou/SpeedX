@@ -90,12 +90,16 @@ src/
       csv.ts          #   separador, BOM e escape — inclusive contra fórmula (D-60)
       consultas.ts    #   o cruzamento autorizado, lido em lotes por cursor
       exportacao.ts   #   os três documentos: completa, repasse e pendências
+      retencao.ts   #   o prazo de 10 dias, ancorado na data do evento (RNF-11)
+      expurgo.ts    #   expurgo total, exclusão a pedido e o resumo que sobrevive
   infra/            # abaixo dos contextos: fala com o banco, não conhece domínio
     limiteDeTaxa.ts   # janela deslizante; Inscrição e Identidade passam a política
     idempotencia.ts   # chave + digestão do envio; Inscrição e Cronometragem usam
+    higiene.ts        # apaga chave e marca de limite com mais de 48 h, sem agendador
   shared/
     env.ts            # configuração validada; ninguém mais lê process.env
     ambienteCli.ts    # carrega o .env nos comandos de terminal (tsx não faz sozinho)
+    argumentos.ts     # leitura de `--chave valor`; os dois CLIs usam o mesmo
     tempo.ts          # única conversão entre `mm:ss.cc` e milissegundos
     log.ts            # registro estruturado; forma fechada e texto livre saneado
     texto.ts          # normalização de acento; o painel e a classificação usam a mesma
@@ -125,11 +129,13 @@ scripts/
   gerar-qr.ts         # QR do ponto de inscrição, nível H, vetorial (T07)
   orcamento.mjs       # orçamento de peso do primeiro carregamento (T07)
   criar-operador.ts   # único caminho que cria conta de Operador (T08, RNF-14)
+  expurgar.ts         # o único comando que apaga dados; ensaia por padrão (T15)
 docs/
   sinalizacao.md      # especificação do material impresso: tamanhos, regras, URL (T07)
   qr/inscricao.svg    # o QR gerado; o destino fica escrito dentro do arquivo
   aprovacao-termo.md  # checklist de RF-09 e registro da aprovação do organizador (T03)
-                      # retenção, contingência, relatórios e checklist chegam com suas tasks
+  retencao.md         # prazo, quem executa e o passo a passo do expurgo (T15)
+                      # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
   skills/             # regras de manutenção do repositório
@@ -202,8 +208,11 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run db:seed [n]` | Popula a massa de desenvolvimento (padrão: 2000 participantes) |
 | `npm run db:studio` | Abre o Drizzle Studio para inspecionar o banco |
 | `npm run criar-operador` | Cria conta de Operador; `-- --desativar <usuario>` tira do ar; `-- --destravar <usuario>` zera o limite de login |
+| `npm run expurgar` | Retenção e exclusão. Sem argumento, mostra a ajuda; `-- --evento AAAA-MM-DD` ensaia o expurgo total; `-- --email <endereço>` acha um pedido de exclusão; `-- --higiene` faz a faxina das tabelas de mecanismo |
 
-Ainda não existem, chegam com suas tarefas: `test:e2e` (T17), `test:carga` (T18), `expurgar` (T15).
+Ainda não existem, chegam com suas tarefas: `test:e2e` (T17) e `test:carga` (T18).
+
+O `expurgar` é o único comando que apaga dados. Por padrão ele **ensaia**: conta e mostra, sem tocar em nada. O procedimento completo, com a ordem dos passos e o que fazer com o comprovante, está em [docs/retencao.md](docs/retencao.md).
 
 ---
 
@@ -355,7 +364,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
 | Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
-| Custódia | T15 | Não iniciado |
+| Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. Falta a data do evento (PE-06) e tirar o site do ar (T19) |
 | Qualidade e operação | T16–T21 | Não iniciado |
 
 **Pendências que bloqueiam:** nenhuma. O termo oficial (Pitch ou Pista) continua indefinido, mas deixou de bloquear: a palavra vive em `src/shared/vocabulario.ts` e trocá-la custa uma linha. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).

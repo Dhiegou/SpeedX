@@ -8,17 +8,39 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-23.** Quatorze tarefas entregues (T01–T14) e **537 testes passando**. `npm run check` e o build limpos. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-24.** Quinze tarefas entregues (T01–T15) e **557 testes passando**. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**T14 entregue:** a Exportação, que é o oposto de tudo o que a Classificação faz — ali o modelo não tem campo para dado pessoal, aqui o documento é a base inteira, com telefone e dados de Responsável de menores. Medida contra o banco real: 2.973 linhas, 673 KB, 663 ms; lista de repasse com 1.267 pessoas; 292 pendências.
+**As cinco trilhas de produto estão fechadas.** Inscrição, Cronometragem, Classificação e Custódia — esta última com a exportação (T14) e, agora, o ciclo de vida completo do dado pessoal (T15): prazo de guarda ancorado na data do evento, expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. O procedimento operacional está em `docs/retencao.md`.
 
-Falta **T15** (retenção e exclusão) para fechar a Custódia, e depois só qualidade e operação (T16–T21).
+Restam apenas as tarefas de qualidade e operação (T16–T21). **Nada mais bloqueia código**; o que falta agora é medição, deploy e ensaio no mundo físico.
+
+Duas pendências do organizador continuam abertas e agora têm consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o comando de expurgo recusa rodar; **PE-05** (onde hospedar) decide como se cumpre a promessa de tirar o site do ar ao fim do prazo.
 
 Cinco critérios do projeto dependem de gente, aparelho ou programa externo, todos no checklist de T21.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-24 — Sessão 18: execução da T15
+
+**Pedido:** identificar em que tarefa o projeto parou e iniciar a seguinte.
+
+**Entregue:** a T15, que fecha a Custódia e o ciclo de vida do dado pessoal — o prazo de retenção em código, o comando `npm run expurgar`, a exclusão individual a pedido, a higiene automática das tabelas de mecanismo e o procedimento escrito em `docs/retencao.md`. 20 testes novos, 557 no total.
+
+**O prazo vive em dois arquivos, e um teste os amarra** (D-62). `DIAS_DE_RETENCAO` é código; "10 dias" é texto do termo que duas mil pessoas vão aceitar. Nada ligava os dois a não ser um teste que lê a seção `retencao` do termo e procura o número lá dentro — sem ele, mudar a constante quebraria uma promessa em silêncio.
+
+**O comando não tem valor padrão para a data do evento** (D-63). A tentação é `hoje - 10 dias`, e isso ancora o prazo no dia em que alguém lembrou de rodar o comando. Quem esquecer por duas semanas terá guardado 24 dias e achado que cumpriu.
+
+**A higiene automática é oportunista porque não existe agendador** (D-64), e um `cron` que só existisse num provedor viraria dívida no dia da migração — PE-05 continua aberta.
+
+**Um item do escopo recusado de propósito** (D-65): preservar a classificação com nome público como "agregado histórico". O escopo da task permitia; o termo, não. Ele autoriza guardar "apenas números que não identificam ninguém", e nome identifica.
+
+**Verificado contra o banco real** (PostgreSQL 18, massa de 2000): o ensaio conta 2.000 participantes e 2.973 tentativas; a exclusão individual levou a base a 1.999 e 2.971, provando a cascata; a busca por e-mail acha com a caixa trocada; a recusa por prazo funcionou com 30 dias restantes; e sem terminal o comando cancela em vez de apagar.
+
+**Aberto:** o expurgo **total** nunca rodou contra o banco real — só o ensaio, mais a suíte contra Postgres via PGlite. Rodar de verdade apagaria a massa de 2000 que T18 ainda vai medir. Entra no ensaio geral de T21.
+
+---
 
 ### 2026-08-23 — Sessão 17: execução da T14
 
@@ -941,6 +963,58 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 
 **O que fica no log e o que não fica:** o identificador do Operador, não o nome. A forma fechada de `EntradaDeLog` não carrega nome de pessoa (RNF-08), e quem precisar do nome cruza com a tabela de Operadores enquanto ela existir.
 
+### D-62 — O prazo de retenção mora em dois lugares, e um teste os amarra
+
+**Decidido:** `DIAS_DE_RETENCAO = 10` vive em `custodia/retencao.ts`, e o texto "10 dias" vive na seção `retencao` do termo `v1.0-2026-08-19`. Um teste lê o termo e procura o número da constante dentro dele.
+
+**Por quê:** são arquivos diferentes, em contextos diferentes, e nada mais os liga. O termo é imutável depois de aprovado (D-19); a constante não é. Alguém que ajuste o número no código para "facilitar um teste" quebraria uma promessa feita a duas mil pessoas, e nenhuma revisão pegaria isso — o código continuaria coerente consigo mesmo.
+
+**Descartado:** derivar o texto do termo a partir da constante. O termo é prova documental e não pode ter parte gerada: o que a pessoa aceitou tem de estar escrito por extenso no arquivo que se guarda.
+
+**Reversível:** sim, mas na direção contrária. Se algum dia o prazo mudar, muda o termo primeiro — com versão nova — e o código depois.
+
+---
+
+### D-63 — O expurgo não adivinha a data do evento
+
+**Decidido:** `npm run expurgar` exige `--evento AAAA-MM-DD` e não tem valor padrão. Recusa datas que não existem (`2026-02-31`) em vez de reinterpretá-las, e recusa rodar antes do vencimento a menos que se passe `--antecipar`.
+
+**Por quê:** o padrão óbvio seria `hoje - 10 dias`. Isso ancora o prazo no dia em que alguém lembrou de rodar o comando, e não no dia contra o qual a promessa foi feita — esquecer por duas semanas viraria 24 dias de guarda com aparência de cumprimento. Como PE-06 ainda não fechou, não existe data para colocar como padrão, e isso é uma vantagem: um padrão aqui seria um palpite com poder de apagar a base.
+
+**Sobre a recusa antes do vencimento:** apagar cedo é mais protetivo em tese. Na prática o caso real não é o organizador zeloso — é um dedo trocado na data na semana do evento, com o painel em uso. `--antecipar` existe para quem de fato quer, e diz o que está fazendo.
+
+**Descoberto ao verificar:** sem terminal, o `readline` fecha sem chamar a resposta da confirmação. Sem tratamento, a promessa ficava pendurada para sempre; com um tratamento descuidado, o silêncio viraria consentimento. Só uma das duas leituras é segura, e é a que recusa.
+
+---
+
+### D-64 — A higiene contínua é oportunista, não agendada
+
+**Decidido:** a varredura que apaga chaves de idempotência e marcas de limite com mais de 48 h é disparada por `consultarEfeito`, no máximo uma vez por hora por processo, e **não é aguardada**. `npm run expurgar -- --higiene` faz o mesmo sob demanda.
+
+**Por quê:** não há agendador neste sistema, e a hospedagem ainda não está escolhida (PE-05). Um `cron` de provedor viraria dívida no dia da migração. O gatilho escolhido é o próprio caminho que **cria** as linhas que precisam sumir — toda escrita idempotente passa por ali.
+
+**Por que não é aguardada:** a faxina não pode segurar a requisição que a disparou, nem falhar junto com ela. Se falhar, sai uma linha de log e o cadastro da pessoa segue. O contrário seria trocar um problema que ninguém vê por um que todo mundo vê, no dia do evento.
+
+**O que se paga:** em ambiente sem processo longo a função pode ser interrompida antes de terminar. Não há dano — o DELETE é idempotente e a próxima requisição depois da hora tenta de novo.
+
+**Efeito colateral que valeu a pena:** `RATE_LIMIT_JANELA_SEGUNDOS` e `LOGIN_JANELA_SEGUNDOS` ganharam teto em `env.ts`. Sem isso, uma janela configurada acima de 48 h faria a faxina apagar contagem que o limite ainda usaria — um limite de taxa que se desarma sozinho e ninguém percebe.
+
+---
+
+### D-65 — Nem a classificação com nome público sobrevive ao expurgo
+
+**Decidido:** o único vestígio que o expurgo preserva é `resumoAnonimo` — contagens de participantes e de menores, e por Pitch quantas tentativas, quantas válidas, quantas ausentes, quantas pendentes, mais melhor tempo, mediana e pior. Sai no terminal e no log, e **não volta para tabela nenhuma**.
+
+**Por quê:** o escopo de T15 permitia preservar "agregados anônimos … classificação com nome público, se o organizador quiser histórico". O termo, não: ele autoriza guardar "apenas números que não identificam ninguém". Nome identifica — e o nome público de menor, com a inicial do sobrenome, já sinaliza a faixa etária (D-21). Entre o que a task permitia e o que o termo prometeu, vale o termo.
+
+**Descartado com registro:** guardar a classificação numa tabela `historico`. Quem quiser histórico com nomes precisa de um termo aceito para isso, não de uma exceção no comando de expurgo.
+
+**Como isso é verificado:** o teste percorre os **valores** do resumo e falha se qualquer texto que não seja o instante de geração aparecer. As chaves são nomes de campo escritos no código; o que não pode existir ali é texto vindo do banco.
+
+**Consequência para o resto:** `operador` também não é apagado — não é dado de participante, e é a conta que permite entrar no painel depois do expurgo para conferir que a base está vazia. O que vai embora são as sessões.
+
+---
+
 ---
 
 ## 4. Premissas assumidas
@@ -965,8 +1039,8 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 | PE-02 | ~~Prazo de retenção dos dados após o evento (RNF-11)~~ — **resolvida em 2026-08-19**: máximo de 10 dias após o evento, definido pelo usuário. Já escrito na seção `retencao` do termo; T15 usa a data do evento (PE-06) como base da contagem | — | — |
 | PE-03 | ~~Canal para solicitação de exclusão de dados (RF-09)~~ — **resolvida em 2026-08-19**: presencial, no ponto de inscrição durante o evento; sem canal remoto (D-20). Já escrito na `v0.2` do termo | — | — |
 | PE-04 | ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — **resolvida em 2026-08-19**: `v1.0-2026-08-19` aprovada por Dhiego, registro em `docs/aprovacao-termo.md`. Se o organizador formal do NEXT for outra pessoa, cabe contra-assinar, sem custo de versão | — | — |
-| PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07 |
-| PE-06 | Data do evento e janela de operação. **O local foi confirmado em 2026-08-23: São Paulo**, o que fixa o fuso de `formatHoraDoEvento` (`America/Sao_Paulo`). Falta a **data** | Organizador | T15 (data-base da retenção), T19 (congelamento de deploy) |
+| PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5) |
+| PE-06 | Data do evento e janela de operação. **O local foi confirmado em 2026-08-23: São Paulo**, o que fixa o fuso de `formatHoraDoEvento` (`America/Sao_Paulo`). Falta a **data**. **Consequência a partir de 2026-08-24:** é a única linha vazia de `docs/retencao.md`, e `npm run expurgar` recusa rodar sem ela — de propósito (D-63) | Organizador | o expurgo de T15 na prática, T19 (congelamento de deploy) |
 
 ---
 
