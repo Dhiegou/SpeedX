@@ -211,6 +211,20 @@ const config = [
     files: ['app/**/*.{ts,tsx}'],
     rules: proibirBanco,
   },
+
+  // Exceção única, do mesmo feitio da de `classificacao/projecao.ts`: o health
+  // check pergunta se **este processo** alcança o banco. A regra acima existe
+  // para impedir que uma rota contorne o caso de uso de um contexto pelo
+  // caminho de baixo, e aqui não há caso de uso a contornar — não existe regra
+  // de negócio chamada "o banco está de pé". Um caso de uso inventado só para
+  // atravessar a sondagem seria uma camada que não decide nada.
+  //
+  // A exceção tem exatamente um arquivo de largura, e `tests/fronteiras.test.ts`
+  // falha se ela crescer.
+  {
+    files: ['app/api/saude/route.ts'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
 ]
 
 export default config

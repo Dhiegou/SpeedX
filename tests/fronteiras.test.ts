@@ -146,4 +146,19 @@ describe('fronteiras entre bounded contexts', () => {
     expect(await erros(`import '@/db'`, 'app/teste.ts')).toHaveLength(1)
     expect(await erros(`import '@/db/schema'`, 'app/api/teste.ts')).toHaveLength(1)
   })
+
+  it('o health check alcança o banco, e é o único arquivo de rota que alcança', async () => {
+    // A exceção existe porque não há caso de uso a contornar: não é regra de
+    // negócio "o banco está de pé". Um caso de uso inventado só para atravessar
+    // a sondagem seria uma camada que não decide nada.
+    expect(await erros(`import '@/db'`, 'app/api/saude/route.ts')).toHaveLength(0)
+    expect(await erros(`import '@/infra/saude'`, 'app/api/saude/route.ts')).toHaveLength(0)
+
+    // Um arquivo de largura. Se alguém copiar a rota para outro nome esperando
+    // levar a permissão junto, cai aqui — que é o ponto de a exceção ser
+    // nominal em vez de um padrão de diretório.
+    expect(await erros(`import '@/db'`, 'app/api/saude/apoio.ts')).toHaveLength(1)
+    expect(await erros(`import '@/db'`, 'app/api/saude2/route.ts')).toHaveLength(1)
+    expect(await erros(`import '@/db'`, 'app/api/metricas/route.ts')).toHaveLength(1)
+  })
 })

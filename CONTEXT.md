@@ -8,19 +8,41 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-24.** Quinze tarefas entregues (T01–T15) e **557 testes passando**. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-24.** Dezesseis tarefas entregues (T01–T16) e **589 testes passando**. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
-**As cinco trilhas de produto estão fechadas.** Inscrição, Cronometragem, Classificação e Custódia — esta última com a exportação (T14) e, agora, o ciclo de vida completo do dado pessoal (T15): prazo de guarda ancorado na data do evento, expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. O procedimento operacional está em `docs/retencao.md`.
+**As cinco trilhas de produto estão fechadas**, e o dia do evento agora é observável. T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia em `/api/metricas` e o relatório de métricas a partir do log, com os quatro alertas do escopo avaliados e testados (`docs/monitoramento.md`).
 
-Restam apenas as tarefas de qualidade e operação (T16–T21). **Nada mais bloqueia código**; o que falta agora é medição, deploy e ensaio no mundo físico.
+Restam T17 a T21. **Nada mais bloqueia código**; o que falta é medição de carga, deploy, contingência em papel e o ensaio no mundo físico.
 
-Duas pendências do organizador continuam abertas e agora têm consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o comando de expurgo recusa rodar; **PE-05** (onde hospedar) decide como se cumpre a promessa de tirar o site do ar ao fim do prazo.
+O que falta em T16 não é código: o **monitor externo** precisa ser contratado, porque só algo de fora distingue "aplicação caiu" de "está tranquilo" — a aplicação caída não escreve log. Depende de PE-05.
 
-Cinco critérios do projeto dependem de gente, aparelho ou programa externo, todos no checklist de T21.
+Duas pendências do organizador continuam abertas, com consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o expurgo recusa rodar; **PE-05** (onde hospedar) decide o desligamento do site prometido no termo e o monitor externo.
+
+Seis critérios do projeto dependem de gente, aparelho ou serviço externo, todos no checklist de T21 — o mais novo é a métrica de uso da busca, que **não é mensurável** neste desenho e precisa de decisão explícita.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-24 — Sessão 19: execução da T16
+
+**Pedido:** iniciar a T16 (observabilidade, métricas e alertas).
+
+**Entregue:** `GET /api/saude` para o monitor externo, `GET /api/metricas` como painel do dia, `shared/metricas.ts` com percentis, relatórios e os quatro alertas, o comando `npm run metricas` e `docs/monitoramento.md`. 32 testes novos, 589 no total.
+
+**O log já era a telemetria; faltava alguém ler** (D-67). Toda rota emite evento, resultado, status e duração desde T05. Um emissor paralelo de métricas seria uma segunda coisa a manter, a sanear e a derrubar sem querer — e mediria o mesmo. Isso torna o critério de FL-12 verdadeiro por construção: **não existe coletor a derrubar**.
+
+**`TELEMETRY_URL` foi removida** (D-66). Declarada em T01, documentada no README e no `.env.example`, nunca usada. Configuração que promete um caminho inexistente é pior que nenhuma. Entrou `APP_VERSION` no lugar.
+
+**O log da própria sondagem corrigiu a sondagem** (D-68). Escrevi o teto em 200 ms, amarrado ao critério de aceitação de 300 ms. O relatório rodando contra o log do servidor de verdade mostrou a primeira sondagem em **191 ms** — ela inclui abrir a primeira conexão do pool. Com teto de 200, um monitor batendo logo após o deploy receberia `degradado` de um sistema saudável. Teto passou a 1 s.
+
+**Uma métrica do PRD não fecha, e a honestidade é o entregável** (D-69): uso da busca por nome (≥ 30%). A busca da Classificação roda inteira no navegador — os testes de T13 exigem zero `fetch` durante a busca —, e por isso o servidor não a vê. O adendo de T13 sugeria derivar da razão 200/304, mas isso mede revalidação, que é outra coisa. Encaminhada a T21 para decisão explícita.
+
+**Verificado contra o mundo real:** `/api/saude` em 13 a 33 ms com o banco de pé; `/api/metricas` fazendo seis agregações em 190 ms contra a base de 2000 (1.999 inscritos, 292 pendências, batendo com T14); o relatório rodando sobre o log de um `next dev` de verdade; e um log degradado sintético disparando os quatro alertas com código de saída 1.
+
+**Aberto:** o monitor externo e o teste de disparo real do canal dependem de contratar serviço (PE-05); a taxa de acerto do cache de borda não chega ao servidor por definição e só o painel do provedor sabe (T19).
+
+---
 
 ### 2026-08-24 — Sessão 18: execução da T15
 
@@ -1015,6 +1037,68 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 
 ---
 
+### D-66 — `TELEMETRY_URL` sai; o transporte da telemetria é a saída padrão
+
+**Decidido:** a variável foi removida de `env.ts`, do `.env.example` e do README. No lugar entrou `APP_VERSION`, devolvida por `/api/saude` e preenchida por T19 com o commit publicado.
+
+**Por quê:** declarada em T01 e **nunca usada** por nenhuma linha de código. Configuração que promete um caminho inexistente é pior que nenhuma: quem chega depois a preenche com a URL de um coletor e conclui que a telemetria está ligada, quando nada é enviado. O engano só apareceria no dia em que alguém procurasse a métrica e não a achasse.
+
+**Descartado:** implementar a emissão por HTTP que a variável prometia. FL-12 exige que a coleta não adicione latência ao caminho da requisição nem falhe junto com ele; um POST por operação adiciona exatamente isso, e precisaria de fila, repetição e desistência para não adicionar. A saída padrão em JSON por linha já é não bloqueante, já é recolhida por qualquer plataforma e já está escrita desde T05.
+
+**Consequência:** não existe coletor neste sistema. O critério de aceitação "derrubar o coletor não afeta a aplicação" passa a ser verdadeiro por construção, e o teste que o prova força a escrita em stdout a lançar.
+
+---
+
+### D-67 — Não há um segundo caminho de telemetria: o log é a fonte
+
+**Decidido:** as métricas de T16 são derivadas do log estruturado. `shared/metricas.ts` é a leitura — puro, sem banco e sem relógio —, e `npm run metricas` é a interface.
+
+**Por quê:** toda rota já emitia evento, resultado, status e duração. Um emissor paralelo de métricas seria uma segunda coisa a manter, a sanear contra dado pessoal e a derrubar sem querer — e mediria exatamente o mesmo. Três ganhos vieram de graça: nenhuma métrica carrega dado pessoal (a forma de `EntradaDeLog` é fechada e já era saneada), nada depende do provedor ainda não escolhido (PE-05), e o relatório roda contra um arquivo hoje e contra o agregador amanhã.
+
+**O que se paga:** métricas só existem onde há linha de log. Duas ficam de fora e estão registradas como tal — a taxa de acerto do cache de borda, que por definição não chega ao servidor, e o uso da busca da Classificação (ver D-69).
+
+**Descartado:** uma tabela de métricas no banco. Além de escrever no caminho da requisição, ela desapareceria no expurgo de T15 — o mesmo argumento de D-61.
+
+---
+
+### D-68 — O teto da sondagem de saúde não é o critério de aceitação
+
+**Decidido:** `LIMITE_DA_SONDAGEM_MS` passou de 200 ms para **1 s**.
+
+**Por quê, e como se descobriu:** a primeira versão amarrou o teto ao critério de T16 ("`/api/saude` responde em ≤ 300 ms"). São grandezas diferentes: o critério descreve o **regime**, e o teto existe para distinguir banco **pendurado** de banco lento. Um banco fora do ar costuma aceitar a conexão e não responder; sem prazo, a sondagem herda essa espera e o monitor registra "sem resposta", que é indistinguível da aplicação inteira ter caído.
+
+O erro apareceu no relatório rodando contra o log de um `next dev` real: a **primeira** sondagem depois de subir o processo levou 191 ms, porque inclui abrir a primeira conexão do pool. Com teto de 200, um monitor batendo logo após o deploy tinha chance real de receber `degradado` de um sistema saudável — alarme falso no minuto em que alguém está olhando, que é a forma mais rápida de um alerta perder crédito.
+
+**Vale além desta função:** limite de tempo de sondagem se dimensiona pelo que se quer distinguir, não pela meta de desempenho da coisa sondada.
+
+---
+
+### D-69 — A métrica de uso da busca não é mensurável, e isso fica escrito
+
+**Decidido:** o uso da busca por nome da Classificação (PRD §7, meta ≥ 30%) **não é medido**. O relatório diz isso com todas as letras, em vez de exibir um número aproximado no lugar.
+
+**Por quê:** a busca roda inteira no navegador, sobre o documento já carregado — os testes de T13 contam as chamadas a `fetch` durante a busca e exigem **zero**. É isso que a faz instantânea e que a faz não gastar rede em 3G, e é pelo mesmo motivo que o servidor não a vê. Medir exigiria telemetria de navegador na página mais pública do evento, e D-33 tirou a telemetria do cliente do cadastro justamente para não ter uma URL de coletor exposta.
+
+**Descartado, e por que a alternativa não serve:** o adendo de T13 a esta task sugeria derivar a métrica da razão entre 200 e 304 no log de `classificacao.leitura`. Essa razão mede **revalidação** — quantas leituras saíram sem corpo —, não quantas pessoas digitaram um nome. O número está no relatório, com esse nome e essa ressalva. Chamá-lo de uso da busca seria inventar uma medida.
+
+**Encaminhado a T21** como risco aceito, com duas saídas possíveis: a métrica cai do PRD, ou alguém aceita a telemetria de navegador de olhos abertos. A escolha é do organizador, não do código.
+
+---
+
+### D-70 — Duas rotas de observação, e não uma
+
+**Decidido:** `/api/saude` (pública, health check) e `/api/metricas` (autenticada, painel do dia) são rotas separadas.
+
+**Por quê:** respondem perguntas diferentes, para públicos diferentes, em frequências diferentes. Juntá-las faria a rota que o monitor bate a cada 60 segundos carregar seis agregações — e, pior, cair junto com o banco, apagando justamente o sinal que distingue "banco fora" de "aplicação fora".
+
+**Sobre a autenticação do painel:** o corpo é só contagem, e nada ali identifica ninguém. O que se protege é a informação operacional — "1.462 inscritos e 293 pendências às 16h" é um retrato do evento que não precisa estar aberto — e o custo: uma rota pública que faz seis agregações por chamada é um amplificador de carga de graça no dia em que a carga importa.
+
+**Onde o painel mora, e por quê:** em `custodia/metricas.ts`. A consulta atravessa BC-01 e BC-02 no mesmo documento, e BC-05 é o único lugar autorizado a isso (SDD §1). A alternativa — meia consulta em Inscrição, meia em Cronometragem, soma na rota — move o cruzamento para fora do lugar onde ele é auditável, que é exatamente o que a fronteira existe para impedir.
+
+**Uma exceção de lint, com um arquivo de largura:** `/api/saude` é a única rota que alcança o banco sem passar por um caso de uso, no mesmo feitio da exceção de `classificacao/projecao.ts`. Não há caso de uso a contornar — não é regra de negócio "o banco está de pé" —, e um inventado só para atravessar a sondagem seria uma camada que não decide nada. `tests/fronteiras.test.ts` falha se a exceção crescer.
+
+---
+
 ---
 
 ## 4. Premissas assumidas
@@ -1039,7 +1123,7 @@ Nesta escala o índice economiza duas páginas de índice e paga as outras vinte
 | PE-02 | ~~Prazo de retenção dos dados após o evento (RNF-11)~~ — **resolvida em 2026-08-19**: máximo de 10 dias após o evento, definido pelo usuário. Já escrito na seção `retencao` do termo; T15 usa a data do evento (PE-06) como base da contagem | — | — |
 | PE-03 | ~~Canal para solicitação de exclusão de dados (RF-09)~~ — **resolvida em 2026-08-19**: presencial, no ponto de inscrição durante o evento; sem canal remoto (D-20). Já escrito na `v0.2` do termo | — | — |
 | PE-04 | ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — **resolvida em 2026-08-19**: `v1.0-2026-08-19` aprovada por Dhiego, registro em `docs/aprovacao-termo.md`. Se o organizador formal do NEXT for outra pessoa, cabe contra-assinar, sem custo de versão | — | — |
-| PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5) |
+| PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5), o monitor externo de T16 |
 | PE-06 | Data do evento e janela de operação. **O local foi confirmado em 2026-08-23: São Paulo**, o que fixa o fuso de `formatHoraDoEvento` (`America/Sao_Paulo`). Falta a **data**. **Consequência a partir de 2026-08-24:** é a única linha vazia de `docs/retencao.md`, e `npm run expurgar` recusa rodar sem ela — de propósito (D-63) | Organizador | o expurgo de T15 na prática, T19 (congelamento de deploy) |
 
 ---

@@ -17,7 +17,7 @@ describe('validarAmbiente', () => {
     expect(env.RATE_LIMIT_JANELA_SEGUNDOS).toBe(600)
     expect(env.RATE_LIMIT_CADASTROS_POR_HORA).toBe(100)
     expect(env.FORMULARIO_SEGUNDOS_MINIMOS).toBe(3)
-    expect(env.TELEMETRY_URL).toBe('')
+    expect(env.APP_VERSION).toBe('desconhecida')
   })
 
   it('T01 — falha nomeando a variável ausente', () => {

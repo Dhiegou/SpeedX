@@ -39,7 +39,7 @@ T21 Auditoria de privacidade e checklist pré-evento  (última)
 
 Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13).
 
-**Concluídas:** T01 a T15. As cinco trilhas de produto estão fechadas — Inscrição, Cronometragem, Classificação e Custódia, esta última com exportação (T14) e ciclo de vida do dado (T15). Restam só qualidade e operação (T16–T21).
+**Concluídas:** T01 a T16. As cinco trilhas de produto estão fechadas — Inscrição, Cronometragem, Classificação e Custódia, esta última com exportação (T14) e ciclo de vida do dado (T15). A observabilidade (T16) também está de pé. Restam T17 a T21.
 
 ---
 
@@ -62,7 +62,7 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 | [T13](task-13-ui-classificacao.md) ✅ | UI pública da Classificação | BC-03 | RF-27 a RF-33, RNF-18 |
 | [T14](task-14-exportacao.md) ✅ | Exportação de dados | BC-05 | RF-34, RF-35, RNF-10 |
 | [T15](task-15-retencao-e-exclusao.md) ✅ | Retenção e exclusão de dados | BC-05 | RNF-11 |
-| [T16](task-16-observabilidade.md) | Observabilidade, métricas e alertas | — | RNF-05, métricas do PRD §7 |
+| [T16](task-16-observabilidade.md) ✅ | Observabilidade, métricas e alertas | — | RNF-05, métricas do PRD §7 |
 | [T17](task-17-testes-automatizados.md) | Testes automatizados | todos | verificações do PRD §5 e §6 |
 | [T18](task-18-testes-de-carga.md) | Testes de carga e desempenho | BC-03 | RNF-01 a RNF-04 |
 | [T19](task-19-deploy-e-infraestrutura.md) | Deploy e infraestrutura | — | RNF-01, RNF-04, RNF-05, RF-23, RF-31 |

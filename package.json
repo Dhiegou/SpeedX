@@ -21,7 +21,8 @@
     "qr": "tsx scripts/gerar-qr.ts",
     "orcamento": "node scripts/orcamento.mjs",
     "criar-operador": "tsx scripts/criar-operador.ts",
-    "expurgar": "tsx scripts/expurgar.ts"
+    "expurgar": "tsx scripts/expurgar.ts",
+    "metricas": "tsx scripts/metricas.ts"
   },
   "engines": {
     "node": ">=20.9.0"

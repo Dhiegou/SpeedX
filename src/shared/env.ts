@@ -83,7 +83,19 @@ const esquema = z.object({
   LOGIN_TENTATIVAS_POR_JANELA: z.coerce.number().int().positive().default(10),
   LOGIN_JANELA_SEGUNDOS: z.coerce.number().int().positive().max(43_200).default(900),
 
-  TELEMETRY_URL: z.union([z.url(), z.literal('')]).default(''),
+  /**
+   * Versão publicada, devolvida por `/api/saude` (T16 §1).
+   *
+   * Existe para responder "qual código está no ar agora" sem entrar na
+   * máquina — a pergunta que se faz às onze da manhã do evento, quando o
+   * comportamento não bate com o que se acabou de testar. T19 preenche com o
+   * identificador do commit publicado.
+   *
+   * Substituiu `TELEMETRY_URL`, declarada em T01 e nunca usada (D-66): o
+   * transporte da telemetria deste sistema é a saída padrão, não um coletor
+   * por HTTP.
+   */
+  APP_VERSION: z.string().default('desconhecida'),
 })
 
 export type Ambiente = z.infer<typeof esquema>

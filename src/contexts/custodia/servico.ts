@@ -5,6 +5,7 @@ import {
   gerarPendencias,
   type TipoDeExportacao,
 } from './exportacao'
+import { painelDoDia, type PainelDoDia } from './metricas'
 
 /**
  * Composição do contexto: liga as exportações à conexão real.
@@ -24,4 +25,15 @@ export function exportar(tipo: TipoDeExportacao): ReadableStream<Uint8Array> | P
     case 'pendencias':
       return gerarPendencias(db())
   }
+}
+
+/**
+ * O painel do dia (T16 §5).
+ *
+ * Mesma composição das exportações: a rota não conhece banco. Fica aqui, e não
+ * num serviço próprio de observabilidade, porque a consulta atravessa BC-01 e
+ * BC-02 — e é esta a fachada autorizada a fazer isso.
+ */
+export function lerPainelDoDia(): Promise<PainelDoDia> {
+  return painelDoDia(db())
 }

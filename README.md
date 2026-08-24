@@ -92,16 +92,19 @@ src/
       exportacao.ts   #   os três documentos: completa, repasse e pendências
       retencao.ts   #   o prazo de 10 dias, ancorado na data do evento (RNF-11)
       expurgo.ts    #   expurgo total, exclusão a pedido e o resumo que sobrevive
+      metricas.ts   #   o painel do dia: contagens que atravessam BC-01 e BC-02
   infra/            # abaixo dos contextos: fala com o banco, não conhece domínio
     limiteDeTaxa.ts   # janela deslizante; Inscrição e Identidade passam a política
     idempotencia.ts   # chave + digestão do envio; Inscrição e Cronometragem usam
     higiene.ts        # apaga chave e marca de limite com mais de 48 h, sem agendador
+    saude.ts          # sondagem do banco com prazo; distingue lento de pendurado
   shared/
     env.ts            # configuração validada; ninguém mais lê process.env
     ambienteCli.ts    # carrega o .env nos comandos de terminal (tsx não faz sozinho)
     argumentos.ts     # leitura de `--chave valor`; os dois CLIs usam o mesmo
     tempo.ts          # única conversão entre `mm:ss.cc` e milissegundos
     log.ts            # registro estruturado; forma fechada e texto livre saneado
+    metricas.ts       # percentis, relatórios e alertas — a leitura do log (T16)
     texto.ts          # normalização de acento; o painel e a classificação usam a mesma
     requisicao.ts     # leitura de Content-Type e do endereço de origem
     vocabulario.ts    # "Pitch" numa constante só, com gênero (PE-01, D-31)
@@ -130,11 +133,13 @@ scripts/
   orcamento.mjs       # orçamento de peso do primeiro carregamento (T07)
   criar-operador.ts   # único caminho que cria conta de Operador (T08, RNF-14)
   expurgar.ts         # o único comando que apaga dados; ensaia por padrão (T15)
+  metricas.ts         # lê o log e devolve métricas, metas e alertas (T16)
 docs/
   sinalizacao.md      # especificação do material impresso: tamanhos, regras, URL (T07)
   qr/inscricao.svg    # o QR gerado; o destino fica escrito dentro do arquivo
   aprovacao-termo.md  # checklist de RF-09 e registro da aprovação do organizador (T03)
   retencao.md         # prazo, quem executa e o passo a passo do expurgo (T15)
+  monitoramento.md    # o que observar no dia, limiares e canal de alerta (T16)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
@@ -182,7 +187,7 @@ A aplicação recusa subir se a configuração estiver incompleta, listando cada
 | `SESSAO_RENOVACAO_MINUTOS` | não | Intervalo mínimo entre renovações gravadas (padrão 30) |
 | `LOGIN_TENTATIVAS_POR_JANELA` | não | Tentativas de login recusadas por IP e por conta (padrão 10) |
 | `LOGIN_JANELA_SEGUNDOS` | não | Janela do limite de login (padrão 900) |
-| `TELEMETRY_URL` | não | Destino das métricas; vazio desliga a emissão |
+| `APP_VERSION` | não | Versão publicada, devolvida por `/api/saude`; T19 preenche com o commit |
 
 Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `process.env`.
 
@@ -208,6 +213,7 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run db:seed [n]` | Popula a massa de desenvolvimento (padrão: 2000 participantes) |
 | `npm run db:studio` | Abre o Drizzle Studio para inspecionar o banco |
 | `npm run criar-operador` | Cria conta de Operador; `-- --desativar <usuario>` tira do ar; `-- --destravar <usuario>` zera o limite de login |
+| `npm run metricas` | Relatório de métricas e alertas a partir do log; `-- --arquivo <caminho>` ou pelo cano. Sai com código 1 se algum alerta disparar |
 | `npm run expurgar` | Retenção e exclusão. Sem argumento, mostra a ajuda; `-- --evento AAAA-MM-DD` ensaia o expurgo total; `-- --email <endereço>` acha um pedido de exclusão; `-- --higiene` faz a faxina das tabelas de mecanismo |
 
 Ainda não existem, chegam com suas tarefas: `test:e2e` (T17) e `test:carga` (T18).
@@ -218,7 +224,7 @@ O `expurgar` é o único comando que apaga dados. Por padrão ele **ensaia**: co
 
 ## Rotas
 
-Existem hoje `/` (formulário de inscrição), `/termo` (texto do consentimento), `POST /api/inscricao` (recebe o cadastro), `/painel/login` e `/api/painel/sessao` (acesso do Operador), mais uma página provisória em `/painel` até T11. As demais são planejadas.
+Todas as rotas da tabela abaixo existem e estão cobertas por teste.
 
 A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino do QR code, e cada salto extra custa uma resolução de nome e um handshake com o celular na borda da célula (FL-01). `tests/entrada.test.ts` falha se alguém introduzir um redirecionamento, uma barra final obrigatória ou uma segunda rota de inscrição.
 
@@ -239,7 +245,8 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 | `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22, RF-24) |
 | `/api/painel/tentativa/:id/historico` | Autenticado | `GET` — trilha de auditoria (RF-23) |
 | `/api/exportacao?tipo=` | Autenticado | `completa` (base inteira), `repasse` (só quem autorizou) ou `pendencias` (métrica do PRD §7) |
-| `/api/saude` | Público | Health check do monitor externo |
+| `/api/saude` | Público | Health check do monitor externo: 200 com o banco de pé, 503 sem — e nada sobre infraestrutura no corpo |
+| `/api/metricas` | Autenticado | `GET` — painel do dia: inscritos por hora, situação de cada Pitch, ritmo de Lançamentos e pendências. Só contagens |
 
 Nenhuma resposta pública expõe e-mail, telefone, idade, dado de responsável, nem o sobrenome completo de participante menor de 18 anos.
 
@@ -365,7 +372,8 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
 | Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. Falta a data do evento (PE-06) e tirar o site do ar (T19) |
-| Qualidade e operação | T16–T21 | Não iniciado |
+| Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. Falta contratar o monitor externo (T19) |
+| Qualidade e operação | T17–T21 | Não iniciado |
 
 **Pendências que bloqueiam:** nenhuma. O termo oficial (Pitch ou Pista) continua indefinido, mas deixou de bloquear: a palavra vive em `src/shared/vocabulario.ts` e trocá-la custa uma linha. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
 

@@ -41,7 +41,8 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] Termo de consentimento aprovado por escrito pelo organizador (T03).
 - [ ] Prazo de retenção acordado e registrado (T15) — o procedimento está escrito em `docs/retencao.md`; o que falta marcar aqui é a **data-base** preenchida (PE-06) e o ensaio do expurgo total contra o banco real, que T15 deixou aberto para não apagar a massa de T18.
 - [ ] Material de contingência impresso e no local, com ensaio feito (T20).
-- [ ] Monitoramento ativo, alertas chegando no canal certo, com teste real de disparo (T16).
+- [ ] Monitoramento ativo, alertas chegando no canal certo, com teste real de disparo (T16) — a especificação do monitor, dos limiares e do canal está em `docs/monitoramento.md`; falta contratar o serviço (PE-05) e disparar de verdade.
+- [ ] **Decidir sobre a métrica de uso da busca por nome** (PRD §7, ≥ 30%): ela **não é mensurável** neste desenho, porque a busca roda no navegador e não gasta rede (D-69). Ou cai do PRD, ou alguém aceita telemetria de navegador na página mais pública do evento. Decisão do organizador, não do código.
 - [ ] Snapshot manual do banco tirado no início do evento (T19).
 - [ ] Deploys congelados; plano de reversão distribuído (T19).
 - [ ] QR code impresso, testado com três leitores e posicionado (T07).
