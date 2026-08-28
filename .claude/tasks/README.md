@@ -43,7 +43,9 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 
 **T19 está parcial**, e a divisão é limpa: tudo o que é código, configuração e documento está pronto — Vercel em `gru1`, Neon em São Paulo, UptimeRobot, `docs/deploy.md` e `docs/plano-do-dia.md`. Faltam as contas criadas e **um domínio**, e é ele que segura quatro dos sete critérios de aceitação, o QR definitivo de T07 e a partida de T18.
 
-Restam T18, T20, T21 e a metade externa de T19.
+**T18 está parcial pelo mesmo motivo**: quatro dos seis critérios fechados com número (`docs/relatorio-carga.md`), um reprovado de propósito — o limite de taxa recusaria a fila — e um adiado por depender de aparelho em 3G.
+
+Restam T20, T21 e a metade externa de T18 e T19.
 
 ---
 
@@ -68,7 +70,7 @@ Restam T18, T20, T21 e a metade externa de T19.
 | [T15](task-15-retencao-e-exclusao.md) ✅ | Retenção e exclusão de dados | BC-05 | RNF-11 |
 | [T16](task-16-observabilidade.md) ✅ | Observabilidade, métricas e alertas | — | RNF-05, métricas do PRD §7 |
 | [T17](task-17-testes-automatizados.md) ✅ | Testes automatizados | todos | verificações do PRD §5 e §6 |
-| [T18](task-18-testes-de-carga.md) | Testes de carga e desempenho | BC-03 | RNF-01 a RNF-04 |
+| [T18](task-18-testes-de-carga.md) ◐ | Testes de carga e desempenho | BC-03 | RNF-01 a RNF-04 |
 | [T19](task-19-deploy-e-infraestrutura.md) ◐ | Deploy e infraestrutura | — | RNF-01, RNF-04, RNF-05, RF-23, RF-31 |
 | [T20](task-20-contingencia-offline.md) | Contingência offline | — | RNF-06 |
 | [T21](task-21-auditoria-e-checklist.md) | Auditoria de privacidade e checklist pré-evento | todos | RNF-08 a RNF-10, SDD §6 |

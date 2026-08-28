@@ -1,0 +1,71 @@
+# Leitura da Classificação sob pico (T18 §2, RNF-01).
+#
+# O cenário do PRD é 500 pessoas atualizando a tabela ao mesmo tempo, durante a
+# premiação.
+#
+# **500 concorrentes não é `arrivalRate: 500`**, e confundir os dois é o erro
+# clássico deste tipo de teste. `arrivalRate` conta chegadas por segundo; o que
+# RNF-01 pede é quanta gente está dentro ao mesmo tempo. Pela lei de Little, a
+# concorrência é a taxa de chegada vezes o tempo que cada um passa dentro:
+#
+#   cada usuário virtual = 1 leitura + 5 s de espera + 1 revalidação ≈ 5 s
+#   500 concorrentes ÷ 5 s de vida = **100 chegadas por segundo**
+#
+# Com `arrivalRate: 500` o teste criaria 150 mil usuários em cinco minutos e
+# mediria o gerador de carga, não a aplicação.
+#
+# **Este arquivo mede o pior caso, e é de propósito.** Não há borda no meio: cada
+# requisição atravessa a aplicação e o banco. Em produção a Vercel absorve o pico
+# com `s-maxage=15` e o banco vê uma consulta a cada quinze segundos (T12). O
+# número que sai daqui é o piso de segurança — se a aplicação aguenta sem cache
+# nenhum, com cache ela só melhora.
+#
+#   npx artillery run perf/classificacao.yml
+#
+config:
+  target: 'http://localhost:3300'
+  phases:
+    # Aquecimento: o primeiro acesso paga a abertura da conexão do pool (~190 ms)
+    # e a construção da projeção. Misturar isso ao regime estragaria o p95.
+    - duration: 20
+      arrivalRate: 10
+      name: aquecimento
+    # 100 chegadas/s × ~5 s de vida ≈ 500 concorrentes (RNF-01).
+    - duration: 300
+      arrivalRate: 100
+      name: pico
+  # A folga de RNF-01 é 2 s no p95. Abaixo disso o teste falha sozinho, e é
+  # assim que ele vira critério de aceitação em vez de relatório para ler.
+  ensure:
+    thresholds:
+      - 'http.response_time.p95': 2000
+    conditions:
+      - expression: 'http.codes.200 + http.codes.304 > 0'
+  http:
+    timeout: 10
+    # Conexões reaproveitadas, e não uma por requisição.
+    #
+    # Sem isto a primeira execução saturou aos ~200 req/s com `ECONNREFUSED` às
+    # centenas — e o culpado não era a aplicação (a consulta da projeção custa
+    # 3,7 ms), era o **gerador de carga** esgotando as portas efêmeras da
+    # máquina. Um navegador de verdade mantém a conexão aberta entre o
+    # carregamento da tabela e o polling de T13; abrir e fechar a cada
+    # requisição mediria um problema que ninguém tem.
+    pool: 50
+
+scenarios:
+  # Duas leituras por usuário: a primeira pinta a tabela, a segunda é o polling
+  # de T13 com `If-None-Match`. A segunda é a que domina no dia — 2000 aparelhos
+  # revalidando a cada poucos segundos — e é a que devolve 304 sem corpo.
+  - name: tabela e revalidação
+    flow:
+      - get:
+          url: '/api/classificacao'
+          capture:
+            - header: etag
+              as: etiqueta
+      - think: 5
+      - get:
+          url: '/api/classificacao'
+          headers:
+            if-none-match: '{{ etiqueta }}'

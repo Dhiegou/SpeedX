@@ -23,6 +23,10 @@
     "criar-operador": "tsx scripts/criar-operador.ts",
     "expurgar": "tsx scripts/expurgar.ts",
     "metricas": "tsx scripts/metricas.ts",
+    "perf:preparar": "tsx perf/preparar.ts",
+    "perf:medir": "tsx perf/medir.ts",
+    "test:carga": "artillery run perf/classificacao.yml",
+    "test:carga:cadastro": "artillery run perf/cadastro.yml",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
@@ -47,6 +51,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "artillery": "^2.0.34",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.1",

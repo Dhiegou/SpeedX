@@ -43,7 +43,7 @@ Definida em [T01](.claude/tasks/task-01-fundacao-do-projeto.md) como premissa �
 | PGlite | 0.5 | PostgreSQL 18.3 em WebAssembly para os testes: constraints reais, sem serviço externo |
 | PostgreSQL | **18** | Consistência forte para Inscrição e Cronometragem. A versão não é preferência: é a que o PGlite 0.5.5 executa nos testes (`select version()` → 18.3), e produção precisa casar com ela |
 | Playwright | 1.62 | End-to-end, incluindo o fluxo só por teclado (T17) |
-| k6 ou Artillery | a definir (T18) | 500 acessos concorrentes à classificação |
+| Artillery | 2.x (T18) | 500 acessos concorrentes à classificação, pico de cadastro e escrita simultânea |
 | Hospedagem com HTTP/3 | **Vercel**, plano gratuito, funções em `gru1` (D-76, D-79) | Exigido pelos fluxos FL-02 e FL-07 do SDD. A borda anuncia HTTP/3; falta o `curl --http3` contra um domínio que ainda não existe |
 | Banco em produção | **Neon**, gratuito, `aws-sa-east-1` (D-79) | Mesma cidade das funções: a Classificação é `force-dynamic`, então cada primeira pintura atravessa essa distância |
 | Monitor externo | **UptimeRobot**, gratuito (D-82) | Só algo de fora distingue "caiu" de "estava tranquilo". A configurar quando houver domínio |
@@ -131,7 +131,7 @@ app/                  # rotas
 tests/                # testes que atravessam módulos (ex.: fronteiras de contexto)
   rastreabilidade.test.ts # lê o PRD e exige um teste, ou uma justificativa, por requisito
 e2e/                  # ponta a ponta com Playwright: teclado, confirmação, 360 px (T17)
-perf/                 # scripts de carga (T18)
+perf/                 # preparo, cenários de carga e medidor (T18)
 scripts/
   gerar-qr.ts         # QR do ponto de inscrição, nível H, vetorial (T07)
   orcamento.mjs       # orçamento de peso do primeiro carregamento (T07)
@@ -147,6 +147,7 @@ docs/
   testes.md           # o mapa da suíte e o que só se verifica com gente (T17)
   deploy.md           # onde roda, o que verificar e como desligar no fim (T19)
   plano-do-dia.md     # uma página, para imprimir: quem acionar e o que fazer (T19)
+  relatorio-carga.md  # números medidos: leitura, escrita, cadastro, índices (T18)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
@@ -226,7 +227,7 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run metricas` | Relatório de métricas e alertas a partir do log; `-- --arquivo <caminho>` ou pelo cano. Sai com código 1 se algum alerta disparar |
 | `npm run expurgar` | Retenção e exclusão. Sem argumento, mostra a ajuda; `-- --evento AAAA-MM-DD` ensaia o expurgo total; `-- --email <endereço>` acha um pedido de exclusão; `-- --higiene` faz a faxina das tabelas de mecanismo |
 
-Ainda não existe, chega com sua tarefa: `test:carga` (T18).
+`npm run perf:preparar` cria `speedx_carga` com 2000 Participantes e 4000 Tentativas — banco próprio, descartável, porque a massa de carga é o pior caso e não a massa realista de desenvolvimento. Depois, com a aplicação de pé contra ele: `npm run test:carga` (leitura), `npm run test:carga:cadastro` (pico de inscrição) e `npm run perf:medir` (documento, consultas, índices, propagação). Números medidos em [docs/relatorio-carga.md](docs/relatorio-carga.md).
 
 O `expurgar` é o único comando que apaga dados. Por padrão ele **ensaia**: conta e mostra, sem tocar em nada. O procedimento completo, com a ordem dos passos e o que fazer com o comprovante, está em [docs/retencao.md](docs/retencao.md).
 
@@ -336,7 +337,7 @@ funcionar sem JavaScript, o que exige repensar a idempotência do lado do client
 npm run test          # unidade + integração (Postgres real via PGlite, não mock)
 ```
 
-`test:carga` (T18) entra com sua tarefa.
+`npm run test:carga` mede a leitura sob pico (T18); o preparo do banco de carga e os números estão descritos em [Comandos](#comandos) e em [docs/relatorio-carga.md](docs/relatorio-carga.md).
 
 Dois testes cuidam de coisas que nenhuma revisão de código pega a olho nu, e ambos já pagaram o próprio custo:
 
@@ -384,7 +385,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); o procedimento de tirar o site do ar está escrito em `docs/deploy.md` §6 |
 | Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. O monitor externo foi escolhido em T19 (UptimeRobot); falta configurá-lo, o que depende do domínio |
 | Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
-| Qualidade e operação | T18 | Não iniciado — depende de T19 publicada |
+| Qualidade e operação | T18 | **Parcial** — 200 req/s com p95 de 7,9 ms e zero 5xx, documento de 14 KB gzip, propagação de ~20 s. Achou o que procurava: o limite de taxa, como configurado, recusaria a fila do evento. Faltam borda, 3G real e o ensaio longo |
 | Qualidade e operação | T19 | **Parcial** — código, configuração e os dois documentos de operação prontos, com Vercel, Neon e UptimeRobot escolhidos. Faltam as contas criadas e um domínio: quatro dos sete critérios só se verificam contra um endereço publicado |
 | Qualidade e operação | T20–T21 | Não iniciado |
 

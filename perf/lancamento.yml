@@ -1,0 +1,89 @@
+# Escrita simultânea dos dois Cockpits (T18 §3, RNF-16).
+#
+# **Roda ao lado da carga de leitura, e não sozinho.** O que este teste procura
+# não é "quanto demora um lançamento" — isso a suíte já mede. É se a latência do
+# painel continua estável **enquanto** 500 pessoas atualizam a tabela pública. O
+# Operador tem quinze segundos para um lançamento inteiro (RNF-16), e o risco é
+# a leitura massiva roubar a conexão de que ele precisa.
+#
+#   npx artillery run perf/classificacao.yml &
+#   npx artillery run perf/lancamento.yml
+#
+# Dois Operadores a três lançamentos por minuto cada, por trinta minutos, é o
+# ritmo real de fila do evento — e é ritmo baixo de propósito: o gargalo do
+# painel é a pessoa digitando, não o servidor.
+config:
+  target: 'http://localhost:3300'
+  # Uma chave de idempotência nova por lançamento — ver o porquê em chave.js.
+  processor: './chave.js'
+  phases:
+    # Dois usuários virtuais, cada um vivendo uma sessão inteira de 30 minutos.
+    - duration: 2
+      arrivalCount: 2
+      name: dois operadores
+  ensure:
+    thresholds:
+      # RNF-16 dá 15 s para o lançamento inteiro, incluindo a pessoa digitando.
+      # A parte do servidor precisa caber numa fração disso.
+      - 'http.response_time.p95': 1000
+  http:
+    timeout: 15
+
+scenarios:
+  - name: operador lançando
+    flow:
+      - function: 'escolherCockpit'
+      - post:
+          url: '/api/painel/sessao'
+          headers:
+            content-type: 'application/json'
+          json:
+            usuario: 'carga'
+            senha: 'carga-de-teste-2026'
+          capture:
+            # O cookie é repassado à mão, e não pelo cofre do gerador de carga.
+            #
+            # Em produção ele nasce `__Host-` e `Secure` (identidade/servico.ts),
+            # e por especificação um cliente correto **não o devolve por HTTP**.
+            # O gerador segue a especificação; o alvo local é HTTP; resultado da
+            # primeira execução: 33 respostas 401 e nenhum lançamento medido.
+            #
+            # Quem está errado aqui é a bancada, não o código — o cookie ser
+            # `Secure` é a coisa certa. Contra o ambiente publicado, em HTTPS,
+            # esta captura vira desnecessária.
+            - header: set-cookie
+              as: sessao
+          expect:
+            - statusCode: 200
+      # 90 voltas a 20 s = 30 minutos, que é o que T18 §3 pede.
+      - loop:
+          - get:
+              url: '/api/painel/fila?cockpit={{ cockpit }}'
+              headers:
+                cookie: '{{ sessao }}'
+              capture:
+                # A primeira pendente da fila é a próxima a correr. Se a fila
+                # esvaziar, `id` fica vazio e o lançamento seguinte recebe 404 —
+                # que é informação, não falha do teste.
+                - json: '$.itens[0].tentativaId'
+                  as: tentativaId
+                  strict: false
+          - think: 10
+          - function: 'novaChave'
+          - post:
+              url: '/api/painel/tempo'
+              headers:
+                content-type: 'application/json'
+                idempotency-key: '{{ idempotencia }}'
+                cookie: '{{ sessao }}'
+              json:
+                tentativaId: '{{ tentativaId }}'
+                tempo: '01:23.45'
+                chave: '{{ chave }}'
+              expect:
+                # 409 é resposta correta: duas Tentativas já lançadas colidem na
+                # constraint de RF-25, e é isso que se quer ver acontecendo sob
+                # concorrência em vez de escrita perdida.
+                - statusCode: [200, 201, 404, 409, 422]
+          - think: 10
+        count: 90

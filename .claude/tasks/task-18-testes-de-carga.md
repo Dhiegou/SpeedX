@@ -67,3 +67,101 @@ Popular ambiente de homologação com **2000 participantes e 4000 tentativas** (
 
 - [ ] **Reavaliar os três índices que a medição mostrou não serem usados** (D-56): `participante_nome_idx`, `participante_sobrenome_idx` e `tentativa_classificacao_idx`. Todos foram criados em T02 por raciocínio; nas medições de T10 e T12, com a massa real, o planejador não os escolhe. Decidir com número: ou some justificativa medida, ou eles saem numa migração.
 - [ ] **Confirmar o dimensionamento do documento público sob carga.** Medido em T12 contra o banco local: 2.422 linhas → 62,7 KB brutos, 10,9 KB gzip, consulta de 5,3 ms. Extrapolado para 4.000 linhas: ~106 KB / ~18 KB. Verificar com 500 acessos simultâneos (RNF-01) e com a borda de verdade no meio.
+
+---
+
+## Resultado da execução — 2026-08-28
+
+**Parcial, e a divisão é a mesma de T19:** tudo o que se mede sem ambiente
+publicado está medido, com números em [`docs/relatorio-carga.md`](../../docs/relatorio-carga.md).
+O que falta — acerto de cache de borda, 3G real, HTTP/3 sob perda — depende do
+domínio que ainda não existe.
+
+**A medição rodou numa máquina só**, com gerador, aplicação e Postgres
+disputando os mesmos núcleos e **sem borda no meio**. É o pior caso, e é por
+isso que vale: em produção a borda absorve o pico e o banco vê uma consulta a
+cada quinze segundos (T12).
+
+### O achado que justifica a tarefa inteira
+
+**O limite de taxa de T05, com os padrões atuais, recusaria a fila do evento.**
+Duzentos cadastros legítimos do mesmo IP produziram **30 criados e 170 recusados
+com `429`** — trinta é exatamente `RATE_LIMIT_CADASTROS_POR_JANELA`. O limite
+funcionou como configurado; a configuração é que está errada para um evento onde
+dezenas de celulares saem do mesmo NAT.
+
+O relatório traz a conta e a proposta (300 por janela, 1200 por hora). **A
+decisão continua sendo de T21**, como o plano previa — o que mudou é que agora
+existe número no lugar do palpite (D-27).
+
+### D-56 se resolve, e a resposta é remover
+
+`pg_stat_user_indexes` depois da carga: `participante_nome_idx`,
+`participante_sobrenome_idx` e `tentativa_classificacao_idx` com **zero
+varreduras**. `tentativa_fila_idx` usado, e é o único que fica. A projeção lê
+3227 de 4000 linhas — o planejador está certo em varrer.
+
+### Três defeitos da bancada, e o que cada um ensinou sobre o sistema
+
+1. **`401` em toda chamada do painel.** O cookie nasce `__Host-` e `Secure`, e
+   cliente correto não o devolve por HTTP. O código estava certo; a bancada é
+   que era HTTP.
+2. **`409 chave_em_conflito` em 46 lançamentos.** O `$uuid` do Artillery é
+   resolvido por usuário virtual, não por requisição: o teste reenviava a mesma
+   chave com Tentativa diferente. O servidor recusou, como FL-06 promete.
+3. **`truncate` no meio da medição.** `medir.ts` importava uma constante de
+   `preparar.ts`, e `preparar.ts` **executa a si mesmo** ao ser carregado. A
+   primeira execução mediu 3227 linhas; a segunda mediu zero. Quem exporta não
+   executa — a constante virou `perf/banco.ts` (D-84).
+
+### Uma mudança de código saiu daqui
+
+**TLS passou a ser exigido pelo destino, e não pelo ambiente** (D-85). A regra
+`NODE_ENV === 'production'` tornava impossível rodar o artefato de produção
+contra um Postgres local — que é exatamente o que esta tarefa precisa — e ainda
+deixava desenvolvimento contra banco remoto trafegar em claro. Agora: laço local
+dispensa, qualquer host de rede exige, e não há variável que desligue.
+
+### Critérios de aceitação
+
+- [x] p95 de `/api/classificacao` ≤ 2 s com 500 concorrentes (RNF-01). —
+      **7,9 ms** em regime, 200 req/s sustentados, **zero 5xx** em 101.917
+      leituras. Com a ressalva da bancada: o número que decide sai do ambiente
+      publicado.
+- [x] 2000 cadastros e 4000 tempos sem degradação (RNF-02). — massa completa,
+      projeção em 3,7 ms, fila em 0,068 ms.
+- [x] Tempo lançado aparece na classificação em ≤ 30 s (RNF-03). — 5,1 s sem
+      borda; ~20 s somando `s-maxage=15`.
+- [ ] Página de cadastro interativa em ≤ 3 s em 3G simulado (RNF-04). —
+      **não medido.** Precisa de limitação de rede em aparelho; T21.
+- [x] Pico de 100 cadastros do mesmo IP não bloqueia legítimos. — **reprovou**,
+      e é o achado principal. Proposta de calibração no relatório; decisão em T21.
+- [x] Relatório publicado com números. — `docs/relatorio-carga.md`.
+
+### Acrescentado por T12
+
+- [x] **Reavaliar os três índices** (D-56). — medidos, zero varreduras, saem.
+      A migração fica para tarefa própria, com este relatório por justificativa.
+- [x] **Confirmar o dimensionamento do documento público.** — 3227 linhas em
+      **83,1 KB brutos / 14,0 KB gzip**, melhor que os 106/18 KB extrapolados em
+      T12 e bem abaixo dos ~40 KB do SDD. Com a borda de verdade, ainda por
+      confirmar.
+
+### Aberto
+
+- [ ] **Medir contra o alvo publicado**, com borda no meio: acerto de cache,
+      HTTP/3 sob perda de pacote e a latência real entre `gru1` e `sa-east-1`.
+- [ ] **RNF-04 em 3G**, com aparelho e limitação de rede reais (T21).
+- [ ] **Trinta minutos contínuos de escrita.** Medidos cinco; o ensaio longo é
+      o de T21.
+- [ ] **A migração que remove os três índices.**
+- [ ] **Decidir a calibração do limite de taxa** (T21, D-27).
+
+---
+
+## Estado
+
+**Parcial em 2026-08-28.** Quatro dos seis critérios fechados com número, um
+reprovado de propósito — é o que a tarefa existia para descobrir — e um adiado
+por depender de aparelho. `perf/` versionado, com preparo, três cenários e o
+medidor.

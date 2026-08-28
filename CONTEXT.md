@@ -8,11 +8,13 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-27.** Dezenove tarefas entregues (T01–T17, T22 e a parte de código da T19) e **628 testes passando** — 609 de unidade e integração, mais 19 de ponta a ponta. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-28.** Vinte tarefas tocadas (T01–T17 e T22 concluídas; T18 e T19 parciais) e **632 testes passando** — 613 de unidade e integração, mais 19 de ponta a ponta. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
 **As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
 
-Restam T18, T20 e T21 — carga, contingência em papel e o ensaio no mundo físico —, mais **a metade da T19 que não é código**.
+Restam T20 e T21 — contingência em papel e o ensaio no mundo físico —, mais **a metade de T18 e T19 que não é código**.
+
+**A T18 mediu e achou o que procurava.** Leitura sustentada a 200 req/s com p95 de 7,9 ms e zero 5xx; documento público de 14 KB comprimidos; propagação de ~20 s com borda. E um reprovado: **o limite de taxa, como está configurado, recusaria a fila do evento** — 200 cadastros do mesmo IP viraram 30 aceitos e 170 recusados. A proposta de calibração está em `docs/relatorio-carga.md`; a decisão é de T21.
 
 **A T19 está parcial, e a divisão é limpa.** Tudo o que o repositório decide sozinho está decidido, testado e escrito: região da função colada à do banco, pool dimensionado contra o pooler e não contra o número (D-80), HSTS com prazo (D-81), a versão publicada saindo do commit, `docs/deploy.md` e `docs/plano-do-dia.md`. O que falta são sete verificações que exigem **um endereço publicado e três contas criadas** — HTTP/3 anunciado, `HIT` de borda, sincronia de relógio, restauração de backup. Estão no checklist de `docs/deploy.md` §8, cada uma com o comando ao lado.
 
@@ -29,6 +31,26 @@ Restam T18, T20 e T21 — carga, contingência em papel e o ensaio no mundo fís
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-28 — Sessão 23: execução da T18
+
+**Pedido:** seguir com a próxima tarefa.
+
+**Entregue:** `perf/` versionado — preparo do banco de carga, três cenários de Artillery e um medidor —, mais `docs/relatorio-carga.md` com números medidos. Quatro dos seis critérios de T18 fechados, um **reprovado de propósito** e um adiado por depender de aparelho.
+
+**O achado que paga a tarefa: o limite de taxa recusaria a fila do evento.** Duzentos cadastros legítimos do mesmo IP produziram **30 criados e 170 recusados com 429** — trinta é exatamente `RATE_LIMIT_CADASTROS_POR_JANELA`. O limite funcionou como configurado; a configuração é que está errada para um lugar onde dezenas de celulares saem do mesmo NAT. D-27 sempre disse "calibrar em T18, decidir em T21"; agora existe número no lugar do palpite.
+
+**D-56 se resolve, e a resposta é remover.** Os três índices criados por raciocínio em T02 têm **zero varreduras** em `pg_stat_user_indexes` depois da carga. `tentativa_fila_idx` é o único usado. A projeção lê 3227 de 4000 linhas — varrer é o plano certo.
+
+**Números que sobreviveram à medição:** documento público de 3227 linhas em **83,1 KB brutos / 14,0 KB gzip** (melhor que os 106/18 extrapolados em T12); projeção em 3,7 ms; fila em 0,068 ms; leitura sustentada a 200 req/s com **p95 de 7,9 ms e zero 5xx em 101.917 requisições**; propagação de 5,1 s sem borda, ~20 s com ela.
+
+**Três defeitos foram da bancada, e cada um ensinou sobre o sistema.** O `401` em todo o painel era o cookie `Secure` recusando-se a viajar por HTTP — o código certo, o alvo errado. Os 46 `409 chave_em_conflito` eram o `$uuid` do Artillery, resolvido por usuário virtual e não por requisição: o teste reenviava a mesma chave com Tentativa diferente, e o servidor recusou como FL-06 promete. E um `truncate` no meio de uma medição veio de `medir.ts` importar uma constante de `preparar.ts`, que **executa a si mesmo** ao ser carregado (D-84).
+
+**Uma mudança de código saiu da tarefa:** TLS exigido pelo **destino** e não pelo ambiente (D-85). A regra antiga impedia rodar o artefato de produção contra Postgres local — o que T18 precisa — e ainda deixava desenvolvimento contra banco remoto trafegar em claro.
+
+**O que não foi medido, e por quê:** acerto de cache de borda, 3G real e HTTP/3 sob perda dependem do ambiente publicado, que depende do domínio. A medição inteira rodou numa máquina só, com gerador e servidor disputando os mesmos núcleos — é o pior caso, e é assim que está escrito no relatório.
+
+---
 
 ### 2026-08-27 — Sessão 22: T22 commitada e execução da T19
 
@@ -1350,6 +1372,33 @@ T16 tinha escrito o requisito com duas exigências que o plano gratuito não cum
 **O que fica é o teste** (`tests/deploy.test.ts`): `git status --ignored` sobre `app`, `src`, `tests`, `e2e` e `scripts` tem de devolver lista vazia. Conferi que ele falha de verdade, remontando o padrão largo: a mensagem nomeia `app/api/exportacao/`.
 
 **A lição, e ela é maior que o defeito:** um arquivo não rastreado é invisível para **toda** ferramenta que este projeto usa para se vigiar. Lint, tipos, testes, build e o teste de rastreabilidade de T17 leem o disco, e o disco estava certo. A única ferramenta que sabia da ausência era o `git`, e ninguém estava perguntando a ele.
+
+---
+
+### D-84 — Quem exporta não executa
+
+**Descoberto em 2026-08-28**, quando a mesma medição devolveu 3227 linhas numa execução e **zero** na seguinte.
+
+**O defeito.** `perf/medir.ts` importava `urlDoBancoDeCarga` de `perf/preparar.ts`. E `preparar.ts` é um comando: a última linha dele chama `principal()`. Importar a constante **disparava o preparo inteiro**, `truncate` incluído, correndo em paralelo com a medição. Na primeira execução a leitura ganhou a corrida; na segunda, o apagamento.
+
+**O que engana aqui** é que nada falha. Não há erro, não há aviso, e o número que sai é plausível — um banco vazio devolve tempos ótimos. Uma medição de desempenho contra base apagada é a pior espécie de resultado: parece sucesso.
+
+**A correção não é mover o `truncate`:** é um arquivo deixar de ser duas coisas. As constantes e os derivadores de URL foram para `perf/banco.ts`, sem efeito nenhum ao importar; `preparar.ts` ficou só comando. Vale para todo script deste repositório que também exporte algo — e há outros que ainda não morderam ninguém porque nada os importa.
+
+---
+
+### D-85 — TLS é exigido pelo destino, não pelo ambiente
+
+**Decidido em 2026-08-28**, ao descobrir que T18 não conseguia medir.
+
+A regra de T02 era `ssl: NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined`, e ela errava dos dois lados:
+
+- **Para menos:** um desenvolvimento apontado para banco remoto trafegava a base inteira em claro pela internet, sem que nada reclamasse.
+- **Para mais:** o artefato de produção ficava **impossível de rodar** contra um Postgres local. É exatamente o que T18 precisa para medir, e o que um ensaio de homologação num laptop precisaria para existir. A medição só começou depois de trocar isto.
+
+**O que decide é se existe rede a proteger.** Contra `localhost`, `127.0.0.1` ou `::1` o pacote não sai da máquina; contra qualquer outro host, TLS com certificado conferido. Uma `DATABASE_URL` de produção apontando para o Neon continua exigindo TLS, e **não existe variável de ambiente capaz de desligar** — a alternativa óbvia seria um `DB_SSL=false`, e uma variável que enfraquece a proteção é uma variável que um dia vaza para produção. URL que não se analisa também exige: a dúvida não relaxa a regra.
+
+`tests/deploy.test.ts` guarda os três casos, e mais um: que `ssl:` nunca volte a olhar para `NODE_ENV`.
 
 ---
 

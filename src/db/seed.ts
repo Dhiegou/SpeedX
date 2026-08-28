@@ -103,7 +103,20 @@ export async function popular(
   {
     participantes = 2000,
     semente = SEMENTE_PADRAO,
-  }: { participantes?: number; semente?: number } = {},
+    proporcaoNosDoisCockpits = 0.5,
+  }: {
+    participantes?: number
+    semente?: number
+    /**
+     * Fração que disputa os **dois** Cockpits (RF-03). Padrão 0,5, que é a
+     * massa realista de desenvolvimento — cerca de 1,5 Tentativa por pessoa.
+     *
+     * T18 usa 1: 2000 pessoas viram 4000 Tentativas, que é o **teto** do
+     * evento e o pior caso do documento público. Um teste de carga contra a
+     * média mede o dia bom; o número que interessa é o do dia cheio.
+     */
+    proporcaoNosDoisCockpits?: number
+  } = {},
 ): Promise<ResumoSeed> {
   const rnd = aleatorio(semente)
   const inicio = new Date('2026-08-18T08:00:00Z').getTime()
@@ -173,8 +186,8 @@ export async function popular(
       aceiteCompartilhamento: rnd() < 0.66,
     })
 
-    // Metade corre os dois Cockpits (RF-03).
-    const cockpits = rnd() < 0.5 ? [1, 2] : [rnd() < 0.5 ? 1 : 2]
+    // Metade corre os dois Cockpits (RF-03) — ou toda a massa, sob T18.
+    const cockpits = rnd() < proporcaoNosDoisCockpits ? [1, 2] : [rnd() < 0.5 ? 1 : 2]
 
     for (const cockpit of cockpits) {
       const sorteio = rnd()

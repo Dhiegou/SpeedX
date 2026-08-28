@@ -1,0 +1,65 @@
+# Pico de cadastro na abertura dos portões (T18 §4, RNF-12).
+#
+# **O teste que calibra o limite de taxa de T05.** Cem celulares no mesmo Wi-Fi
+# saem do mesmo IP por NAT, e na rede móvel a operadora coloca milhares de
+# assinantes atrás do mesmo endereço. Um limite apertado não impede ataque
+# nenhum e recusa participante legítimo — que é o custo mais caro que este
+# sistema pode pagar (RNF-15).
+#
+# O fluxo é o de gente de verdade, e não um POST direto: carrega a página,
+# espera o tempo de quem digita, envia. É a única forma de obter o token
+# assinado que o servidor emite na renderização (RNF-12) — e é justamente o que
+# um script de ataque teria de fazer também.
+#
+#   npx artillery run perf/cadastro.yml
+#
+config:
+  target: 'http://localhost:3300'
+  phases:
+    # Cem chegando em dez segundos. A abertura dos portões não é uma fila
+    # ordenada; é o ônibus da escola chegando junto.
+    - duration: 10
+      arrivalRate: 10
+      name: portões abertos
+  ensure:
+    thresholds:
+      - 'http.response_time.p95': 3000
+  http:
+    timeout: 15
+
+scenarios:
+  - name: cadastro completo
+    flow:
+      - get:
+          url: '/'
+          capture:
+            # O token vem no HTML do formulário, dentro do payload que o React
+            # entrega ao componente. Se este regex parar de casar, o teste falha
+            # no POST com `automacao_suspeita` — e é assim que se descobre.
+            - regexp: '(\d{13}\.[A-Za-z0-9_-]{43})'
+              as: token
+      # FORMULARIO_SEGUNDOS_MINIMOS é 3. Menos que isso e o servidor trata como
+      # automação, que é exatamente o que ele deve fazer.
+      - think: 4
+      - post:
+          url: '/api/inscricao'
+          headers:
+            content-type: 'application/json'
+            idempotency-key: '{{ $uuid }}'
+          json:
+            nome: 'Carga'
+            # Nome válido, e não aleatório: gerador de cadeia aleatória produz
+            # dígitos e símbolos,
+            # que o validador recusa com 422 — e um teste de limite de taxa que
+            # nunca chega ao limite não mede nada. Descoberto na primeira
+            # execução: 84 de 100 cadastros morreram na validação do sobrenome.
+            sobrenome: 'DeCarga'
+            email: 'carga-{{ $uuid }}@exemplo.test'
+            telefone: '11999990000'
+            idade: 25
+            cockpits: [1]
+            consentimento: true
+            aceiteCompartilhamento: false
+            token: '{{ token }}'
+          expect:
+            - statusCode: [201, 429]

@@ -24,7 +24,7 @@ npm run test:e2e      # ponta a ponta (precisa de Postgres de pé)
 npm run test:e2e:ui   # o mesmo, com o inspetor do Playwright
 ```
 
-**Medido:** 609 testes de unidade e integração em ~100 s. O critério de T17 é
+**Medido:** 613 testes de unidade e integração em ~100 s. O critério de T17 é
 dez minutos; a folga existe para que ninguém aprenda a pular a suíte.
 
 ---

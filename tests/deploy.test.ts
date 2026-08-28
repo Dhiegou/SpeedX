@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { exigeTls } from '@/db'
 
 /**
  * As promessas de T19 que o repositório **consegue** guardar sozinho.
@@ -167,6 +168,41 @@ describe('o deploy sai do commit, e o commit tem tudo (T19 §6)', () => {
       .map((linha) => linha.slice(3).trim())
 
     expect(ignorados).toEqual([])
+  })
+})
+
+describe('TLS na conexão com o banco é decidido pelo destino (FL-09)', () => {
+  it('qualquer host de rede exige TLS, e nenhuma variável de ambiente desliga', () => {
+    for (const url of [
+      'postgresql://u:s@ep-abc-123-pooler.sa-east-1.aws.neon.tech/speedx',
+      'postgresql://u:s@10.0.0.7:5432/speedx',
+      'postgresql://u:s@db.interno.example/speedx',
+    ]) {
+      expect(exigeTls(url), url).toBe(true)
+    }
+  })
+
+  it('só o laço local dispensa TLS — ali não há rede a proteger', () => {
+    for (const url of [
+      'postgresql://u:s@localhost:5432/speedx',
+      'postgresql://u:s@127.0.0.1:5432/speedx_carga',
+    ]) {
+      expect(exigeTls(url), url).toBe(false)
+    }
+  })
+
+  it('URL ilegível exige TLS — a dúvida não relaxa a regra', () => {
+    expect(exigeTls('não é uma url')).toBe(true)
+  })
+
+  it('T18 — a regra antiga proibiria medir, e a nova protege mais, não menos', () => {
+    // Antes o critério era `NODE_ENV === 'production'`, e errava dos dois lados:
+    // desenvolvimento contra banco remoto trafegava em claro, e o artefato de
+    // produção não subia contra um Postgres local — que é o que T18 precisa.
+    const fonte = ler('src', 'db', 'index.ts')
+
+    expect(fonte).not.toMatch(/ssl:.*NODE_ENV/)
+    expect(fonte).toMatch(/rejectUnauthorized: true/)
   })
 })
 

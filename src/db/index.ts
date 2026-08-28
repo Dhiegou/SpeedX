@@ -16,13 +16,40 @@ declare global {
   var __speedxPool: Pool | undefined
 }
 
+/**
+ * TLS é exigido pelo **destino**, não pelo ambiente (FL-09).
+ *
+ * A regra anterior era `NODE_ENV === 'production'`, e ela errava dos dois
+ * lados. Errava para menos: um desenvolvimento apontado para um banco remoto
+ * trafegava a base em claro pela internet, calado. E errava para mais: o
+ * artefato de produção ficava **impossível de rodar** contra um Postgres local,
+ * que é exatamente o que T18 precisa para medir e o que um ensaio de
+ * homologação num laptop precisaria para existir.
+ *
+ * O que decide é se há rede a proteger. Contra `localhost` o pacote não sai da
+ * máquina; contra qualquer outro host, TLS com certificado conferido. Um
+ * `DATABASE_URL` de produção apontando para Neon continua exigindo TLS, e não
+ * há variável de ambiente capaz de desligar isso — a que existia, e que um dia
+ * vazaria para produção, deixou de existir.
+ */
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
+
+export function exigeTls(urlDoBanco: string): boolean {
+  try {
+    return !LOOPBACK.has(new URL(urlDoBanco).hostname)
+  } catch {
+    // URL que não se analisa não é motivo para relaxar: exige TLS e deixa o
+    // driver reclamar do endereço, que é o defeito de verdade.
+    return true
+  }
+}
+
 function criarPool(): Pool {
-  const { DATABASE_URL, NODE_ENV, DB_POOL_MAX } = env()
+  const { DATABASE_URL, DB_POOL_MAX } = env()
 
   return new Pool({
     connectionString: DATABASE_URL,
-    // TLS obrigatório fora de desenvolvimento (SDD FL-09).
-    ssl: NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined,
+    ssl: exigeTls(DATABASE_URL) ? { rejectUnauthorized: true } : undefined,
     // O painel precisa de resposta previsível sob pressão: melhor falhar rápido
     // e o Operador repetir do que a requisição pendurar sem retorno (RNF-16).
     connectionTimeoutMillis: 5_000,

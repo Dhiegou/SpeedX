@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
+import { exigeTls } from '@/db'
 import { carregarAmbienteDoTerminal } from '@/shared/ambienteCli'
 import { env } from '@/shared/env'
 
@@ -13,11 +14,12 @@ carregarAmbienteDoTerminal()
  * (src/db/index.ts) é global e ficaria pendurado, deixando o comando sem sair.
  */
 async function principal(): Promise<void> {
-  const { DATABASE_URL, NODE_ENV } = env()
+  const { DATABASE_URL } = env()
 
   const pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: NODE_ENV === 'production' ? { rejectUnauthorized: true } : undefined,
+    // Mesma regra da aplicação: TLS pelo destino, não pelo ambiente.
+    ssl: exigeTls(DATABASE_URL) ? { rejectUnauthorized: true } : undefined,
     max: 1,
   })
 
