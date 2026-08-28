@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
-import type { Pitch } from '@/contexts/inscricao/contrato'
+import type { Cockpit } from '@/contexts/inscricao/contrato'
 import * as schema from '@/db/schema'
 import {
   chaveValida,
@@ -92,7 +92,7 @@ export type ResultadoDeLancamento =
 type EfeitoDeLancamento = {
   readonly tentativaId: string
   readonly participanteId: string
-  readonly pitch: number
+  readonly cockpit: number
   readonly estado: EstadoDaTentativa
   readonly tempoMs: number | null
   readonly resolvidoEm: string | null
@@ -100,8 +100,8 @@ type EfeitoDeLancamento = {
   readonly lancamentoId: string
 }
 
-function comoPitch(valor: number): Pitch {
-  // O banco garante `pitch in (1,2)` por constraint; isto é o estreitamento de
+function comoCockpit(valor: number): Cockpit {
+  // O banco garante `cockpit in (1,2)` por constraint; isto é o estreitamento de
   // tipo que o TypeScript não deduz de um smallint.
   return valor === 2 ? 2 : 1
 }
@@ -114,7 +114,7 @@ function reidratar(efeito: EfeitoDeLancamento): {
     tentativa: {
       id: efeito.tentativaId,
       participanteId: efeito.participanteId,
-      pitch: comoPitch(efeito.pitch),
+      cockpit: comoCockpit(efeito.cockpit),
       estado: efeito.estado,
       tempoMs: efeito.tempoMs,
       resolvidoEm: efeito.resolvidoEm === null ? null : new Date(efeito.resolvidoEm),
@@ -195,7 +195,7 @@ async function aplicar(
         .select({
           id: schema.tentativa.id,
           participanteId: schema.tentativa.participanteId,
-          pitch: schema.tentativa.pitch,
+          cockpit: schema.tentativa.cockpit,
           estado: schema.tentativa.estado,
           tempoMs: schema.tentativa.tempoMs,
           resolvidoEm: schema.tentativa.resolvidoEm,
@@ -236,7 +236,7 @@ async function aplicar(
         .returning({
           id: schema.tentativa.id,
           participanteId: schema.tentativa.participanteId,
-          pitch: schema.tentativa.pitch,
+          cockpit: schema.tentativa.cockpit,
           estado: schema.tentativa.estado,
           tempoMs: schema.tentativa.tempoMs,
           resolvidoEm: schema.tentativa.resolvidoEm,
@@ -265,7 +265,7 @@ async function aplicar(
       const efeito: EfeitoDeLancamento = {
         tentativaId: atualizada.id,
         participanteId: atualizada.participanteId,
-        pitch: atualizada.pitch,
+        cockpit: atualizada.cockpit,
         estado: atualizada.estado,
         tempoMs: atualizada.tempoMs,
         resolvidoEm: atualizada.resolvidoEm?.toISOString() ?? null,

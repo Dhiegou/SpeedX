@@ -163,7 +163,7 @@ describe('o expurgo total', () => {
       .insert(schema.tentativa)
       .values({
         participanteId: pessoa!.id,
-        pitch: 1,
+        cockpit: 1,
         estado: 'valida',
         tempoMs: 90_000,
         resolvidoEm: new Date(),
@@ -211,7 +211,7 @@ describe('o expurgo total', () => {
     const { resumo } = await expurgarTudo(banco.db)
 
     expect(resumo.participantes).toBe(60)
-    expect(resumo.pitches.length).toBeGreaterThan(0)
+    expect(resumo.cockpits.length).toBeGreaterThan(0)
 
     // A verificação de verdade: varre os **valores** do documento — as chaves
     // são nomes de campo escritos no código, e olhá-las só produziria um teste
@@ -234,11 +234,11 @@ describe('o expurgo total', () => {
     await popular(banco.db, { participantes: 50 })
 
     const resumo = await resumoAnonimo(banco.db)
-    const pitch = resumo.pitches.find((p) => p.validas > 0)
+    const cockpit = resumo.cockpits.find((p) => p.validas > 0)
 
-    expect(pitch).toBeDefined()
-    expect(pitch!.melhorMs).toBeLessThanOrEqual(pitch!.medianaMs!)
-    expect(pitch!.medianaMs).toBeLessThanOrEqual(pitch!.piorMs!)
+    expect(cockpit).toBeDefined()
+    expect(cockpit!.melhorMs).toBeLessThanOrEqual(cockpit!.medianaMs!)
+    expect(cockpit!.medianaMs).toBeLessThanOrEqual(cockpit!.piorMs!)
   })
 
   it('numa base vazia não quebra nem inventa número', async () => {
@@ -246,7 +246,7 @@ describe('o expurgo total', () => {
 
     expect(resumo.participantes).toBe(0)
     expect(resumo.menoresDeIdade).toBe(0)
-    expect(resumo.pitches).toEqual([])
+    expect(resumo.cockpits).toEqual([])
   })
 })
 
@@ -267,8 +267,8 @@ describe('a exclusão individual, a pedido', () => {
     })
 
     await banco.db.insert(schema.tentativa).values([
-      { participanteId: pessoa!.id, pitch: 1 },
-      { participanteId: pessoa!.id, pitch: 2 },
+      { participanteId: pessoa!.id, cockpit: 1 },
+      { participanteId: pessoa!.id, cockpit: 2 },
     ])
 
     return pessoa!.id

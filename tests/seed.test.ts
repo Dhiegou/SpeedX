@@ -28,7 +28,7 @@ afterAll(async () => {
 describe('massa de desenvolvimento', () => {
   it('gera participantes e tentativas na proporção esperada', () => {
     expect(resumo.participantes).toBe(300)
-    // Metade corre os dois Pitches: entre 1x e 2x o número de pessoas.
+    // Metade corre os dois Cockpits: entre 1x e 2x o número de pessoas.
     expect(resumo.tentativas).toBeGreaterThan(resumo.participantes)
     expect(resumo.tentativas).toBeLessThanOrEqual(resumo.participantes * 2)
     expect(resumo.validas + resumo.ausentes + resumo.pendentes).toBe(resumo.tentativas)
@@ -88,11 +88,11 @@ describe('massa de desenvolvimento', () => {
 })
 
 describe('consultas quentes do evento', () => {
-  it('RF-14 — a Fila de um Pitch usa índice, não varredura', async () => {
+  it('RF-14 — a Fila de um Cockpit usa índice, não varredura', async () => {
     const plano = await banco.cliente.query<{ 'QUERY PLAN': string }>(`
       explain select id, participante_id, inscrito_em
       from tentativa
-      where pitch = 1 and estado = 'pendente'
+      where cockpit = 1 and estado = 'pendente'
       order by inscrito_em
     `)
 
@@ -104,7 +104,7 @@ describe('consultas quentes do evento', () => {
     const fila = await banco.db
       .select({ inscritoEm: schema.tentativa.inscritoEm, estado: schema.tentativa.estado })
       .from(schema.tentativa)
-      .where(sql`pitch = 1 and estado = 'pendente'`)
+      .where(sql`cockpit = 1 and estado = 'pendente'`)
       .orderBy(schema.tentativa.inscritoEm)
 
     expect(fila.every((t) => t.estado === 'pendente')).toBe(true)

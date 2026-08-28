@@ -2,19 +2,20 @@ import type { NextRequest } from 'next/server'
 import { incluirTentativa } from '@/contexts/cronometragem/servico'
 import { esquemaInclusao } from '@/contexts/cronometragem/schema'
 import { exigirOperadorNaApi } from '@/contexts/identidade/servico'
+import { COCKPIT } from '@/shared/vocabulario'
 import { comRegistro, falha, lerCorpo, responder } from '../_apoio'
 import { serializarTentativa } from '../_traduzir'
 
 /**
- * `POST /api/painel/tentativa` — inclui alguém num Pitch adicional (RF-24).
+ * `POST /api/painel/tentativa` — inclui alguém num Cockpit adicional (RF-24).
  *
- * O caso real: a pessoa se inscreveu só no Pitch 1, viu a corrida e resolveu
+ * O caso real: a pessoa se inscreveu só no Cockpit 1, viu a corrida e resolveu
  * disputar o 2. Sem isto, o Operador a mandaria preencher o formulário de novo
  * e o evento acabaria com dois cadastros da mesma pessoa — o que estraga a
  * Exportação, a Classificação e o expurgo de T15 de uma vez só.
  *
  * **Sem chave de idempotência, e isso é deliberado.** A unicidade
- * `(participante_id, pitch)` no banco já torna a operação idempotente por
+ * `(participante_id, cockpit)` no banco já torna a operação idempotente por
  * construção: o reenvio esbarra na constraint e volta como `409 ja_existe`, que
  * é a mesma informação que uma chave devolveria. Acrescentar chave aqui seria
  * cerimônia sem efeito.
@@ -65,7 +66,7 @@ export function POST(request: NextRequest): Promise<Response> {
         return {
           resposta: falha(
             'tentativa_ja_existe',
-            'Esta pessoa já tem uma tentativa neste Pitch.',
+            `Esta pessoa já tem uma tentativa ${COCKPIT.artigo === 'o' ? 'neste' : 'nesta'} ${COCKPIT.singular}.`,
             409,
           ),
           registro: { resultado: 'recusada', motivo: 'ja_existe' },
@@ -77,10 +78,10 @@ export function POST(request: NextRequest): Promise<Response> {
           registro: { resultado: 'recusada', motivo: 'participante_inexistente' },
         }
 
-      case 'pitch_invalido':
+      case 'cockpit_invalido':
         return {
-          resposta: falha('pitch_invalido', 'Informe pitch 1 ou 2.', 400),
-          registro: { resultado: 'recusada', motivo: 'pitch_invalido' },
+          resposta: falha('cockpit_invalido', 'Informe cockpit 1 ou 2.', 400),
+          registro: { resultado: 'recusada', motivo: 'cockpit_invalido' },
         }
     }
   })

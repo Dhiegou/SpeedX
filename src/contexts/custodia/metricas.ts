@@ -7,7 +7,7 @@ import * as schema from '@/db/schema'
  *
  * Os números que o time olha durante o evento e que **só o banco sabe**:
  * quantos se inscreveram nesta hora, quantas Tentativas continuam pendentes em
- * cada Pitch, quantos Lançamentos por minuto. Latência, erro e taxa de
+ * cada Cockpit, quantos Lançamentos por minuto. Latência, erro e taxa de
  * revalidação vêm do log, por `shared/metricas.ts` — as duas metades juntas são
  * o painel; nenhuma sozinha responde.
  *
@@ -30,8 +30,8 @@ const UMA_HORA_MS = 60 * 60 * 1000
 
 export type InscritosPorHora = { readonly hora: string; readonly total: number }
 
-export type SituacaoDoPitch = {
-  readonly pitch: number
+export type SituacaoDoCockpit = {
+  readonly cockpit: number
   readonly pendentes: number
   readonly validas: number
   readonly ausentes: number
@@ -44,7 +44,7 @@ export type PainelDoDia = {
     readonly ultimaHora: number
     readonly porHora: readonly InscritosPorHora[]
   }
-  readonly pitches: readonly SituacaoDoPitch[]
+  readonly cockpits: readonly SituacaoDoCockpit[]
   readonly lancamentos: {
     readonly total: number
     readonly correcoes: number
@@ -73,7 +73,7 @@ export async function painelDoDia(db: Db, agora: Date = new Date()): Promise<Pai
   const umaHoraAtras = new Date(agora.getTime() - UMA_HORA_MS)
   const cincoMinutosAtras = new Date(agora.getTime() - 5 * 60_000)
 
-  const [total, ultimaHora, porHora, pitches, lancamentos, recentes] = await Promise.all([
+  const [total, ultimaHora, porHora, cockpits, lancamentos, recentes] = await Promise.all([
     umNumero(db.select({ total: sql<number>`count(*)::int` }).from(schema.participante)),
 
     umNumero(
@@ -97,14 +97,14 @@ export async function painelDoDia(db: Db, agora: Date = new Date()): Promise<Pai
 
     db
       .select({
-        pitch: schema.tentativa.pitch,
+        cockpit: schema.tentativa.cockpit,
         pendentes: sql<number>`count(*) filter (where ${schema.tentativa.estado} = 'pendente')::int`,
         validas: sql<number>`count(*) filter (where ${schema.tentativa.estado} = 'valida')::int`,
         ausentes: sql<number>`count(*) filter (where ${schema.tentativa.estado} = 'ausente')::int`,
       })
       .from(schema.tentativa)
-      .groupBy(schema.tentativa.pitch)
-      .orderBy(asc(schema.tentativa.pitch)),
+      .groupBy(schema.tentativa.cockpit)
+      .orderBy(asc(schema.tentativa.cockpit)),
 
     db
       .select({
@@ -134,7 +134,7 @@ export async function painelDoDia(db: Db, agora: Date = new Date()): Promise<Pai
   return {
     geradoEm: agora.toISOString(),
     inscritos: { total, ultimaHora, porHora },
-    pitches,
+    cockpits,
     lancamentos: {
       total: lancados,
       correcoes: corrigidos,
@@ -157,16 +157,16 @@ export async function contarInscritos(db: Db): Promise<number> {
 }
 
 /**
- * Quantas Tentativas seguem pendentes num Pitch — o alerta de fila parada.
+ * Quantas Tentativas seguem pendentes num Cockpit — o alerta de fila parada.
  *
  * Separado de `painelDoDia` porque é a única consulta que alguém vai querer
  * repetir a cada minuto, e ela custa um índice já existente (`tentativa_fila_idx`).
  */
-export async function contarPendentes(db: Db, pitch: number): Promise<number> {
+export async function contarPendentes(db: Db, cockpit: number): Promise<number> {
   return umNumero(
     db
       .select({ total: sql<number>`count(*)::int` })
       .from(schema.tentativa)
-      .where(and(eq(schema.tentativa.estado, 'pendente'), eq(schema.tentativa.pitch, pitch))),
+      .where(and(eq(schema.tentativa.estado, 'pendente'), eq(schema.tentativa.cockpit, cockpit))),
   )
 }

@@ -74,7 +74,7 @@ async function corredor(
 
   await banco.db.insert(schema.tentativa).values({
     participanteId: p?.id ?? '',
-    pitch: 1,
+    cockpit: 1,
     estado: 'valida',
     tempoMs,
     resolvidoEm: AGORA,

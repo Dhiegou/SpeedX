@@ -53,11 +53,11 @@ const montar = (linhas: readonly LinhaCompacta[] = BASE) => {
 }
 
 describe('as colunas de RF-27, e nenhuma a mais', () => {
-  it('mostra posição, nome, pitch e tempo', () => {
+  it('mostra posição, nome, cockpit e tempo', () => {
     montar()
 
     const colunas = screen.getAllByRole('columnheader').map((c) => c.textContent)
-    expect(colunas).toEqual(['#', 'Nome', 'Pitch', 'Tempo'])
+    expect(colunas).toEqual(['#', 'Nome', 'Cockpit', 'Tempo'])
   })
 
   it('o tempo é formatado pelo formatador compartilhado', () => {
@@ -76,16 +76,16 @@ describe('as colunas de RF-27, e nenhuma a mais', () => {
   })
 })
 
-describe('filtro por Pitch (RF-29)', () => {
+describe('filtro por Cockpit (RF-29)', () => {
   it('renumera a partir de 1 e não fala com o servidor', async () => {
     const teclado = montar()
 
-    await teclado.click(screen.getByRole('tab', { name: 'Pitch 2' }))
+    await teclado.click(screen.getByRole('tab', { name: 'Cockpit 2' }))
 
     const linhas = screen.getAllByRole('row').slice(1)
     expect(linhas).toHaveLength(2)
 
-    // Bruno é o 2º no geral e o 1º do Pitch 2.
+    // Bruno é o 2º no geral e o 1º do Cockpit 2.
     expect(within(linhas[0] as HTMLElement).getByText('1')).toBeTruthy()
     expect(linhas[0]?.textContent).toContain('Bruno Souza')
 

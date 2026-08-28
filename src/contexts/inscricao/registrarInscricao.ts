@@ -1,7 +1,7 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from '@/db/schema'
 import { assegurarTermoAprovado, TERMO_VIGENTE } from './consentimento'
-import type { Pitch } from './contrato'
+import type { Cockpit } from './contrato'
 import { InscricaoInvalidaError, paraErrosDeValidacao } from './erros'
 import { esquemaInscricao, type Inscricao } from './schema'
 
@@ -25,7 +25,7 @@ export type InscricaoRegistrada = {
   readonly participanteId: string
   readonly nome: string
   readonly sobrenome: string
-  readonly pitches: readonly Pitch[]
+  readonly cockpits: readonly Cockpit[]
   readonly versaoTermo: string
 }
 
@@ -99,18 +99,18 @@ export async function registrarInscricao(db: Db, entrada: unknown): Promise<Insc
       aceiteCompartilhamento: inscricao.aceiteCompartilhamento,
     })
 
-    // A Tentativa nasce Pendente na Inscrição (SDD BC-02), uma por Pitch
+    // A Tentativa nasce Pendente na Inscrição (SDD BC-02), uma por Cockpit
     // declarado. `inscrito_em` vem do relógio do servidor, pelo default da
     // tabela: nunca do dispositivo de quem se inscreveu.
     await tx
       .insert(schema.tentativa)
-      .values(inscricao.pitches.map((pitch) => ({ participanteId: participante.id, pitch })))
+      .values(inscricao.cockpits.map((cockpit) => ({ participanteId: participante.id, cockpit })))
 
     return {
       participanteId: participante.id,
       nome: inscricao.nome,
       sobrenome: inscricao.sobrenome,
-      pitches: inscricao.pitches,
+      cockpits: inscricao.cockpits,
       versaoTermo: TERMO_VIGENTE.versao,
     }
   })

@@ -47,9 +47,9 @@ graph TD
 - Nenhum Participante existe sem Consentimento registrado (RF-08)
 - Nenhum Participante com idade abaixo de 18 existe sem Responsável completo e consentimento do Responsável (RF-06, RNF-07)
 - Idade inferior a 13 não produz Participante (RF-04)
-- Toda Inscrição declara ao menos um Pitch (RF-03)
+- Toda Inscrição declara ao menos um Cockpit (RF-03)
 
-**O que publica.** O evento `InscriçãoConfirmada`, contendo identificador do Participante, os Pitches declarados e o instante da inscrição. Não publica dados pessoais.
+**O que publica.** O evento `InscriçãoConfirmada`, contendo identificador do Participante, os Cockpits declarados e o instante da inscrição. Não publica dados pessoais.
 
 **Requisitos que ancora.** RF-01 a RF-10, RNF-07, RNF-12, RNF-13, RNF-15, RNF-17.
 
@@ -61,7 +61,7 @@ graph TD
 
 **Por que é um contexto próprio.** É o único contexto com escrita sob pressão de tempo real e com operador humano no caminho crítico. Seus requisitos são de ergonomia e integridade, não de validação de entrada. É também o único que produz dado novo durante o evento.
 
-**Agregado raiz: Tentativa.** Uma Tentativa nasce Pendente no momento da Inscrição e transiciona uma única vez para Válida ou Ausente. A Tentativa, não o Participante, é o objeto que carrega o Pitch — decisão que decorre de RF-03 e RF-24, já que a mesma pessoa pode disputar as duas pistas.
+**Agregado raiz: Tentativa.** Uma Tentativa nasce Pendente no momento da Inscrição e transiciona uma única vez para Válida ou Ausente. A Tentativa, não o Participante, é o objeto que carrega o Cockpit — decisão que decorre de RF-03 e RF-24, já que a mesma pessoa pode disputar os dois.
 
 **Máquina de estados.**
 
@@ -74,7 +74,7 @@ Pendente ──lançar tempo──▶ Válida ──corrigir──▶ Válida
 Uma Tentativa Ausente não retorna a Pendente. Se a pessoa reaparecer e correr, o operador lança o tempo diretamente, o que transiciona para Válida.
 
 **Invariantes.**
-- No máximo uma Tentativa por Participante por Pitch (RF-25)
+- No máximo uma Tentativa por Participante por Cockpit (RF-25)
 - Tentativa Válida sempre possui Tempo; Pendente e Ausente nunca possuem (RF-21)
 - Toda transição registra Operador e instante (RF-23)
 
@@ -96,7 +96,7 @@ Segundo, **perfil de carga oposto**. Inscrição e Cronometragem são escrita es
 
 Terceiro, **tolerância a defasagem**. RNF-03 admite 30 segundos de atraso. Inscrição e Cronometragem não admitem defasagem alguma. São garantias de consistência incompatíveis no mesmo modelo.
 
-**Modelo de leitura.** Projeção materializada contendo apenas: identificador da Tentativa, Nome Público, Pitch, Tempo e instante do registro. Ordenada por Tempo crescente, desempatada pelo registro mais antigo (RF-31).
+**Modelo de leitura.** Projeção materializada contendo apenas: identificador da Tentativa, Nome Público, Cockpit, Tempo e instante do registro. Ordenada por Tempo crescente, desempatada pelo registro mais antigo (RF-31).
 
 **Estratégia de entrega.** A projeção completa é servida como um único documento em cache, com janela de revalidação de 15 segundos. Busca e filtro (RF-29, RF-30) executam no dispositivo do usuário sobre o documento já recebido.
 
@@ -132,11 +132,13 @@ O dimensionamento sustenta essa escolha: 4000 Tentativas em formato compacto pro
 
 ## 3. Linguagem Ubíqua
 
-### Nota preliminar sobre "Pitch"
+### O termo oficial é "Cockpit" — resolvido em 2026-08-25
 
-O PRD usa "Pista"; a equipe do evento fala "Pitch 1" e "Pitch 2". **A linguagem ubíqua deve seguir o vocabulário falado, não o escrito.** Se no dia do evento o supervisor vai dizer "esse é do pitch 2", o código, a interface e este documento devem dizer Pitch. Adoto **Pitch** como termo oficial e trato "Pista" como sinônimo obsoleto, a ser eliminado da documentação.
+O PRD usa "Pista"; este documento adotou "Pitch" por ser o que a equipe parecia falar. **As duas estavam erradas, e o organizador desempatou: são dois _cockpits_, que é onde fica o simulador.** Não há pista física nenhuma — o evento é de simulador, e a palavra que o supervisor vai dizer no dia é "cockpit".
 
-Essa é uma decisão a confirmar com o organizador antes da implementação. Divergência entre o termo do código e o termo falado no corredor é origem clássica de erro de operação.
+A regra que gerou o erro continua valendo, e é ela que importa: **a linguagem ubíqua segue o vocabulário falado, não o escrito.** Divergência entre o termo do código e o termo falado no corredor é origem clássica de erro de operação. Ficou barato descobrir tarde porque a palavra que o participante lê mora numa constante só, `src/shared/vocabulario.ts` (D-31) — a troca custou duas linhas e duas mensagens de erro que tinham escapado dela.
+
+**O identificador interno acompanhou a palavra** (T22, no mesmo dia). A primeira decisão foi manter Pitch na coluna, no campo de API e no tipo de domínio, para poupar uma migração — e durou o tempo de alguém perguntar se não era melhor renomear. O argumento que decide não é o custo da migração: é quem lê o nome da coluna às sete da noite do dia do evento, com a fila parada. Duas palavras para o mesmo conceito é o que esta seção existe para impedir. Hoje é `tentativa.cockpit` em toda parte. "Pista" e "Pitch" são sinônimos obsoletos, e só aparecem em texto histórico.
 
 ### Glossário
 
@@ -144,13 +146,13 @@ Essa é uma decisão a confirmar com o organizador antes da implementação. Div
 
 **Responsável** — Adulto que autoriza a participação de Participante menor de 18 anos. Não é usuário do sistema; é sujeito de dados registrado.
 
-**Inscrição** — Ato de registro de um Participante, incluindo a declaração dos Pitches pretendidos e o Consentimento. Ocorre uma única vez por pessoa.
+**Inscrição** — Ato de registro de um Participante, incluindo a declaração dos Cockpits pretendidos e o Consentimento. Ocorre uma única vez por pessoa.
 
 **Consentimento** — Manifestação registrada de concordância com o tratamento dos dados. Para menores de 18, compreende obrigatoriamente a manifestação do Responsável.
 
-**Pitch** — Uma das duas pistas do evento. Valores possíveis: 1 e 2. É atributo da Tentativa, nunca do Participante.
+**Cockpit** — Um dos dois postos de simulador do evento, onde fica o simulador que o Participante disputa. Valores possíveis: 1 e 2. É atributo da Tentativa, nunca do Participante. Uma palavra só, da tela ao nome da coluna (`tentativa.cockpit`); a que o participante lê mora em `src/shared/vocabulario.ts`.
 
-**Tentativa** — Intenção registrada de um Participante disputar um Pitch específico. Nasce Pendente na Inscrição. Um Participante possui de uma a duas Tentativas. Este é o conceito que muitas pessoas chamam informalmente de "corrida"; evitar esse uso, pois "corrida" também nomeia o evento inteiro.
+**Tentativa** — Intenção registrada de um Participante disputar um Cockpit específico. Nasce Pendente na Inscrição. Um Participante possui de uma a duas Tentativas. Este é o conceito que muitas pessoas chamam informalmente de "corrida"; evitar esse uso, pois "corrida" também nomeia o evento inteiro.
 
 **Pendente** — Estado da Tentativa cujo desfecho ainda não foi registrado. Compõe a Fila.
 
@@ -162,13 +164,13 @@ Essa é uma decisão a confirmar com o organizador antes da implementação. Div
 
 **Lançamento** — Ato do Operador de registrar um Tempo. Distinto de Tempo: Lançamento é o evento, Tempo é o valor. RF-23 rastreia Lançamentos, não Tempos.
 
-**Fila** — Conjunto ordenado de Tentativas Pendentes de um Pitch, do cadastro mais antigo para o mais recente. É a visão padrão de trabalho do Operador. Não é fila física de pessoas, embora tenda a coincidir com ela.
+**Fila** — Conjunto ordenado de Tentativas Pendentes de um Cockpit, do cadastro mais antigo para o mais recente. É a visão padrão de trabalho do Operador. Não é fila física de pessoas, embora tenda a coincidir com ela.
 
 **Operador** — Usuário autenticado que realiza Lançamentos. Chamado de "supervisor" pelo organizador; os termos são equivalentes e Operador é o oficial no sistema.
 
 **Nome Público** — Identificador do Participante em superfície pública, e o único admissível ali. Para maior de idade, nome e sobrenome completos; para menor de 18, nome e apenas a inicial do sobrenome (RNF-09, revisado em 2026-08-19). Existe somente no contexto de Classificação. **Consequência conhecida:** o formato abreviado sinaliza que a pessoa é menor de idade — aceito em D-21 como exposição menor que a do nome completo.
 
-**Posição** — Índice ordinal de uma Tentativa Válida na Classificação. **Relativa ao filtro aplicado**: filtrar por Pitch renumera a partir de 1 (RF-29). Não é atributo persistido; é calculada na apresentação.
+**Posição** — Índice ordinal de uma Tentativa Válida na Classificação. **Relativa ao filtro aplicado**: filtrar por Cockpit renumera a partir de 1 (RF-29). Não é atributo persistido; é calculada na apresentação.
 
 **Desempate** — Regra aplicada a Tempos idênticos: prevalece o Lançamento mais antigo (RF-31).
 
@@ -225,7 +227,7 @@ Há um segundo ganho específico deste cenário. QUIC identifica a conexão por 
 
 O envio do cadastro carrega, no caso de menores, o registro de Consentimento do Responsável. Sua perda parcial não é degradação de serviço: é ausência de base legal para dados já coletados. RNF-07 não admite entrega probabilística.
 
-O mesmo vale para o Lançamento. RF-25 estabelece unicidade por Participante e Pitch; RF-23 exige rastreabilidade de autoria. Ambos pressupõem que a escrita ou aconteceu integralmente ou não aconteceu.
+O mesmo vale para o Lançamento. RF-25 estabelece unicidade por Participante e Cockpit; RF-23 exige rastreabilidade de autoria. Ambos pressupõem que a escrita ou aconteceu integralmente ou não aconteceu.
 
 **Refinamento necessário:** confiabilidade de transporte garante entrega, não unicidade de efeito. Se a confirmação se perder no retorno, o Operador reenvia e a operação executa duas vezes. Transporte não resolve isso — **exige chave de idempotência na camada de aplicação** para FL-03 e FL-06. Este é o ponto onde depender apenas do TCP produz defeito real.
 
@@ -282,7 +284,7 @@ Alertas e registros de auditoria não seguem esta regra e usam transporte confi�
 - [ ] Validar idempotência de FL-03 e FL-06 sob reenvio deliberado
 - [ ] Confirmar sincronia de relógio do servidor e que o instante de Lançamento é o do servidor
 - [ ] Teste de carga de FL-07 com 500 acessos concorrentes (RNF-01)
-- [ ] Confirmar com o organizador o termo oficial: Pitch ou Pista
+- [x] Confirmar com o organizador o termo oficial — **Cockpit**, confirmado em 2026-08-25; a interface reflete a decisão
 - [ ] Verificar ausência de campo pessoal em toda resposta pública (RNF-08, RNF-09)
 
 ---

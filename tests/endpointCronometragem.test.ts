@@ -103,7 +103,7 @@ async function criarParticipante(sobrescrever: Record<string, unknown> = {}): Pr
 }
 
 async function criarTentativa(
-  pitch: 1 | 2 = 1,
+  cockpit: 1 | 2 = 1,
   inscritoEm?: Date,
   participante: Record<string, unknown> = {},
 ): Promise<{ tentativaId: string; participanteId: string }> {
@@ -111,16 +111,16 @@ async function criarTentativa(
 
   const [t] = await banco.db
     .insert(schema.tentativa)
-    .values({ participanteId, pitch, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
+    .values({ participanteId, cockpit, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
     .returning({ id: schema.tentativa.id })
 
   return { tentativaId: t?.id ?? '', participanteId }
 }
 
-const fila = (busca?: string, pitch = 1) =>
+const fila = (busca?: string, cockpit = 1) =>
   filaRota.GET(
     new NextRequest(
-      `${BASE}/fila?pitch=${String(pitch)}${busca === undefined ? '' : `&busca=${encodeURIComponent(busca)}`}`,
+      `${BASE}/fila?cockpit=${String(cockpit)}${busca === undefined ? '' : `&busca=${encodeURIComponent(busca)}`}`,
     ),
   )
 
@@ -136,7 +136,7 @@ describe('a guarda vale em todas as rotas (RF-11)', () => {
       tempoRota.POST(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() })),
       tempoRota.PATCH(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() }, 'PATCH')),
       ausenciaRota.POST(corpoJson({ tentativaId, chave: randomUUID() })),
-      tentativaRota.POST(corpoJson({ participanteId, pitch: 2 })),
+      tentativaRota.POST(corpoJson({ participanteId, cockpit: 2 })),
       historicoRota.GET(new Request(`${BASE}/tentativa/${tentativaId}/historico`), {
         params: Promise.resolve({ id: tentativaId }),
       }),
@@ -185,15 +185,15 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     expect(corpo.pendentes).toBe(1)
   })
 
-  it('alternar pitch altera a lista (RF-13)', async () => {
-    await criarTentativa(1, undefined, { nome: 'DoPitchUm' })
-    await criarTentativa(2, undefined, { nome: 'DoPitchDois' })
+  it('alternar cockpit altera a lista (RF-13)', async () => {
+    await criarTentativa(1, undefined, { nome: 'DoCockpitUm' })
+    await criarTentativa(2, undefined, { nome: 'DoCockpitDois' })
 
     const um = (await (await fila(undefined, 1)).json()) as { itens: { nome: string }[] }
     const dois = (await (await fila(undefined, 2)).json()) as { itens: { nome: string }[] }
 
-    expect(um.itens.map((i) => i.nome)).toEqual(['DoPitchUm'])
-    expect(dois.itens.map((i) => i.nome)).toEqual(['DoPitchDois'])
+    expect(um.itens.map((i) => i.nome)).toEqual(['DoCockpitUm'])
+    expect(dois.itens.map((i) => i.nome)).toEqual(['DoCockpitDois'])
   })
 
   it('cada item traz o necessário para distinguir homônimos — e nada além (RF-15)', async () => {
@@ -233,15 +233,15 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     expect(Object.keys(corpo.itens[0] ?? {})).not.toContain('idade')
   })
 
-  it('busca por trecho, sem acento e sem caixa, dentro do Pitch (RF-16)', async () => {
+  it('busca por trecho, sem acento e sem caixa, dentro do Cockpit (RF-16)', async () => {
     await criarTentativa(1, undefined, { nome: 'João', sobrenome: 'Silva' })
     await criarTentativa(1, undefined, { nome: 'Lélio', sobrenome: 'Assumpção Neto' })
     await criarTentativa(1, undefined, { nome: 'Bruno', sobrenome: 'Souza' })
-    // Mesmo nome, outro Pitch: não pode aparecer na busca do Pitch 1.
+    // Mesmo nome, outro Cockpit: não pode aparecer na busca do Cockpit 1.
     await criarTentativa(2, undefined, { nome: 'João', sobrenome: 'Pereira' })
 
-    const nomes = async (busca: string, pitch = 1) =>
-      ((await (await fila(busca, pitch)).json()) as { itens: { nome: string }[] }).itens.map(
+    const nomes = async (busca: string, cockpit = 1) =>
+      ((await (await fila(busca, cockpit)).json()) as { itens: { nome: string }[] }).itens.map(
         (i) => i.nome,
       )
 
@@ -251,14 +251,14 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     // Trecho no meio de sobrenome composto — o caso que prefixo não pega.
     expect(await nomes('neto')).toEqual(['Lélio'])
     expect(await nomes('assump')).toEqual(['Lélio'])
-    // O recorte por Pitch continua valendo.
+    // O recorte por Cockpit continua valendo.
     expect(await nomes('joao', 2)).toEqual(['João'])
     expect(await nomes('zzz')).toEqual([])
   })
 
-  it('recusa pitch fora de {1,2}', async () => {
+  it('recusa cockpit fora de {1,2}', async () => {
     for (const p of ['0', '3', 'x', '']) {
-      const r = await filaRota.GET(new NextRequest(`${BASE}/fila?pitch=${p}`))
+      const r = await filaRota.GET(new NextRequest(`${BASE}/fila?cockpit=${p}`))
       expect(r.status).toBe(400)
     }
   })
@@ -459,25 +459,25 @@ describe('POST /tentativa (RF-24)', () => {
     await entrar()
   })
 
-  it('inclui no outro Pitch mantendo um único cadastro', async () => {
+  it('inclui no outro Cockpit mantendo um único cadastro', async () => {
     const { participanteId } = await criarTentativa(1)
 
-    expect((await tentativaRota.POST(corpoJson({ participanteId, pitch: 2 }))).status).toBe(201)
+    expect((await tentativaRota.POST(corpoJson({ participanteId, cockpit: 2 }))).status).toBe(201)
 
     const dois = (await (await fila(undefined, 2)).json()) as { itens: unknown[] }
     expect(dois.itens).toHaveLength(1)
     expect(await banco.db.select().from(schema.participante)).toHaveLength(1)
   })
 
-  it('incluir de novo no mesmo Pitch é 409', async () => {
+  it('incluir de novo no mesmo Cockpit é 409', async () => {
     const { participanteId } = await criarTentativa(1)
 
-    expect((await tentativaRota.POST(corpoJson({ participanteId, pitch: 1 }))).status).toBe(409)
+    expect((await tentativaRota.POST(corpoJson({ participanteId, cockpit: 1 }))).status).toBe(409)
   })
 
   it('participante inexistente é 404', async () => {
     expect(
-      (await tentativaRota.POST(corpoJson({ participanteId: randomUUID(), pitch: 2 }))).status,
+      (await tentativaRota.POST(corpoJson({ participanteId: randomUUID(), cockpit: 2 }))).status,
     ).toBe(404)
   })
 })
@@ -487,13 +487,13 @@ describe('GET /participante (RF-22, RF-24)', () => {
     await entrar()
   })
 
-  it('acha quem já saiu da Fila, com as tentativas nos dois Pitches', async () => {
+  it('acha quem já saiu da Fila, com as tentativas nos dois Cockpits', async () => {
     const { tentativaId, participanteId } = await criarTentativa(1, undefined, {
       nome: 'Marina',
       sobrenome: 'Costa',
       telefone: '11987654321',
     })
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 2 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 2 })
 
     await tempoRota.POST(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() }))
 
@@ -504,13 +504,13 @@ describe('GET /participante (RF-22, RF-24)', () => {
     const corpo = (await (
       await participanteRota.GET(new NextRequest(`${BASE}/participante?busca=marina`))
     ).json()) as {
-      itens: { tentativas: { pitch: number; estado: string; tempo: string | null }[] }[]
+      itens: { tentativas: { cockpit: number; estado: string; tempo: string | null }[] }[]
     }
 
     expect(corpo.itens).toHaveLength(1)
     expect(corpo.itens[0]?.tentativas).toHaveLength(2)
-    expect(corpo.itens[0]?.tentativas.find((t) => t.pitch === 1)?.tempo).toBe('01:23.45')
-    expect(corpo.itens[0]?.tentativas.find((t) => t.pitch === 2)?.estado).toBe('pendente')
+    expect(corpo.itens[0]?.tentativas.find((t) => t.cockpit === 1)?.tempo).toBe('01:23.45')
+    expect(corpo.itens[0]?.tentativas.find((t) => t.cockpit === 2)?.estado).toBe('pendente')
   })
 
   it('busca vazia devolve vazio, não a base inteira', async () => {

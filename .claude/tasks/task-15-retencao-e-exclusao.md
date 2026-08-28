@@ -149,7 +149,7 @@ usaria — um limite de taxa que se desarma sozinho e ninguém percebe.
 
 ### Aberto
 
-- [ ] **A data do evento** (PE-06). É a única linha vazia de `docs/retencao.md`, e sem ela o comando recusa rodar. Não é dívida técnica: é uma decisão do organizador que o sistema se nega a adivinhar.
+- [x] ~~**A data do evento** (PE-06)~~ — **resolvida em 2026-08-25: 24 de outubro de 2026.** `docs/retencao.md` §2 já traz a data-base e o vencimento (04/11/2026, 00:00 em São Paulo). O comando continua exigindo `--evento 2026-10-24` escrito à mão: a data existir não a torna valor padrão (D-63).
 - [ ] **Tirar o site do ar** ao fim do prazo. O passo 5 do procedimento está escrito e depende de onde a aplicação vai morar (PE-05, T19). Apagar o banco não cumpre sozinho a promessa do termo.
 - [ ] **O expurgo total nunca rodou contra o banco real** — só o ensaio, e a suíte contra Postgres via PGlite. Rodar de verdade apagaria a massa de 2000 que T18 ainda vai medir. Entra no ensaio geral de T21.
 

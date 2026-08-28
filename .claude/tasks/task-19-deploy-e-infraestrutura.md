@@ -11,6 +11,19 @@
 
 Colocar em pé o ambiente que sustenta as decisões de transporte do SDD. Duas delas dependem inteiramente da infraestrutura e não do código: **HTTP/3 anunciado** e **relógio do servidor confiável**.
 
+### O que já está decidido — 2026-08-25
+
+**A aplicação vai para a Vercel, plano gratuito** (D-76). Isso encaminha três itens desta task sem trabalho: a borda anuncia HTTP/3 (§1) e comprime com Brotli, honra `s-maxage` e `stale-while-revalidate` (§3), e o deploy sai de commit com reversão em minutos (§6). Nenhum deles está **verificado** — §1 continua exigindo o `curl --http3` contra o domínio de verdade.
+
+**Quatro coisas continuam abertas, e são elas que seguram T18 e T21:**
+
+1. **Onde roda o Postgres.** A Vercel não hospeda o banco. Vale tudo o que §5 pede — TLS obrigatório, backup automático, restauração testada — mais duas questões que só existem por causa do ambiente sem servidor: **limite de conexões** visto de funções efêmeras, e **região**. A página da Classificação é `force-dynamic` (D-59): cada primeira pintura atravessa a distância entre a função e o banco, e a região padrão da Vercel não é São Paulo.
+2. **O domínio.** Enquanto não existir, o QR de T07 é provisório (D-35).
+3. **O monitor externo** de T16, com o teste real de disparo.
+4. **O plano Hobby é para uso não comercial.** Se o evento é patrocinado, cobra inscrição ou carrega marca de terceiro, confirmar os termos antes — ou orçar o plano pago. A consequência de errar isso não é uma fatura, é o site sair do ar no dia.
+
+**A data do evento é 24 de outubro de 2026** (PE-06), o que data o congelamento de deploys de §6 e o desligamento programado: **4 de novembro de 2026**, o mesmo instante em que a retenção vence.
+
 ## Escopo
 
 ### 1. Hospedagem com HTTP/3 (FL-02, FL-07)

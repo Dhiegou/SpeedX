@@ -88,8 +88,9 @@ export function formatTempo(ms: number): string {
  * mudar quando a hospedagem mudar (PE-05) — e "Tempo já registrado às 17h32"
  * com três horas de diferença é pior que nenhuma hora.
  *
- * Fixo em São Paulo por ser onde o evento acontece. Se isso mudar, muda aqui e
- * em nenhum outro lugar. Confirmar junto com a data do evento (PE-06).
+ * Fixo em São Paulo por ser onde o evento acontece — 24 de outubro de 2026,
+ * confirmado com a data em 2026-08-25 (PE-06). Se isso mudar, muda aqui e em
+ * nenhum outro lugar.
  */
 export const FUSO_DO_EVENTO = 'America/Sao_Paulo'
 
@@ -108,4 +109,25 @@ const HORA_DO_EVENTO = new Intl.DateTimeFormat('pt-BR', {
  */
 export function formatHoraDoEvento(instante: Date): string {
   return HORA_DO_EVENTO.format(instante)
+}
+
+const DATA_HORA_DO_EVENTO = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: FUSO_DO_EVENTO,
+  dateStyle: 'short',
+  timeStyle: 'medium',
+})
+
+/**
+ * `24/10/2026 14:32:07` — instante completo, para o `title` de um rótulo relativo.
+ *
+ * **Existe para não depender do relógio de quem lê.** `toLocaleString()` sem
+ * argumento formata no fuso e na língua do ambiente: no servidor dá uma coisa,
+ * no navegador dá outra, e o React acusa divergência de hidratação na página
+ * mais pública do evento. Com o fuso fixo, os dois lados escrevem o mesmo texto.
+ *
+ * Ancorar no fuso do evento também é o que faz sentido para quem lê: a pessoa
+ * está fisicamente lá, e a hora que interessa é a do lugar, não a do aparelho.
+ */
+export function formatDataHoraDoEvento(instante: Date): string {
+  return DATA_HORA_DO_EVENTO.format(instante)
 }

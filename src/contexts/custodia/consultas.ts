@@ -38,7 +38,7 @@ export type LinhaDaExportacao = {
   consentimentoRegistradoEm: Date | null
   aceiteCompartilhamento: boolean | null
   inscritoEm: Date
-  pitch: number
+  cockpit: number
   estado: 'pendente' | 'valida' | 'ausente'
   tempoMs: number | null
   resolvidoEm: Date | null
@@ -49,13 +49,13 @@ export type LinhaDaExportacao = {
 /**
  * Percorre a exportação completa em lotes.
  *
- * Ordenada por `(participante_id, pitch)`: as duas linhas de quem correu os dois
- * Pitches ficam juntas na planilha, e o par serve de cursor estável — paginar
+ * Ordenada por `(participante_id, cockpit)`: as duas linhas de quem correu os dois
+ * Cockpits ficam juntas na planilha, e o par serve de cursor estável — paginar
  * por `OFFSET` reordenaria silenciosamente se algo fosse gravado no meio da
  * leitura, e no fim do evento ainda há Operador lançando.
  */
 export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExportacao> {
-  let cursor: { participanteId: string; pitch: number } | null = null
+  let cursor: { participanteId: string; cockpit: number } | null = null
 
   for (;;) {
     const lote: LinhaDaExportacao[] = await db
@@ -73,7 +73,7 @@ export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExpo
         consentimentoRegistradoEm: schema.consentimento.registradoEm,
         aceiteCompartilhamento: schema.consentimento.aceiteCompartilhamento,
         inscritoEm: schema.tentativa.inscritoEm,
-        pitch: schema.tentativa.pitch,
+        cockpit: schema.tentativa.cockpit,
         estado: schema.tentativa.estado,
         tempoMs: schema.tentativa.tempoMs,
         resolvidoEm: schema.tentativa.resolvidoEm,
@@ -103,11 +103,11 @@ export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExpo
               gt(schema.participante.id, cursor.participanteId),
               and(
                 eq(schema.participante.id, cursor.participanteId),
-                gt(schema.tentativa.pitch, cursor.pitch),
+                gt(schema.tentativa.cockpit, cursor.cockpit),
               ),
             ),
       )
-      .orderBy(asc(schema.participante.id), asc(schema.tentativa.pitch))
+      .orderBy(asc(schema.participante.id), asc(schema.tentativa.cockpit))
       .limit(TAMANHO_DO_LOTE)
 
     if (lote.length === 0) return
@@ -117,7 +117,7 @@ export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExpo
     const ultima = lote[lote.length - 1]
     if (ultima === undefined || lote.length < TAMANHO_DO_LOTE) return
 
-    cursor = { participanteId: ultima.participanteId, pitch: ultima.pitch }
+    cursor = { participanteId: ultima.participanteId, cockpit: ultima.cockpit }
   }
 }
 
@@ -136,7 +136,7 @@ export type LinhaDeRepasse = {
  * entrega o telefone de quem recusou no instante em que o arquivo sai daqui —
  * e é exatamente o que a caixa opcional do formulário existe para impedir.
  *
- * Uma pessoa aparece **uma vez**, mesmo tendo corrido os dois Pitches: isto é
+ * Uma pessoa aparece **uma vez**, mesmo tendo corrido os dois Cockpits: isto é
  * uma lista de contato, não uma lista de tentativas.
  */
 export async function lerListaDeRepasse(db: Db): Promise<readonly LinhaDeRepasse[]> {
@@ -161,7 +161,7 @@ export type Pendencia = {
   nome: string
   sobrenome: string
   ultimos4Telefone: string
-  pitch: number
+  cockpit: number
   inscritoEm: Date
 }
 
@@ -184,11 +184,11 @@ export async function lerPendencias(db: Db): Promise<readonly Pendencia[]> {
       nome: schema.participante.nome,
       sobrenome: schema.participante.sobrenome,
       ultimos4Telefone: sql<string>`right(${schema.participante.telefone}, 4)`,
-      pitch: schema.tentativa.pitch,
+      cockpit: schema.tentativa.cockpit,
       inscritoEm: schema.tentativa.inscritoEm,
     })
     .from(schema.tentativa)
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
     .where(and(eq(schema.tentativa.estado, 'pendente'), isNull(schema.tentativa.resolvidoEm)))
-    .orderBy(asc(schema.tentativa.pitch), asc(schema.tentativa.inscritoEm))
+    .orderBy(asc(schema.tentativa.cockpit), asc(schema.tentativa.inscritoEm))
 }

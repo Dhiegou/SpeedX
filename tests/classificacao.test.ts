@@ -49,7 +49,7 @@ type Corredor = {
   nome: string
   sobrenome: string
   idade?: number
-  pitch?: 1 | 2
+  cockpit?: 1 | 2
   tempoMs?: number | null
   estado?: 'pendente' | 'valida' | 'ausente'
   resolvidoEm?: Date
@@ -74,7 +74,7 @@ async function criar(c: Corredor): Promise<string> {
     .insert(schema.tentativa)
     .values({
       participanteId: p?.id ?? '',
-      pitch: c.pitch ?? 1,
+      cockpit: c.cockpit ?? 1,
       estado,
       tempoMs: estado === 'valida' ? (c.tempoMs ?? 83_450) : null,
       resolvidoEm: resolvida ? (c.resolvidoEm ?? AGORA) : null,
@@ -96,7 +96,7 @@ describe('quem entra na classificação (RF-21, RF-28)', () => {
     expect(linhas.map((l) => l.nomePublico)).toEqual(['Valida Silva'])
   })
 
-  it('quem correu os dois Pitches ocupa duas linhas (RF-28)', async () => {
+  it('quem correu os dois Cockpits ocupa duas linhas (RF-28)', async () => {
     const [p] = await banco.db
       .insert(schema.participante)
       .values({
@@ -108,13 +108,13 @@ describe('quem entra na classificação (RF-21, RF-28)', () => {
       })
       .returning({ id: schema.participante.id })
 
-    for (const [pitch, tempoMs] of [
+    for (const [cockpit, tempoMs] of [
       [1, 83_450],
       [2, 91_000],
     ] as const) {
       await banco.db.insert(schema.tentativa).values({
         participanteId: p?.id ?? '',
-        pitch,
+        cockpit,
         estado: 'valida',
         tempoMs,
         resolvidoEm: AGORA,
@@ -125,7 +125,7 @@ describe('quem entra na classificação (RF-21, RF-28)', () => {
     const { linhas } = await projetarClassificacao(banco.db, AGORA)
 
     expect(linhas).toHaveLength(2)
-    expect(linhas.map((l) => l.pitch).sort()).toEqual([1, 2])
+    expect(linhas.map((l) => l.cockpit).sort()).toEqual([1, 2])
     // Duas linhas, mesma pessoa, identificadores distintos: a linha é da
     // Tentativa, não do Participante.
     expect(new Set(linhas.map((l) => l.id)).size).toBe(2)
@@ -251,7 +251,7 @@ describe('RNF-08 — o que atravessa a rede', () => {
     const [p] = await banco.db.select().from(schema.participante)
     await banco.db.insert(schema.tentativa).values({
       participanteId: p?.id ?? '',
-      pitch: 1,
+      cockpit: 1,
       estado: 'valida',
       tempoMs: 83_450,
       resolvidoEm: AGORA,

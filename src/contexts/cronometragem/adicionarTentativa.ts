@@ -1,13 +1,13 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
-import type { Pitch } from '@/contexts/inscricao/contrato'
+import type { Cockpit } from '@/contexts/inscricao/contrato'
 import * as schema from '@/db/schema'
 import { violouUnicidade } from '@/infra/idempotencia'
 import type { TentativaResolvida } from './modelo'
 
 /**
- * Inclui uma Tentativa em Pitch adicional para quem já está cadastrado (RF-24).
+ * Inclui uma Tentativa em Cockpit adicional para quem já está cadastrado (RF-24).
  *
- * O caso real: a pessoa se inscreveu só no Pitch 1, viu a corrida e resolveu
+ * O caso real: a pessoa se inscreveu só no Cockpit 1, viu a corrida e resolveu
  * disputar o 2. Sem isto, o Operador a mandaria preencher o formulário de novo
  * e o evento acabaria com dois cadastros para a mesma pessoa — o que estraga a
  * Exportação, a Classificação e o expurgo de T15 de uma vez só.
@@ -26,15 +26,15 @@ type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 
 export type ComandoDeInclusao = {
   readonly participanteId: string
-  readonly pitch: Pitch
+  readonly cockpit: Cockpit
 }
 
 export type ResultadoDeInclusao =
   | { readonly situacao: 'criada'; readonly tentativa: TentativaResolvida }
-  /** RF-25 pela porta da frente: já existe Tentativa desta pessoa neste Pitch. */
+  /** RF-25 pela porta da frente: já existe Tentativa desta pessoa neste Cockpit. */
   | { readonly situacao: 'ja_existe' }
   | { readonly situacao: 'participante_inexistente' }
-  | { readonly situacao: 'pitch_invalido' }
+  | { readonly situacao: 'cockpit_invalido' }
 
 /** Violação de chave estrangeira do Postgres, atravessando o embrulho do Drizzle. */
 function violouChaveEstrangeira(erro: unknown): boolean {
@@ -52,16 +52,16 @@ export async function adicionarTentativa(
   db: Db,
   comando: ComandoDeInclusao,
 ): Promise<ResultadoDeInclusao> {
-  if (comando.pitch !== 1 && comando.pitch !== 2) return { situacao: 'pitch_invalido' }
+  if (comando.cockpit !== 1 && comando.cockpit !== 2) return { situacao: 'cockpit_invalido' }
 
   try {
     const [criada] = await db
       .insert(schema.tentativa)
-      .values({ participanteId: comando.participanteId, pitch: comando.pitch })
+      .values({ participanteId: comando.participanteId, cockpit: comando.cockpit })
       .returning({
         id: schema.tentativa.id,
         participanteId: schema.tentativa.participanteId,
-        pitch: schema.tentativa.pitch,
+        cockpit: schema.tentativa.cockpit,
         estado: schema.tentativa.estado,
         tempoMs: schema.tentativa.tempoMs,
         resolvidoEm: schema.tentativa.resolvidoEm,
@@ -72,7 +72,7 @@ export async function adicionarTentativa(
 
     return {
       situacao: 'criada',
-      tentativa: { ...criada, pitch: comando.pitch },
+      tentativa: { ...criada, cockpit: comando.cockpit },
     }
   } catch (erro) {
     // Quem decide as duas recusas abaixo é o banco, não uma consulta prévia.

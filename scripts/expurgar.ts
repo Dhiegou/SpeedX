@@ -25,6 +25,7 @@ import { lerArgumentos, presente, texto, type Argumentos } from '@/shared/argume
 import { env } from '@/shared/env'
 import { registrarOperacao } from '@/shared/log'
 import { formatTempo } from '@/shared/tempo'
+import { nomeDoCockpit } from '@/shared/vocabulario'
 
 carregarAmbienteDoTerminal()
 
@@ -32,8 +33,8 @@ carregarAmbienteDoTerminal()
  * Expurgo e exclusão (T15 — RNF-11, RF-09).
  *
  * ```
- * npm run expurgar -- --evento 2026-09-12                       # ensaio: mostra o que sairia
- * npm run expurgar -- --evento 2026-09-12 --confirmar           # expurgo total
+ * npm run expurgar -- --evento 2026-10-24                       # ensaio: mostra o que sairia
+ * npm run expurgar -- --evento 2026-10-24 --confirmar           # expurgo total
  * npm run expurgar -- --email alguem@exemplo.com                # procura o pedido de exclusão
  * npm run expurgar -- --participante <uuid> --confirmar         # exclusão individual
  * npm run expurgar -- --higiene                                 # faxina sob demanda
@@ -49,9 +50,9 @@ carregarAmbienteDoTerminal()
  * 1. **Sem `--confirmar`, nada é apagado.** O padrão é o ensaio, que conta e
  *    mostra. Quem digita o comando errado vê um relatório, não uma base vazia.
  * 2. **A data do evento é obrigatória e não tem valor padrão.** O prazo foi
- *    prometido contra um dia específico (PE-02); um padrão aqui seria um
- *    palpite com poder de apagar a base, e a data ainda nem está definida
- *    (PE-06).
+ *    prometido contra um dia específico (PE-02) — 24 de outubro de 2026, desde
+ *    2026-08-25 (PE-06). Continua sem padrão de propósito: quem apaga a base
+ *    digita a data que está apagando, e o vencimento sai do que foi digitado.
  * 3. **O expurgo total recusa rodar antes do vencimento.** Apagar cedo é mais
  *    protetivo em tese e catastrófico na prática: o caso real não é o
  *    organizador zeloso, é um dedo trocado na data no meio da semana do evento.
@@ -107,9 +108,9 @@ function tabela(contagem: ContagemDaBase): string {
 function resumoEmTexto(resumo: ResumoAnonimo): string {
   const ms = (valor: number | null): string => (valor === null ? '—' : formatTempo(valor))
 
-  const linhas = resumo.pitches.map(
+  const linhas = resumo.cockpits.map(
     (p) =>
-      `  pitch ${String(p.pitch)}  ${String(p.tentativas).padStart(5)} tentativas  ` +
+      `  ${nomeDoCockpit(p.cockpit).padEnd(9)} ${String(p.tentativas).padStart(5)} tentativas  ` +
       `${String(p.validas).padStart(5)} válidas  ${String(p.ausentes).padStart(4)} ausentes  ` +
       `${String(p.pendentes).padStart(4)} pendentes  melhor ${ms(p.melhorMs)}  ` +
       `mediana ${ms(p.medianaMs)}  pior ${ms(p.piorMs)}`,

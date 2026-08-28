@@ -39,8 +39,8 @@ test.describe('cadastro público', () => {
     }
 
     // O sexto é a escolha de pista, que é caixa e não campo de texto.
-    await expect(page.getByLabel('Pitch 1')).toBeVisible()
-    await expect(page.getByLabel('Pitch 2')).toBeVisible()
+    await expect(page.getByLabel('Cockpit 1')).toBeVisible()
+    await expect(page.getByLabel('Cockpit 2')).toBeVisible()
   })
 
   test('RF-05 — o bloco do Responsável aparece em 13 e 17, e não em 18 e 19', async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe('cadastro público', () => {
 
   test('RF-08 — enviar sem o aceite do termo é recusado', async ({ page }) => {
     await preencherBase(page)
-    await page.getByLabel('Pitch 1').check()
+    await page.getByLabel('Cockpit 1').check()
 
     await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
 
@@ -105,14 +105,14 @@ test.describe('cadastro público', () => {
 
   test('RF-10 — a confirmação mostra o nome e as pistas enviadas', async ({ page }) => {
     await preencherBase(page)
-    await page.getByLabel('Pitch 1').check()
-    await page.getByLabel('Pitch 2').check()
+    await page.getByLabel('Cockpit 1').check()
+    await page.getByLabel('Cockpit 2').check()
     await page.getByRole('checkbox', { name: /li e entendi/i }).check()
 
     await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
 
     await expect(page.getByRole('heading', { name: 'Inscrição concluída' })).toBeVisible()
     await expect(page.getByText(`${ADULTA.nome} ${ADULTA.sobrenome}`)).toBeVisible()
-    await expect(page.getByText('Pitch 1 e Pitch 2')).toBeVisible()
+    await expect(page.getByText('Cockpit 1 e Cockpit 2')).toBeVisible()
   })
 })

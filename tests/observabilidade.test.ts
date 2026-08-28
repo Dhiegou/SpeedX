@@ -208,7 +208,7 @@ describe('o painel do dia', () => {
       .insert(schema.tentativa)
       .values({
         participanteId: pessoa!.id,
-        pitch: 1,
+        cockpit: 1,
         estado: 'valida',
         tempoMs: 90_000,
         resolvidoEm: new Date(),
@@ -216,7 +216,7 @@ describe('o painel do dia', () => {
       })
       .returning({ id: schema.tentativa.id })
 
-    await banco.db.insert(schema.tentativa).values({ participanteId: pessoa!.id, pitch: 2 })
+    await banco.db.insert(schema.tentativa).values({ participanteId: pessoa!.id, cockpit: 2 })
 
     await banco.db.insert(schema.lancamento).values([
       { tentativaId: t1!.id, tipo: 'registro', tempoMsNovo: 91_000, operadorId },
@@ -237,7 +237,7 @@ describe('o painel do dia', () => {
     expect(painel.pendencias).toBe(1)
     expect(painel.lancamentos.total).toBe(2)
     expect(painel.lancamentos.correcoes).toBe(1)
-    expect(painel.pitches).toHaveLength(2)
+    expect(painel.cockpits).toHaveLength(2)
   })
 
   it('responde "quantos" e nunca "quem"', async () => {

@@ -43,20 +43,20 @@ executar: os comandos exigem a credencial do banco, que não é distribuída.
 | Campo                       | Valor                                                                      |
 | --------------------------- | -------------------------------------------------------------------------- |
 | Prazo de guarda             | **10 dias** após a data do evento (PE-02, decidido em 2026-08-19)          |
-| Data-base                   | **a definir** — depende da data do evento (PE-06)                          |
-| Vencimento                  | 00:00 do 11º dia, no fuso `America/Sao_Paulo`                              |
+| Data-base                   | **24 de outubro de 2026** (`2026-10-24`) — PE-06, decidida em 2026-08-25   |
+| Vencimento                  | **4 de novembro de 2026, 00:00** no fuso `America/Sao_Paulo`               |
 | Responsável pela execução   | Dhiego (`dhiegodev@hotmail.com`)                                           |
 | Canal de pedido de exclusão | `dhiegodev@hotmail.com`; durante o evento, também o ponto de inscrição     |
 | Prazo de atendimento        | mesmo dia em que o pedido chega                                            |
 | Forma de confirmação        | comprovante impresso pelo comando, com contagem zerada em todas as tabelas |
 
-> **A data-base ainda não existe.** Enquanto PE-06 não fechar, este documento
-> está incompleto e o comando de expurgo recusa rodar — ele não tem valor padrão
-> para a data do evento, de propósito. Preencher a linha "Data-base" acima é
-> parte de fechar PE-06.
+> **A data acima não é valor padrão de lugar nenhum.** O comando continua
+> exigindo `--evento 2026-10-24` escrito à mão, mesmo agora que a data existe:
+> quem apaga a base digita a data que está apagando. Este documento é onde se
+> confere qual é ela, não de onde o programa a lê.
 
 O prazo vence na **virada** do décimo dia, não em uma hora qualquer dele: evento
-em 12/09 significa guarda até o fim de 22/09, e a partir de 23/09 às 00:00 em São
+em 24/10 significa guarda até o fim de 03/11, e a partir de 04/11 às 00:00 em São
 Paulo nada mais pode estar guardado.
 
 ---
@@ -195,7 +195,7 @@ o dado auditado não é auditoria.
 
 Para marcar no dia, e anexar ao comprovante.
 
-- [ ] Data do evento definida e escrita na seção 2 (PE-06).
+- [x] Data do evento definida e escrita na seção 2 (PE-06): **24/10/2026**.
 - [ ] As três exportações de T14 baixadas e guardadas fora do servidor.
 - [ ] Ensaio rodado; prazo vencido e contagem conferida.
 - [ ] Expurgo executado, com responsável nomeado.

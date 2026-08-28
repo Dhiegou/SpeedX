@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server'
 import { fila, pendentes } from '@/contexts/cronometragem/servico'
-import { esquemaBusca, esquemaPitch } from '@/contexts/cronometragem/schema'
+import { esquemaBusca, esquemaCockpit } from '@/contexts/cronometragem/schema'
 import { exigirOperadorNaApi } from '@/contexts/identidade/servico'
 import { comRegistro, falha, instanteDoServidor, responder } from '../_apoio'
 
 /**
- * `GET /api/painel/fila?pitch=1&busca=` — a visão de trabalho do Operador
+ * `GET /api/painel/fila?cockpit=1&busca=` — a visão de trabalho do Operador
  * (RF-13, RF-14, RF-16).
  *
  * **O que cada item carrega, e por quê tão pouco:** identificador, nome,
@@ -32,11 +32,11 @@ export function GET(request: NextRequest): Promise<Response> {
 
     const parametros = request.nextUrl.searchParams
 
-    const pitch = esquemaPitch.safeParse(parametros.get('pitch'))
-    if (!pitch.success) {
+    const cockpit = esquemaCockpit.safeParse(parametros.get('cockpit'))
+    if (!cockpit.success) {
       return {
-        resposta: falha('pitch_invalido', 'Informe pitch=1 ou pitch=2.', 400),
-        registro: { resultado: 'recusada', motivo: 'pitch_invalido' },
+        resposta: falha('cockpit_invalido', 'Informe cockpit=1 ou cockpit=2.', 400),
+        registro: { resultado: 'recusada', motivo: 'cockpit_invalido' },
       }
     }
 
@@ -49,15 +49,15 @@ export function GET(request: NextRequest): Promise<Response> {
     }
 
     const [pagina, total] = await Promise.all([
-      fila(pitch.data, { busca: busca.data }),
-      pendentes(pitch.data),
+      fila(cockpit.data, { busca: busca.data }),
+      pendentes(cockpit.data),
     ])
 
     return {
       resposta: responder(
         {
-          pitch: pitch.data,
-          // A contagem é do Pitch inteiro, não da página: é o número que o
+          cockpit: cockpit.data,
+          // A contagem é do Cockpit inteiro, não da página: é o número que o
           // painel mostra em fonte grande, e ele não pode encolher porque
           // alguém digitou uma letra na busca.
           pendentes: total,
@@ -74,7 +74,7 @@ export function GET(request: NextRequest): Promise<Response> {
         200,
         instanteDoServidor(),
       ),
-      registro: { resultado: 'sucesso', motivo: `pitch_${String(pitch.data)}` },
+      registro: { resultado: 'sucesso', motivo: `cockpit_${String(cockpit.data)}` },
     }
   })
 }

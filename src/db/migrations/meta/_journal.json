@@ -29,6 +29,13 @@
       "when": 1787417208704,
       "tag": "0003_sessao_do_operador",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787701171141,
+      "tag": "0004_renomeia_pitch_para_cockpit",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@
   "name": "speedx",
   "version": "0.1.0",
   "private": true,
-  "description": "Sistema de cadastro e classificação de corrida — evento de um dia, dois Pitches, 2000+ participantes",
+  "description": "Sistema de cadastro e classificação de corrida — evento de um dia, dois Cockpits, 2000+ participantes",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

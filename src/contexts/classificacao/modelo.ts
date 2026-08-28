@@ -12,8 +12,8 @@
  * Consumido pela projeção (T12) e pela página pública (T13).
  */
 
-/** Uma das duas pistas do evento. */
-export type Pitch = 1 | 2
+/** Um dos dois Cockpits do evento. */
+export type Cockpit = 1 | 2
 
 /** Uma linha da tabela pública. Corresponde a uma Tentativa Válida. */
 export type LinhaClassificacao = {
@@ -21,7 +21,7 @@ export type LinhaClassificacao = {
   id: string
   /** "Dhiego Ferreira" para maiores; "Lucas M." para menores de 18 (RNF-09). */
   nomePublico: string
-  pitch: Pitch
+  cockpit: Cockpit
   /** Tempo em milissegundos. Formatado como `mm:ss.cc` só na exibição. */
   tempoMs: number
   /** Instante do Lançamento original. Serve ao desempate (RF-31), não à exibição. */

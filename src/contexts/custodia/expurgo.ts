@@ -81,8 +81,8 @@ export async function contarBase(db: Db): Promise<ContagemDaBase> {
 // O resumo anônimo — o único vestígio que o termo autoriza
 // ---------------------------------------------------------------------------
 
-export type ResumoDePitch = {
-  readonly pitch: number
+export type ResumoDeCockpit = {
+  readonly cockpit: number
   readonly tentativas: number
   readonly validas: number
   readonly ausentes: number
@@ -96,7 +96,7 @@ export type ResumoAnonimo = {
   readonly geradoEm: string
   readonly participantes: number
   readonly menoresDeIdade: number
-  readonly pitches: readonly ResumoDePitch[]
+  readonly cockpits: readonly ResumoDeCockpit[]
 }
 
 /**
@@ -119,9 +119,9 @@ export async function resumoAnonimo(db: Db, agora: Date = new Date()): Promise<R
     })
     .from(schema.participante)
 
-  const pitches = await db
+  const cockpits = await db
     .select({
-      pitch: schema.tentativa.pitch,
+      cockpit: schema.tentativa.cockpit,
       tentativas: sql<number>`count(*)::int`,
       validas: sql<number>`count(*) filter (where ${schema.tentativa.estado} = 'valida')::int`,
       ausentes: sql<number>`count(*) filter (where ${schema.tentativa.estado} = 'ausente')::int`,
@@ -133,14 +133,14 @@ export async function resumoAnonimo(db: Db, agora: Date = new Date()): Promise<R
       piorMs: sql<number | null>`max(${schema.tentativa.tempoMs})::int`,
     })
     .from(schema.tentativa)
-    .groupBy(schema.tentativa.pitch)
-    .orderBy(asc(schema.tentativa.pitch))
+    .groupBy(schema.tentativa.cockpit)
+    .orderBy(asc(schema.tentativa.cockpit))
 
   return {
     geradoEm: agora.toISOString(),
     participantes: totais?.participantes ?? 0,
     menoresDeIdade: totais?.menores ?? 0,
-    pitches,
+    cockpits,
   }
 }
 

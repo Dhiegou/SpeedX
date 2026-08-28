@@ -14,7 +14,7 @@
 
 export const SOBRENOME_DE_ENSAIO = 'Ensaio'
 
-/** Cinco pendentes no Pitch 1, para os cinco lançamentos de RF-19. */
+/** Cinco pendentes no Cockpit 1, para os cinco lançamentos de RF-19. */
 export const CORREDORES_DE_ENSAIO = [
   { nome: 'Alice', idade: 28 },
   { nome: 'Bruno', idade: 34 },

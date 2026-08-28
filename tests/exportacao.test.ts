@@ -102,7 +102,7 @@ type Pessoa = {
   compartilha?: boolean
   responsavel?: boolean
   estado?: 'pendente' | 'valida' | 'ausente'
-  pitch?: 1 | 2
+  cockpit?: 1 | 2
 }
 
 async function criar(p: Pessoa = {}): Promise<string> {
@@ -143,7 +143,7 @@ async function criar(p: Pessoa = {}): Promise<string> {
 
   await banco.db.insert(schema.tentativa).values({
     participanteId,
-    pitch: p.pitch ?? 1,
+    cockpit: p.cockpit ?? 1,
     estado: est,
     tempoMs: est === 'valida' ? 83_450 : null,
     resolvidoEm: resolvida ? AGORA : null,
@@ -304,16 +304,18 @@ describe('a exportação completa (RF-34)', () => {
     expect(csv.trim().split('\r\n')[1]?.endsWith(';0')).toBe(true)
   })
 
-  it('quem correu os dois Pitches ocupa duas linhas seguidas', async () => {
-    const participanteId = await criar({ nome: 'Dois', pitch: 1 })
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 2, estado: 'pendente' })
+  it('quem correu os dois Cockpits ocupa duas linhas seguidas', async () => {
+    const participanteId = await criar({ nome: 'Dois', cockpit: 1 })
+    await banco.db
+      .insert(schema.tentativa)
+      .values({ participanteId, cockpit: 2, estado: 'pendente' })
 
     const linhas = (await texto(await exportar('completa')))
       .split('\r\n')
       .filter((l) => l.includes('Dois'))
 
     expect(linhas).toHaveLength(2)
-    // Ordenadas por participante e Pitch: as duas linhas da mesma pessoa ficam
+    // Ordenadas por participante e Cockpit: as duas linhas da mesma pessoa ficam
     // juntas na planilha.
     expect(linhas[0]?.includes(';1;')).toBe(true)
     expect(linhas[1]?.includes(';2;')).toBe(true)
@@ -387,9 +389,11 @@ describe('a lista de repasse (D-23)', () => {
     }
   })
 
-  it('quem correu os dois Pitches aparece uma vez — é contato, não tentativa', async () => {
+  it('quem correu os dois Cockpits aparece uma vez — é contato, não tentativa', async () => {
     const participanteId = await criar({ nome: 'Unico', compartilha: true })
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 2, estado: 'pendente' })
+    await banco.db
+      .insert(schema.tentativa)
+      .values({ participanteId, cockpit: 2, estado: 'pendente' })
 
     const csv = await texto(await exportar('repasse'))
 
@@ -404,7 +408,7 @@ describe('o relatório de pendências (PRD §7)', () => {
 
   it('lista exatamente as Tentativas sem tempo e sem ausência', async () => {
     await criar({ nome: 'Pendente1', estado: 'pendente' })
-    await criar({ nome: 'Pendente2', estado: 'pendente', pitch: 2 })
+    await criar({ nome: 'Pendente2', estado: 'pendente', cockpit: 2 })
     await criar({ nome: 'Resolvida', estado: 'valida' })
     await criar({ nome: 'Ausente', estado: 'ausente' })
 

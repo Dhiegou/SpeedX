@@ -117,7 +117,7 @@ async function garantirBanco(base: string): Promise<void> {
 type Db = ReturnType<typeof drizzle<typeof schema>>
 
 async function semearNomeados(db: Db, operadorId: string): Promise<void> {
-  // Os cinco de RF-19: pendentes no Pitch 1, na ordem de inscrição, que é a
+  // Os cinco de RF-19: pendentes no Cockpit 1, na ordem de inscrição, que é a
   // ordem em que a Fila vai apresentá-los.
   for (const [posicao, corredor] of CORREDORES_DE_ENSAIO.entries()) {
     const [pessoa] = await db
@@ -142,7 +142,7 @@ async function semearNomeados(db: Db, operadorId: string): Promise<void> {
 
     await db.insert(schema.tentativa).values({
       participanteId: pessoa!.id,
-      pitch: 1,
+      cockpit: 1,
       inscritoEm: new Date(Date.UTC(2026, 8, 12, 9, posicao)),
     })
   }
@@ -173,7 +173,7 @@ async function semearNomeados(db: Db, operadorId: string): Promise<void> {
 
   await db.insert(schema.tentativa).values({
     participanteId: menor!.id,
-    pitch: 1,
+    cockpit: 1,
     estado: 'valida',
     tempoMs: 83_400,
     resolvidoEm: new Date(Date.UTC(2026, 8, 12, 10, 0)),
@@ -202,7 +202,7 @@ async function semearNomeados(db: Db, operadorId: string): Promise<void> {
 
   await db.insert(schema.tentativa).values({
     participanteId: adulta!.id,
-    pitch: 1,
+    cockpit: 1,
     estado: 'valida',
     tempoMs: ADULTA_CLASSIFICADA.tempoMs,
     resolvidoEm: new Date(Date.UTC(2026, 8, 12, 10, 1)),

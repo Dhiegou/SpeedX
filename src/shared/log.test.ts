@@ -32,7 +32,7 @@ describe('sanear', () => {
 
     expect(sanear(`participante ${uuid} gravado`)).toContain(uuid)
     expect(sanear('validacao recusou idade_minima')).toBe('validacao recusou idade_minima')
-    expect(sanear('pitch 1 e 2, 200 ms')).toBe('pitch 1 e 2, 200 ms')
+    expect(sanear('cockpit 1 e 2, 200 ms')).toBe('cockpit 1 e 2, 200 ms')
   })
 
   it('preserva também o UUID cheio de dígitos', () => {

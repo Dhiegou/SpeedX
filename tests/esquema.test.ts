@@ -147,32 +147,32 @@ describe('consentimento', () => {
 })
 
 describe('tentativa', () => {
-  it('RF-25 — duas tentativas no mesmo Pitch para a mesma pessoa são recusadas', async () => {
+  it('RF-25 — duas tentativas no mesmo Cockpit para a mesma pessoa são recusadas', async () => {
     const participanteId = await criarParticipante()
 
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
     expect(
-      await violou(banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })),
-    ).toMatch(/tentativa_participante_pitch_unica/)
+      await violou(banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })),
+    ).toMatch(/tentativa_participante_cockpit_unica/)
   })
 
-  it('RF-03 e RF-24 — a mesma pessoa pode disputar os dois Pitches', async () => {
+  it('RF-03 e RF-24 — a mesma pessoa pode disputar os dois Cockpits', async () => {
     const participanteId = await criarParticipante()
 
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
     await expect(
-      banco.db.insert(schema.tentativa).values({ participanteId, pitch: 2 }),
+      banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 2 }),
     ).resolves.toBeDefined()
   })
 
-  it('só existem os Pitches 1 e 2', async () => {
+  it('só existem os Cockpits 1 e 2', async () => {
     const participanteId = await criarParticipante()
 
     expect(
-      await violou(banco.db.insert(schema.tentativa).values({ participanteId, pitch: 3 })),
-    ).toMatch(/tentativa_pitch_valido/)
+      await violou(banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 3 })),
+    ).toMatch(/tentativa_cockpit_valido/)
   })
 
   it('Válida sem tempo é recusada', async () => {
@@ -183,7 +183,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'valida',
           operadorId,
           resolvidoEm: new Date(),
@@ -197,7 +197,7 @@ describe('tentativa', () => {
 
     expect(
       await violou(
-        banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1, tempoMs: 83_450 }),
+        banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1, tempoMs: 83_450 }),
       ),
     ).toMatch(/tentativa_tempo_coerente_com_estado/)
   })
@@ -210,7 +210,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'ausente',
           tempoMs: 83_450,
           operadorId,
@@ -227,7 +227,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'valida',
           tempoMs: 83_450,
           resolvidoEm: new Date(),
@@ -244,7 +244,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'valida',
           tempoMs: 83_450,
           operadorId,
@@ -260,7 +260,7 @@ describe('tentativa', () => {
       await violou(
         banco.db
           .insert(schema.tentativa)
-          .values({ participanteId, pitch: 1, resolvidoEm: new Date() }),
+          .values({ participanteId, cockpit: 1, resolvidoEm: new Date() }),
       ),
     ).toMatch(/tentativa_resolucao_coerente_com_estado/)
   })
@@ -271,7 +271,7 @@ describe('tentativa', () => {
 
     expect(
       await violou(
-        banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1, operadorId }),
+        banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1, operadorId }),
       ),
     ).toMatch(/tentativa_autoria_coerente_com_estado/)
   })
@@ -284,7 +284,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'valida',
           tempoMs: 0,
           operadorId,
@@ -302,7 +302,7 @@ describe('tentativa', () => {
       await violou(
         banco.db.insert(schema.tentativa).values({
           participanteId,
-          pitch: 1,
+          cockpit: 1,
           estado: 'valida',
           tempoMs: -1,
           operadorId,
@@ -317,7 +317,7 @@ describe('tentativa', () => {
 
     const [linha] = await banco.db
       .insert(schema.tentativa)
-      .values({ participanteId, pitch: 1 })
+      .values({ participanteId, cockpit: 1 })
       .returning()
 
     expect(linha!.estado).toBe('pendente')
@@ -336,7 +336,7 @@ describe('lancamento — trilha de auditoria (RF-23)', () => {
       .insert(schema.tentativa)
       .values({
         participanteId,
-        pitch: 1,
+        cockpit: 1,
         estado: 'valida',
         tempoMs: 83_450,
         operadorId,
@@ -444,7 +444,7 @@ describe('exclusão de participante (T15)', () => {
       aceiteParticipante: true,
       aceiteResponsavel: true,
     })
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
     await banco.cliente.exec(`delete from participante where id = '${participanteId}'`)
 

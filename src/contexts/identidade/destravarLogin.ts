@@ -11,9 +11,9 @@ import { ESCOPO_LOGIN_ORIGEM, ESCOPO_LOGIN_USUARIO, identificarUsuario } from '.
  * do evento, e destravar junto a força bruta contra o painel seria um efeito
  * colateral que ninguém decidiu. Só que a decisão deixou um buraco do outro
  * lado — sem nenhuma alavanca, um Operador que errasse a senha dez vezes ficava
- * fora por quinze minutos, com a fila do Pitch parada. RNF-16 dá quinze
+ * fora por quinze minutos, com a fila do Cockpit parada. RNF-16 dá quinze
  * **segundos** para um lançamento inteiro; quinze minutos é o evento inteiro
- * travado num Pitch.
+ * travado num Cockpit.
  *
  * Errar dez vezes não é hipótese remota: senha de doze caracteres, digitada em
  * tablet, de pé, sob sol, com o teclado capitalizando a primeira letra.

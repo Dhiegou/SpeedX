@@ -84,14 +84,14 @@ export type ItemDaFila = {
 }
 
 export type RespostaDaFila = {
-  pitch: number
+  cockpit: number
   pendentes: number
   truncado: boolean
   itens: ItemDaFila[]
 }
 
-export function buscarFila(pitch: number, busca: string, sinal?: AbortSignal) {
-  const parametros = new URLSearchParams({ pitch: String(pitch) })
+export function buscarFila(cockpit: number, busca: string, sinal?: AbortSignal) {
+  const parametros = new URLSearchParams({ cockpit: String(cockpit) })
   if (busca.trim() !== '') parametros.set('busca', busca.trim())
 
   return chamar<RespostaDaFila>(`/api/painel/fila?${parametros.toString()}`, { signal: sinal })
@@ -99,7 +99,7 @@ export function buscarFila(pitch: number, busca: string, sinal?: AbortSignal) {
 
 export type TentativaEncontrada = {
   tentativaId: string
-  pitch: number
+  cockpit: number
   estado: 'pendente' | 'valida' | 'ausente'
   tempoMs: number | null
   tempo: string | null
@@ -134,8 +134,8 @@ export function buscarHistorico(tentativaId: string) {
   return chamar<{ lancamentos: Lancamento[] }>(`/api/painel/tentativa/${tentativaId}/historico`)
 }
 
-export function incluirNoPitch(participanteId: string, pitch: number) {
-  return chamar<unknown>('/api/painel/tentativa', JSON_POST({ participanteId, pitch }))
+export function incluirNoCockpit(participanteId: string, cockpit: number) {
+  return chamar<unknown>('/api/painel/tentativa', JSON_POST({ participanteId, cockpit }))
 }
 
 /**

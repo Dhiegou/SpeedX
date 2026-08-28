@@ -16,11 +16,40 @@ Restam T18 a T21: carga, deploy, contingência em papel e o ensaio no mundo fís
 
 **Quatro requisitos continuam sem verificação automática**, cada um com justificativa escrita que um teste obriga a existir: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (gente com cronômetro). **RNF-18 saiu dessa lista em T17** — 360 px é uma largura, e um navegador sabe ser 360 px.
 
-Duas pendências do organizador continuam abertas, com consequência datada: **PE-06** (data do evento) é a única linha vazia de `docs/retencao.md`, e sem ela o expurgo recusa rodar; **PE-05** (onde hospedar) decide o desligamento do site prometido no termo e o monitor externo de T16.
+**2026-08-25 — o organizador respondeu três pendências, e uma delas mudou uma palavra do produto.**
+
+- **PE-01 fechou, e não como o projeto supunha.** Não é "Pitch" nem "Pista": são dois **Cockpits**, que é onde fica o simulador (D-75). A palavra na tela mudou primeiro; o identificador do banco e da API acompanhou horas depois, na **T22** (D-77), porque manter dois nomes para o mesmo conceito é o que a linguagem ubíqua existe para impedir.
+- **PE-06 fechou.** O evento é em **24 de outubro de 2026**. Preenche a última linha vazia de `docs/retencao.md` e data o vencimento da retenção: **4 de novembro de 2026, 00:00** em São Paulo. O comando de expurgo continua sem valor padrão, de propósito (D-63).
+- **PE-05 fechou mais um terço.** A aplicação vai para a **Vercel, plano gratuito** (D-76). Continuam sem destino **quem hospeda o Postgres**, qual é o **domínio** e o **monitor externo** — e são eles, não a aplicação, que ainda seguram o QR definitivo (T07), a T19 e o desligamento do site prometido no termo.
 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-25 — Sessão 21: levantamento de pendências e três respostas do organizador
+
+**Pedido:** verificar o que ficou pendente das tasks feitas até aqui.
+
+**Levantamento.** `npm run check` limpo, e2e com 19 casos passando, árvore limpa, nenhum TODO no código. Duas coisas que documento nenhum registrava apareceram na execução:
+
+1. **`tests/identidade.test.ts` é instável na suíte cheia.** O caso do destravamento estourou os 30 s de `testTimeout` em `npm test` e passou em 40 s rodando o arquivo sozinho. Não é regressão: são 21 conferências de scrypt, cada uma reservando 64 MiB (D-37), competindo com o outro worker. É margem de tempo, e vai piscar vermelho no CI.
+2. **Erro de hidratação na Classificação pública.** O e2e passa, mas o `next dev` registra *hydration mismatch* em `Classificacao.tsx`: `useState(() => Date.now())` roda no servidor e de novo no navegador, e `toLocaleString('pt-BR')` usa o fuso do servidor. Atinge o indicador de RF-32. Em produção o React se recupera calado, e é por isso que nenhum teste pega.
+
+**Três respostas do organizador**, aplicadas nesta sessão: o termo é **Cockpit** (D-75), o evento é em **24/10/2026** (PE-06) e a aplicação vai para a **Vercel gratuita** (D-76).
+
+**A troca de palavra custou o que D-31 prometeu que custaria** — duas linhas em `src/shared/vocabulario.ts` — mais duas mensagens que tinham escapado da constante: a recusa de tentativa duplicada em `api/painel/tentativa` e o `error` do `esquemaPitch`. As duas agora leem a constante. Sete asserções de texto na suíte acompanharam.
+
+**Depois, na mesma sessão, os dois achados viraram conserto e nasceu a T22.**
+
+**O relógio da Classificação deixou de ser estado do componente.** `useState(() => Date.now())` roda no servidor e no navegador, e os dois valores nunca coincidem — era essa a divergência de hidratação. Virou `useSyncExternalStore`, cujo `getServerSnapshot` devolve nulo: enquanto a página não hidrata sai a hora absoluta no fuso do evento, que os dois lados escrevem igual; depois entra o relativo que RF-32 pede. O `title` deixou de usar `toLocaleString()` sem argumento, que formata no fuso de quem lê, e passou a usar `formatDataHoraDoEvento` (D-78). O log do e2e, que trazia o erro, passou a não trazer nenhum.
+
+**O teste de identidade ganhou prazo próprio** (`vi.setConfig`, 120 s) com o porquê escrito no arquivo: vinte e uma derivações de scrypt num caso só, ~250 ms cada, competindo com o outro worker. O que **não** foi feito: baixar o custo do scrypt em teste, porque uma variável que enfraquece a derivação de senha é uma variável que um dia vaza para produção.
+
+**A T22 renomeou `pitch` para `cockpit`** no código e no banco (D-77). Ela existe porque o usuário discordou de D-75 no mesmo dia, e tinha razão.
+
+**Aberto:** o que a Vercel não resolve — banco, domínio e monitor —, e o texto do termo de consentimento, que ainda diz "pista" e não pode ser mudado sem aprovação (D-18).
+
+---
 
 ### 2026-08-24 — Sessão 20: execução da T17
 
@@ -1171,6 +1200,70 @@ Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em
 
 ---
 
+### D-75 — O termo oficial é Cockpit, e o identificador interno não mudou junto
+
+**Decidido em 2026-08-25, pelo organizador:** a palavra é **Cockpit**. Não era o desempate que o projeto esperava entre "Pitch" (SDD §3) e "Pista" (PRD) — as duas estavam erradas. O evento é de **simulador**, e os dois postos são cockpits. Não existe pista física nenhuma.
+
+**O que a decisão confirma:** a regra do SDD §3 — a linguagem ubíqua segue o vocabulário falado — estava certa; o que estava errado era o palpite sobre qual era o vocabulário falado. Perguntar teria custado uma frase em agosto.
+
+**O que ela custou:** duas linhas em `src/shared/vocabulario.ts`, exatamente o que D-31 prometeu. A constante existia para essa troca e pagou por si.
+
+**Duas fugas que a constante não pegava**, e que a troca revelou: `'Esta pessoa já tem uma tentativa neste Pitch.'` em `app/api/painel/tentativa/route.ts` e `{ error: 'Pitch deve ser 1 ou 2.' }` em `src/contexts/cronometragem/schema.ts`. Duas mensagens que o usuário lê, escritas à mão fora do lugar onde a palavra mora. Ambas passaram a ler a constante — a segunda é o primeiro caso de um contexto importar `@/shared/vocabulario`, o que é legítimo: `shared/` é folha, e a regra de fronteira só proíbe o caminho contrário.
+
+**O identificador interno continua `pitch`:** coluna `tentativa.pitch`, campo do documento público da Classificação, tipo `Pitch` do domínio. Renomear alcançaria migração de banco e contrato de API para mudar nada do que alguém lê. A fronteira entre a palavra falada e o identificador é a própria constante, e o glossário do SDD registra as duas.
+
+> **Revisto no mesmo dia — ver D-77.** Este parágrafo durou algumas horas. O usuário perguntou se não era melhor renomear tudo, e o argumento que eu tinha usado — o custo da migração — não era o argumento que decide. Fica registrado como estava porque a decisão errada e a razão dela valem mais que um texto limpo.
+
+**O que não foi reescrito:** o texto histórico das tasks entregues e das sessões anteriores. São registros datados do que se pensava naquele dia; corrigi-los apagaria a única evidência de que o projeto operou seis semanas com a palavra errada.
+
+---
+
+### D-76 — A aplicação vai para a Vercel gratuita; o banco continua sem casa
+
+**Decidido em 2026-08-25, pelo usuário:** hospedagem da aplicação na **Vercel, plano Hobby (gratuito)**.
+
+**O que isso fecha.** A borda da Vercel anuncia HTTP/3 e comprime com Brotli, o que atende FL-02 e FL-07 sem trabalho de infraestrutura; ela honra `s-maxage` e `stale-while-revalidate`, que é a estratégia de cache de T12; e o deploy sai de commit, com reversão em minutos, que é o que T19 pede no item 6.
+
+**O que isso não fecha, e é o que sobra de PE-05:**
+
+1. **O Postgres não vem junto.** O banco é PostgreSQL 18 desde 2026-08-23 (D-14), mas "onde ele roda" continua em aberto. Precisa de TLS obrigatório (FL-09), backup automático com restauração testada (T19 §5) e, de preferência, região São Paulo — a página da Classificação é `force-dynamic` (D-59), então cada primeira pintura atravessa a distância entre função e banco.
+2. **O domínio.** Sem ele o QR de `docs/qr/inscricao.svg` continua provisório (D-35), e uma URL definitiva de comprimento diferente muda o número de módulos do código.
+3. **O monitor externo** de T16 continua a contratar.
+
+**O risco do uso não comercial foi levantado e fechado em 2026-08-25.** O plano Hobby da Vercel é para uso não comercial, e o evento tem patrocinadores — mas o que vai ao ar é uma **iniciação científica em nome da universidade**, conforme o usuário: o site não carrega marca de patrocinador, não vende nada e não cobra inscrição. Fica registrado assim, com o detalhe que importa se alguém reabrir a pergunta: **o que decide é o que a página faz, não o que o evento em volta dela é**. Se um patrocinador pedir logotipo na página de inscrição, a pergunta volta.
+
+**Também a verificar em T19**, porque nenhuma delas se resolve daqui: a região das funções (o padrão não é São Paulo), o teto de execução do plano contra a exportação completa de T14, e o limite de conexões do Postgres visto de um ambiente sem servidor de longa duração.
+
+---
+
+### D-77 — O identificador interno acompanhou a palavra, e a migração foi escrita à mão
+
+**Decidido em 2026-08-25**, algumas horas depois de D-75, a pedido do usuário: `pitch` vira `cockpit` **em tudo** — coluna, constraints, tipos, campos de API, estado de interface, classe de CSS. Executado como T22.
+
+**Por que a decisão anterior estava errada.** Eu tinha pesado o custo da migração contra o benefício de quem lê a tela, e concluído que ninguém lê o nome da coluna. Lê: quem depura às sete da noite do dia 24 de outubro, com a fila parada, vendo `tentativa.pitch` numa janela e "Cockpit 2" na outra. Nesse momento, confirmar que são a mesma coisa custa segundos que não existem. Duas palavras para o mesmo conceito é precisamente o que o SDD §3 existe para impedir — e o custo real, medido, foi 66 arquivos numa varredura e uma migração de três linhas.
+
+**A varredura cega acertou o código e errou a prosa.** Quatro substituições resolveram os 66 arquivos e o `tsc` passou de primeira. O que ela não sabe distinguir é **a palavra usada** da **palavra citada**: o comentário que contava a história da decisão virou "não era escolha entre 'Cockpit' e 'Pista'", que não quer dizer nada. Vale para qualquer renomeação em massa — o compilador confere identificador, não confere texto, e a revisão que importa é a dos comentários.
+
+**Três mensagens que o participante lê apareceram só agora.** `src/contexts/inscricao/schema.ts` recusava o cadastro com "Escolha pelo menos uma **pista**", "**Pista** inválida" e "Cada **pista** pode ser escolhida uma vez só". Escaparam da auditoria de D-75 porque aquela busca procurava "Pitch", e estas usavam a **outra** palavra errada. Só apareceram porque renomear obrigou a varrer "pista" também. As três passaram a ler `COCKPIT.singular`.
+
+**A migração precisou ser escrita à mão, e o motivo é uma pergunta.** `drizzle-kit generate` recusa rodar sem terminal interativo quando vê uma coluna sumir e outra aparecer: ele pergunta se é renomeação ou substituição. As duas respostas não se parecem — uma preserva 2971 Tentativas, a outra apaga a coluna. Escrevi `0004_renomeia_pitch_para_cockpit.sql` com três `RENAME` e montei o snapshot a partir do `0003`. A conferência não foi leitura: rodar `drizzle-kit generate` de novo devolveu **"No schema changes, nothing to migrate"**, que é o programa dizendo que o snapshot escrito à mão descreve o esquema do código. A suíte recria o banco a partir das migrações, então os 594 verdes provam a cadeia.
+
+**O que não foi renomeado, e por quê:** o texto do termo de consentimento (`v1.0-2026-08-19`) diz "a pista, o tempo e o horário". É texto aprovado por escrito (D-17) e versão nova nasce rascunho, o que **impede cadastro** até alguém aprovar (D-18). Não é varredura: é decisão do organizador. O PRD também ficou como está, de propósito — é o documento de origem, e `tests/rastreabilidade.test.ts` o lê.
+
+---
+
+### D-78 — O relógio da página pública é fonte externa, não estado
+
+**Decidido em 2026-08-25**, ao consertar uma divergência de hidratação que nenhum teste pegava e que só aparecia no log do `next dev`.
+
+**O defeito.** `const [agora] = useState(() => Date.now())` parece inofensivo e não é: o inicializador roda **duas vezes**, uma no servidor ao pintar a primeira tabela e outra no navegador, e os dois valores nunca coincidem. O React descartava a árvore vinda do servidor e repintava a página inteira — em produção, calado, porque a divergência é "recuperável". O e2e passava. O que denunciava era uma linha no log do servidor de desenvolvimento.
+
+**O conserto.** `useSyncExternalStore`, que existe para exatamente este caso: `getServerSnapshot` devolve nulo, os dois lados pintam o mesmo texto, e o relógio só anda depois de hidratar. O instante mora fora do componente porque `getSnapshot` precisa devolver o **mesmo** valor entre avisos — `Date.now()` ali dentro renderizaria em laço.
+
+**Um segundo defeito no mesmo trecho:** o `title` usava `toLocaleString('pt-BR')` sem fuso, que formata no fuso de **quem lê**. Além de divergir na hidratação, é a hora errada: quem lê está no evento, e a hora que interessa é a de São Paulo. Virou `formatDataHoraDoEvento`, com o fuso fixo.
+
+**O que isto ensina sobre a suíte:** `npm test` e o e2e passavam nos dois estados, antes e depois. O que achou o defeito foi ler o log de uma execução que já estava verde.
+
 ---
 
 ## 4. Premissas assumidas
@@ -1191,12 +1284,12 @@ Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em
 
 | # | Pendência | Quem resolve | Bloqueia |
 |---|---|---|---|
-| PE-01 | Termo oficial: **Pitch** ou **Pista** — **deixou de bloquear em 2026-08-20**: a palavra vive em `src/shared/vocabulario.ts` (D-31), e trocá-la custa uma linha. Continua aberta como decisão. | Organizador | — |
+| PE-01 | ~~Termo oficial: **Pitch** ou **Pista**~~ — **resolvida em 2026-08-25**: nenhuma das duas. São dois **Cockpits**, que é onde fica o simulador (D-75). A troca custou duas linhas em `src/shared/vocabulario.ts`, como D-31 previa, mais duas mensagens que tinham escapado da constante | — | — |
 | PE-02 | ~~Prazo de retenção dos dados após o evento (RNF-11)~~ — **resolvida em 2026-08-19**: máximo de 10 dias após o evento, definido pelo usuário. Já escrito na seção `retencao` do termo; T15 usa a data do evento (PE-06) como base da contagem | — | — |
 | PE-03 | ~~Canal para solicitação de exclusão de dados (RF-09)~~ — **resolvida em 2026-08-19**: presencial, no ponto de inscrição durante o evento; sem canal remoto (D-20). Já escrito na `v0.2` do termo | — | — |
 | PE-04 | ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — **resolvida em 2026-08-19**: `v1.0-2026-08-19` aprovada por Dhiego, registro em `docs/aprovacao-termo.md`. Se o organizador formal do NEXT for outra pessoa, cabe contra-assinar, sem custo de versão | — | — |
-| PE-05 | Hospedagem e banco. **Resolvida na metade em 2026-08-23**: o banco é **PostgreSQL 18**, decidido pelo usuário depois de a avaliação mostrar que o Autonomous Database da Oracle é incompatível de fundo com o projeto. Falta **onde** hospedar aplicação e banco em produção. **Continua bloqueando a impressão**: sem o domínio definitivo, o QR de `docs/qr/inscricao.svg` é provisório (D-35) | Time técnico | T19 (hospedagem), material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5), o monitor externo de T16 |
-| PE-06 | Data do evento e janela de operação. **O local foi confirmado em 2026-08-23: São Paulo**, o que fixa o fuso de `formatHoraDoEvento` (`America/Sao_Paulo`). Falta a **data**. **Consequência a partir de 2026-08-24:** é a única linha vazia de `docs/retencao.md`, e `npm run expurgar` recusa rodar sem ela — de propósito (D-63) | Organizador | o expurgo de T15 na prática, T19 (congelamento de deploy) |
+| PE-05 | Hospedagem e banco. **Resolvida em dois terços.** Em 2026-08-23 o banco virou **PostgreSQL 18** (D-14); em 2026-08-25 a aplicação ganhou casa: **Vercel, plano gratuito** (D-76). Faltam três coisas, e nenhuma é a aplicação: **onde roda o Postgres** (com TLS, backup e restauração testada), qual é o **domínio** — sem ele o QR de `docs/qr/inscricao.svg` segue provisório (D-35) — e o **monitor externo**. O uso não comercial do plano Hobby deixou de ser risco em 2026-08-25: é iniciação científica em nome da universidade, sem marca de patrocinador na página (D-76) | Time técnico | T19, material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5), o monitor externo de T16 |
+| PE-06 | ~~Data do evento e janela de operação~~ — **resolvida em 2026-08-25**: **24 de outubro de 2026**, em São Paulo (o local já estava confirmado desde 2026-08-23, e é o que fixa `America/Sao_Paulo`). A retenção vence em **4 de novembro de 2026, 00:00**, escrito em `docs/retencao.md` §2. `npm run expurgar` continua exigindo `--evento 2026-10-24` escrito à mão: a data existir não a torna valor padrão (D-63) | — | — |
 
 ---
 
@@ -1204,7 +1297,7 @@ Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em
 
 Glossário completo no [SDD §3](SDD.md). Os termos que mais causam confusão:
 
-- **Pitch** — uma das duas pistas. É atributo da **Tentativa**, nunca do Participante.
+- **Cockpit** — um dos dois postos de simulador, onde fica o simulador que a pessoa disputa. É atributo da **Tentativa**, nunca do Participante. Uma palavra só, da tela ao nome da coluna `tentativa.cockpit` (D-75, D-77). "Pitch" e "Pista" aparecem no texto histórico deste arquivo porque era o que se pensava até 2026-08-25.
 - **Tentativa** — intenção registrada de um Participante disputar um Pitch. Nasce Pendente na Inscrição. É o agregado raiz da Cronometragem. Evitar chamar de "corrida", porque "corrida" também nomeia o evento inteiro.
 - **Lançamento** — o **ato** de registrar um Tempo. Distinto de **Tempo**, que é o valor. RF-23 rastreia lançamentos, não tempos.
 - **Nome Público** — nome + inicial do sobrenome. Existe **somente** no contexto de Classificação; é o único identificador pessoal admissível em superfície pública.

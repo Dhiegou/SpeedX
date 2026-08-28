@@ -40,7 +40,7 @@ function entrada(sobrescrever: Record<string, unknown> = {}) {
     email: 'marina@exemplo.com',
     telefone: '(11) 98765-4321',
     idade: 30,
-    pitches: [1],
+    cockpits: [1],
     consentimento: true,
     ...sobrescrever,
   }
@@ -68,13 +68,13 @@ describe('registrarInscricao — o que fica gravado', () => {
     expect(linha?.aceiteResponsavel).toBeNull()
   })
 
-  it('RF-03 — um Pitch gera uma Tentativa Pendente', async () => {
-    await registrarInscricao(banco.db, entrada({ pitches: [1] }))
+  it('RF-03 — um Cockpit gera uma Tentativa Pendente', async () => {
+    await registrarInscricao(banco.db, entrada({ cockpits: [1] }))
 
     const linhas = await banco.db.select().from(schema.tentativa)
 
     expect(linhas).toHaveLength(1)
-    expect(linhas[0]?.pitch).toBe(1)
+    expect(linhas[0]?.cockpit).toBe(1)
     expect(linhas[0]?.estado).toBe('pendente')
     // Pendente é o único estado sem autoria: ninguém agiu sobre ela ainda.
     expect(linhas[0]?.operadorId).toBeNull()
@@ -82,12 +82,12 @@ describe('registrarInscricao — o que fica gravado', () => {
     expect(linhas[0]?.tempoMs).toBeNull()
   })
 
-  it('RF-03 — dois Pitches geram duas Tentativas Pendentes', async () => {
-    await registrarInscricao(banco.db, entrada({ pitches: [1, 2] }))
+  it('RF-03 — dois Cockpits geram duas Tentativas Pendentes', async () => {
+    await registrarInscricao(banco.db, entrada({ cockpits: [1, 2] }))
 
     const linhas = await banco.db.select().from(schema.tentativa)
 
-    expect(linhas.map((l) => l.pitch).sort()).toEqual([1, 2])
+    expect(linhas.map((l) => l.cockpit).sort()).toEqual([1, 2])
     expect(linhas.every((l) => l.estado === 'pendente')).toBe(true)
   })
 
@@ -102,11 +102,11 @@ describe('registrarInscricao — o que fica gravado', () => {
   })
 
   it('RF-10 — o resultado devolve exatamente o que foi enviado', async () => {
-    const resultado = await registrarInscricao(banco.db, entrada({ pitches: [2, 1] }))
+    const resultado = await registrarInscricao(banco.db, entrada({ cockpits: [2, 1] }))
 
     expect(resultado.nome).toBe('Marina')
     expect(resultado.sobrenome).toBe('Costa')
-    expect(resultado.pitches).toEqual([2, 1])
+    expect(resultado.cockpits).toEqual([2, 1])
     expect(resultado.versaoTermo).toBe(TERMO_VIGENTE.versao)
     expect(resultado.participanteId).toMatch(/^[0-9a-f-]{36}$/)
   })
@@ -256,8 +256,8 @@ describe('RNF-13 — o servidor revalida, mesmo com o cliente burlado', () => {
     expect(await banco.db.select().from(schema.consentimento)).toHaveLength(0)
   })
 
-  it('recusa Pitch inexistente antes de chegar ao banco', async () => {
-    await expect(registrarInscricao(banco.db, entrada({ pitches: [3] }))).rejects.toBeInstanceOf(
+  it('recusa Cockpit inexistente antes de chegar ao banco', async () => {
+    await expect(registrarInscricao(banco.db, entrada({ cockpits: [3] }))).rejects.toBeInstanceOf(
       InscricaoInvalidaError,
     )
   })

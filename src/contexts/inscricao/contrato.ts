@@ -13,8 +13,8 @@
  * Implementação em T04/T09.
  */
 
-/** Uma das duas pistas do evento. Atributo da Tentativa, nunca do Participante. */
-export type Pitch = 1 | 2
+/** Um dos dois Cockpits do evento. Atributo da Tentativa, nunca do Participante. */
+export type Cockpit = 1 | 2
 
 /** Identidade mínima para o Operador distinguir duas pessoas na Fila (RF-15). */
 export type ParticipanteNaFila = {
@@ -28,6 +28,6 @@ export type ParticipanteNaFila = {
 /** Evento publicado quando uma Inscrição é confirmada. Não carrega dado pessoal. */
 export type InscricaoConfirmada = {
   participanteId: string
-  pitches: readonly Pitch[]
+  cockpits: readonly Cockpit[]
   inscritoEm: Date
 }

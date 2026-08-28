@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import estilos from './classificacao.module.css'
-import { classificar, contarLinhas, encontrar, montarBlocos, type FiltroDePitch } from './filtro'
+import { classificar, contarLinhas, encontrar, montarBlocos, type FiltroDeCockpit } from './filtro'
 import type { DocumentoTransmitido } from '@/contexts/classificacao'
-import { formatTempo } from '@/shared/tempo'
-import { nomeDaPista, PISTA } from '@/shared/vocabulario'
+import { formatDataHoraDoEvento, formatHoraDoEvento, formatTempo } from '@/shared/tempo'
+import { nomeDoCockpit, COCKPIT } from '@/shared/vocabulario'
 
 /**
  * A tabela pública (T13 — RF-27 a RF-33, RNF-18).
@@ -47,16 +47,61 @@ function tempoRelativo(desde: string, agora: number): string {
   return `há ${String(Math.floor(segundos / 3600))} h`
 }
 
+/**
+ * O relógio de parede, como fonte externa ao React.
+ *
+ * `useState(() => Date.now())` parecia o caminho óbvio e era um defeito: o
+ * inicializador roda **duas vezes** — uma no servidor, ao pintar a primeira
+ * tabela, e outra no navegador —, e os dois valores nunca coincidem. O React
+ * chamava isso de divergência de hidratação, descartava a árvore do servidor e
+ * repintava a página inteira; em produção, calado. Nenhum teste pegava.
+ *
+ * `useSyncExternalStore` existe exatamente para isto: `lerNoServidor` devolve
+ * nulo, os dois lados pintam o mesmo texto, e o relógio só começa a andar
+ * depois de hidratar. O instante fica fora do componente porque o `getSnapshot`
+ * precisa devolver o **mesmo** valor entre avisos — `Date.now()` direto ali
+ * renderizaria em laço infinito.
+ */
+let instante = Date.now()
+
+function assinarRelogio(avisar: () => void): () => void {
+  const relogio = setInterval(() => {
+    instante = Date.now()
+    avisar()
+  }, 1_000)
+
+  return () => {
+    clearInterval(relogio)
+  }
+}
+
+const lerNoCliente = (): number => instante
+const lerNoServidor = (): null => null
+
+/**
+ * O rótulo de RF-32, nas duas fases da vida desta página.
+ *
+ * **`agora` é nulo enquanto a página não hidrata.** Nessa fase sai a hora
+ * absoluta no fuso do evento, que servidor e navegador escrevem igual. Depois,
+ * o relativo que RF-32 pede.
+ */
+function rotuloDeAtualizacao(geradoEm: string, agora: number | null): string {
+  if (agora === null) return `atualizado às ${formatHoraDoEvento(new Date(geradoEm))}`
+
+  return `atualizado ${tempoRelativo(geradoEm, agora)}`
+}
+
 export default function Classificacao({ inicial }: Props) {
   const [documento, setDocumento] = useState(inicial)
-  const [pitch, setPitch] = useState<FiltroDePitch>('todos')
+  const [cockpit, setCockpit] = useState<FiltroDeCockpit>('todos')
   const [busca, setBusca] = useState('')
   const [limite, setLimite] = useState(PAGINA)
   const [atualizando, setAtualizando] = useState(false)
   const [falhou, setFalhou] = useState(false)
-  const [agora, setAgora] = useState(() => Date.now())
 
-  const linhas = useMemo(() => classificar(documento.linhas, pitch), [documento.linhas, pitch])
+  const agora = useSyncExternalStore(assinarRelogio, lerNoCliente, lerNoServidor)
+
+  const linhas = useMemo(() => classificar(documento.linhas, cockpit), [documento.linhas, cockpit])
   const achados = useMemo(() => encontrar(linhas, busca), [linhas, busca])
   const blocos = useMemo(() => montarBlocos(linhas, achados, limite), [linhas, achados, limite])
 
@@ -79,7 +124,6 @@ export default function Classificacao({ inicial }: Props) {
       .then((novo) => {
         setDocumento(novo)
         setFalhou(false)
-        setAgora(Date.now())
       })
       .catch(() => {
         // A tabela antiga fica. Perder a lista por causa de um pacote é pior
@@ -102,20 +146,9 @@ export default function Classificacao({ inicial }: Props) {
     }
   }, [atualizar])
 
-  /** O relógio do rótulo "atualizado há X" precisa andar sozinho. */
-  useEffect(() => {
-    const relogio = setInterval(() => {
-      setAgora(Date.now())
-    }, 1_000)
-
-    return () => {
-      clearInterval(relogio)
-    }
-  }, [])
-
-  function trocarPitch(novo: FiltroDePitch): void {
-    setPitch(novo)
-    // A paginação volta ao começo: manter 400 linhas carregadas de um Pitch ao
+  function trocarCockpit(novo: FiltroDeCockpit): void {
+    setCockpit(novo)
+    // A paginação volta ao começo: manter 400 linhas carregadas de um Cockpit ao
     // trocar para o outro daria uma lista longa que ninguém pediu.
     setLimite(PAGINA)
   }
@@ -128,19 +161,19 @@ export default function Classificacao({ inicial }: Props) {
       </p>
 
       <div className={estilos.controles}>
-        <div className={estilos.abas} role="tablist" aria-label={`Filtrar por ${PISTA.singular}`}>
+        <div className={estilos.abas} role="tablist" aria-label={`Filtrar por ${COCKPIT.singular}`}>
           {(['todos', 1, 2] as const).map((opcao) => (
             <button
               key={String(opcao)}
               type="button"
               role="tab"
-              aria-selected={pitch === opcao}
-              className={`${estilos.aba} ${pitch === opcao ? estilos.abaAtiva : ''}`}
+              aria-selected={cockpit === opcao}
+              className={`${estilos.aba} ${cockpit === opcao ? estilos.abaAtiva : ''}`}
               onClick={() => {
-                trocarPitch(opcao)
+                trocarCockpit(opcao)
               }}
             >
-              {opcao === 'todos' ? 'Todos' : nomeDaPista(opcao)}
+              {opcao === 'todos' ? 'Todos' : nomeDoCockpit(opcao)}
             </button>
           ))}
         </div>
@@ -172,8 +205,8 @@ export default function Classificacao({ inicial }: Props) {
         </span>
         <span>
           {/* RF-32: relativo na tela, absoluto no `title`. */}
-          <span title={new Date(documento.geradoEm).toLocaleString('pt-BR')}>
-            atualizado {tempoRelativo(documento.geradoEm, agora)}
+          <span title={formatDataHoraDoEvento(new Date(documento.geradoEm))}>
+            {rotuloDeAtualizacao(documento.geradoEm, agora)}
           </span>{' '}
           <button
             type="button"
@@ -212,8 +245,8 @@ export default function Classificacao({ inicial }: Props) {
                 #
               </th>
               <th scope="col">Nome</th>
-              <th scope="col" className={estilos.pitch}>
-                {PISTA.singular}
+              <th scope="col" className={estilos.cockpit}>
+                {COCKPIT.singular}
               </th>
               <th scope="col" className={estilos.tempo}>
                 Tempo
@@ -235,7 +268,7 @@ export default function Classificacao({ inicial }: Props) {
                   >
                     <td className={estilos.posicao}>{linha.posicao}</td>
                     <td className={estilos.nome}>{linha.nomePublico}</td>
-                    <td className={estilos.pitch}>{nomeDaPista(linha.pitch)}</td>
+                    <td className={estilos.cockpit}>{nomeDoCockpit(linha.cockpit)}</td>
                     <td className={estilos.tempo}>{formatTempo(linha.tempoMs)}</td>
                   </tr>
                 ))

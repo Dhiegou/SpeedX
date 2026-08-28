@@ -6,7 +6,7 @@ import { registrarOperacao } from '@/shared/log'
  * `GET /api/metricas` — o painel do dia (T16 §5, PRD §7).
  *
  * Os números que o time olha durante o evento: inscritos por hora, situação de
- * cada Pitch, ritmo de Lançamentos, taxa de correção e — o que mais importa —
+ * cada Cockpit, ritmo de Lançamentos, taxa de correção e — o que mais importa —
  * quantas Tentativas continuam pendentes.
  *
  * **Exige sessão de Operador, e a razão não é o dado.** O corpo é só contagem;

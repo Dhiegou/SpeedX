@@ -173,10 +173,10 @@ export async function popular(
       aceiteCompartilhamento: rnd() < 0.66,
     })
 
-    // Metade corre os dois Pitches (RF-03).
-    const pitches = rnd() < 0.5 ? [1, 2] : [rnd() < 0.5 ? 1 : 2]
+    // Metade corre os dois Cockpits (RF-03).
+    const cockpits = rnd() < 0.5 ? [1, 2] : [rnd() < 0.5 ? 1 : 2]
 
-    for (const pitch of pitches) {
+    for (const cockpit of cockpits) {
       const sorteio = rnd()
 
       // Tempos concentrados numa faixa estreita e em passos de 100 ms, para que
@@ -187,7 +187,7 @@ export async function popular(
         resumo.validas += 1
         tentativasLinhas.push({
           participanteId: id,
-          pitch,
+          cockpit,
           estado: 'valida',
           tempoMs,
           inscritoEm,
@@ -198,7 +198,7 @@ export async function popular(
         resumo.ausentes += 1
         tentativasLinhas.push({
           participanteId: id,
-          pitch,
+          cockpit,
           estado: 'ausente',
           inscritoEm,
           resolvidoEm: new Date(inicio + 3_600_000 + resumo.ausentes * 1_000),
@@ -206,7 +206,7 @@ export async function popular(
         })
       } else {
         resumo.pendentes += 1
-        tentativasLinhas.push({ participanteId: id, pitch, inscritoEm })
+        tentativasLinhas.push({ participanteId: id, cockpit, inscritoEm })
       }
 
       resumo.tentativas += 1

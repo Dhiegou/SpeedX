@@ -29,7 +29,7 @@ function resposta(corpo: unknown, status = 201): Response {
   } as Response
 }
 
-const SUCESSO = { nome: 'Marina', sobrenome: 'Costa', pitches: [1] }
+const SUCESSO = { nome: 'Marina', sobrenome: 'Costa', cockpits: [1] }
 
 beforeEach(() => {
   enviado.mockReset()
@@ -70,7 +70,7 @@ async function preencherAdulto(user: UserEvent, idade = '30'): Promise<void> {
   await digitar(user, /E-mail/, 'marina@exemplo.com')
   await digitar(user, /^Telefone com DDD$/, '11987654321')
   await digitar(user, /^Idade$/, idade)
-  await user.click(screen.getByRole('checkbox', { name: /Pitch 1/ }))
+  await user.click(screen.getByRole('checkbox', { name: /Cockpit 1/ }))
   await user.click(screen.getByRole('checkbox', { name: ACEITE_PARTICIPANTE }))
 }
 
@@ -102,7 +102,7 @@ describe('RF-02 — os campos da inscrição', () => {
     expect(screen.getByLabelText(/^Idade$/)).toHaveProperty('inputMode', 'numeric')
 
     await waitFor(() => {
-      expect(screen.getAllByRole('checkbox', { name: /Pitch/ })).toHaveLength(2)
+      expect(screen.getAllByRole('checkbox', { name: /Cockpit/ })).toHaveLength(2)
     })
   })
 
@@ -201,33 +201,33 @@ describe('RF-05 e RF-07 — a idade decide qual formulário existe', () => {
   })
 })
 
-describe('RF-03 — escolha de Pitch', () => {
-  it('sem Pitch o envio é bloqueado, com mensagem própria', async () => {
+describe('RF-03 — escolha de Cockpit', () => {
+  it('sem Cockpit o envio é bloqueado, com mensagem própria', async () => {
     const user = userEvent.setup()
     montar()
 
     await preencherAdulto(user)
-    await user.click(screen.getByRole('checkbox', { name: /Pitch 1/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Cockpit 1/ }))
 
     await concluir(user)
 
     // Duas vezes: no resumo do topo e junto do campo. Quem rolou até o fim do
     // formulário não vê o topo, e quem só olha o topo não sabe onde corrigir.
-    expect(await screen.findAllByText(/Escolha pelo menos uma pista/)).toHaveLength(2)
+    expect(await screen.findAllByText(/Escolha pelo menos um Cockpit/)).toHaveLength(2)
     expect(enviado).not.toHaveBeenCalled()
   })
 
-  it('com os dois Pitches marcados, os dois são enviados', async () => {
+  it('com os dois Cockpits marcados, os dois são enviados', async () => {
     const user = userEvent.setup()
     montar()
 
     await preencherAdulto(user)
-    await user.click(screen.getByRole('checkbox', { name: /Pitch 2/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Cockpit 2/ }))
 
     await concluir(user)
 
     await waitFor(() => {
-      expect(corpoEnviado()['pitches']).toEqual([1, 2])
+      expect(corpoEnviado()['cockpits']).toEqual([1, 2])
     })
   })
 })
@@ -301,7 +301,7 @@ describe('RNF-17 — cada regra com a sua mensagem', () => {
     await digitar(user, /E-mail/, 'sem-arroba')
     await digitar(user, /^Telefone com DDD$/, '119')
     await digitar(user, /^Idade$/, '30')
-    await user.click(screen.getByRole('checkbox', { name: /Pitch 1/ }))
+    await user.click(screen.getByRole('checkbox', { name: /Cockpit 1/ }))
     await user.click(screen.getByRole('checkbox', { name: ACEITE_PARTICIPANTE }))
 
     await concluir(user)
@@ -399,9 +399,9 @@ describe('FL-03 — falha de rede não vira cadastro duplicado', () => {
 })
 
 describe('RF-10 — confirmação', () => {
-  it('mostra o nome registrado e os Pitches escolhidos', async () => {
+  it('mostra o nome registrado e os Cockpits escolhidos', async () => {
     const user = userEvent.setup()
-    enviado.mockResolvedValue(resposta({ nome: 'Marina', sobrenome: 'Costa', pitches: [1, 2] }))
+    enviado.mockResolvedValue(resposta({ nome: 'Marina', sobrenome: 'Costa', cockpits: [1, 2] }))
     montar()
 
     await preencherAdulto(user)
@@ -409,7 +409,7 @@ describe('RF-10 — confirmação', () => {
 
     expect(await screen.findByText(/Inscrição concluída/)).toBeDefined()
     expect(screen.getByText('Marina Costa')).toBeDefined()
-    expect(screen.getByText('Pitch 1 e Pitch 2')).toBeDefined()
+    expect(screen.getByText('Cockpit 1 e Cockpit 2')).toBeDefined()
     expect(screen.getByRole('link', { name: /classificação/i })).toHaveProperty(
       'href',
       expect.stringContaining('/classificacao'),

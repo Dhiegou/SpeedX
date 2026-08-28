@@ -14,7 +14,7 @@
  *    importa;
  *  - múltiplas sessões simultâneas de Operadores distintos são permitidas
  *    (RF-12) — e as do mesmo Operador também, porque dois tablets no mesmo
- *    Pitch é o uso previsto.
+ *    Cockpit é o uso previsto.
  *
  * **A fachada exporta o tipo, e só.** Quem precisa da sessão — as rotas e o
  * layout do painel — importa `@/contexts/identidade/servico` diretamente, do

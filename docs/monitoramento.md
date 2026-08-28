@@ -63,7 +63,7 @@ Público — um monitor não sabe autenticar-se. Devolve:
 ### `GET /api/metricas`
 
 Exige sessão de Operador. Devolve contagens: inscritos no total e na última
-hora, inscritos por hora no fuso do evento, situação de cada Pitch, ritmo de
+hora, inscritos por hora no fuso do evento, situação de cada Cockpit, ritmo de
 Lançamentos, taxa de correção e **pendências**.
 
 Só responde "quantos", nunca "quem". Para saber quem falta existe o relatório de

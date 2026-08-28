@@ -36,7 +36,7 @@ WebAssembly —, com as mesmas migrações que vão para produção.
 
 A razão é o princípio de D-05: as invariantes mais caras deste sistema moram em
 constraints do banco. Um Participante com idade 12, uma Tentativa Válida sem
-tempo, dois tempos no mesmo Pitch — nada disso é recusado por código de
+tempo, dois tempos no mesmo Cockpit — nada disso é recusado por código de
 aplicação, e sim pelo motor. Testar contra mock verificaria a existência do
 mock.
 

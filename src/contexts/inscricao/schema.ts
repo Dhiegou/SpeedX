@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import type { Pitch } from './contrato'
+import { COCKPIT } from '@/shared/vocabulario'
+import type { Cockpit } from './contrato'
 import type { CodigoErro } from './erros'
 import { IDADE_MAIORIDADE, IDADE_MAXIMA, IDADE_MINIMA } from './idades'
 
@@ -94,19 +95,22 @@ const idade = z
     regra('idade_maxima', `Idade acima de ${String(IDADE_MAXIMA)} anos: confira o valor digitado.`),
   )
 
-/** Pitches declarados (RF-03). Ao menos um, sem repetição, dentro de [1, 2]. */
-const pitches = z
+/** Cockpits declarados (RF-03). Ao menos um, sem repetição, dentro de [1, 2]. */
+const cockpits = z
   .array(z.number())
-  .refine((v) => v.length > 0, regra('pitch_ausente', 'Escolha pelo menos uma pista.'))
+  .refine(
+    (v) => v.length > 0,
+    regra('cockpit_ausente', `Escolha pelo menos um ${COCKPIT.singular}.`),
+  )
   .refine(
     (v) => v.every((p) => p === 1 || p === 2),
-    regra('pitch_invalido', 'Pista inválida: as opções são 1 e 2.'),
+    regra('cockpit_invalido', `${COCKPIT.singular} inválido: as opções são 1 e 2.`),
   )
   .refine(
     (v) => new Set(v).size === v.length,
-    regra('pitch_repetido', 'Cada pista pode ser escolhida uma vez só.'),
+    regra('cockpit_repetido', `Cada ${COCKPIT.singular} pode ser escolhido uma vez só.`),
   )
-  .transform((v) => v as Pitch[])
+  .transform((v) => v as Cockpit[])
 
 const consentimento = z
   .boolean()
@@ -137,7 +141,7 @@ const entrada = z.object({
   email,
   telefone,
   idade,
-  pitches,
+  cockpits,
   consentimento,
   /** Repasse à FIAP e à escolinha: opcional (D-23). Ausente significa recusa. */
   aceiteCompartilhamento: z.boolean().default(false),
@@ -153,7 +157,7 @@ type Comuns = {
   readonly email: string
   readonly telefone: string
   readonly idade: number
-  readonly pitches: readonly Pitch[]
+  readonly cockpits: readonly Cockpit[]
   readonly aceiteCompartilhamento: boolean
 }
 
@@ -176,7 +180,7 @@ function comuns(valor: z.infer<typeof entrada>): Comuns {
     email: valor.email,
     telefone: valor.telefone,
     idade: valor.idade,
-    pitches: valor.pitches,
+    cockpits: valor.cockpits,
     aceiteCompartilhamento: valor.aceiteCompartilhamento,
   }
 }

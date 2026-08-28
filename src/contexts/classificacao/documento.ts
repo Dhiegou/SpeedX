@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto'
-import type { DocumentoClassificacao, LinhaClassificacao, Pitch } from './modelo'
+import type { DocumentoClassificacao, LinhaClassificacao, Cockpit } from './modelo'
 
 /**
  * O que atravessa a rede (T12, escopo 3).
  *
- * O documento inteiro vai para o dispositivo de uma vez, e o filtro por Pitch
+ * O documento inteiro vai para o dispositivo de uma vez, e o filtro por Cockpit
  * e a busca por nome acontecem lá (SDD BC-03). Uma requisição por tecla
  * digitada, com 2000 pessoas buscando ao mesmo tempo, é o cenário capaz de
  * derrubar o sistema — por isso o filtro não volta ao servidor.
@@ -13,7 +13,7 @@ import type { DocumentoClassificacao, LinhaClassificacao, Pitch } from './modelo
  * Duas decisões:
  *
  * **1. Arrays posicionais, não objetos.** `["Marina Costa",1,83450]` contra
- * `{"nomePublico":"Marina Costa","pitch":1,"tempoMs":83450}` — as chaves
+ * `{"nomePublico":"Marina Costa","cockpit":1,"tempoMs":83450}` — as chaves
  * repetidas 4000 vezes custam mais que os dados. O custo é legibilidade do
  * corpo cru, que se paga com este comentário e com um tipo nomeado.
  *
@@ -29,8 +29,8 @@ import type { DocumentoClassificacao, LinhaClassificacao, Pitch } from './modelo
  *    porta. Menos campo na rede é menos superfície, e aqui também é menos risco.
  */
 
-/** `[nomePublico, pitch, tempoMs]`. A posição no array é a classificação. */
-export type LinhaCompacta = readonly [string, Pitch, number]
+/** `[nomePublico, cockpit, tempoMs]`. A posição no array é a classificação. */
+export type LinhaCompacta = readonly [string, Cockpit, number]
 
 export type DocumentoTransmitido = {
   /** Instante em que a projeção foi gerada (RF-32). */
@@ -46,7 +46,7 @@ export function compactar(documento: DocumentoClassificacao): DocumentoTransmiti
     total: documento.linhas.length,
     linhas: documento.linhas.map((l: LinhaClassificacao): LinhaCompacta => [
       l.nomePublico,
-      l.pitch,
+      l.cockpit,
       l.tempoMs,
     ]),
   }

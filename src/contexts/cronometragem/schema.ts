@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { parseTempo, TempoInvalidoError } from '@/shared/tempo'
+import { COCKPIT } from '@/shared/vocabulario'
 
 /**
  * A forma dos comandos que chegam pela rede (T10, regra 7).
@@ -20,10 +21,10 @@ const uuid = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-
   error: 'Identificador inválido: esperado um UUID.',
 })
 
-export const esquemaPitch = z.coerce
+export const esquemaCockpit = z.coerce
   .number()
   .int()
-  .refine((v): v is 1 | 2 => v === 1 || v === 2, { error: 'Pitch deve ser 1 ou 2.' })
+  .refine((v): v is 1 | 2 => v === 1 || v === 2, { error: `${COCKPIT.singular} deve ser 1 ou 2.` })
 
 /**
  * O Tempo chega como texto `mm:ss.cc`, nunca como milissegundos.
@@ -59,7 +60,7 @@ export const esquemaAusencia = z.object({
 
 export const esquemaInclusao = z.object({
   participanteId: uuid,
-  pitch: esquemaPitch,
+  cockpit: esquemaCockpit,
 })
 
 /**

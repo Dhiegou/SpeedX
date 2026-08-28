@@ -52,7 +52,7 @@ const CABECALHO_COMPLETO = [
   'consentimento_registrado_em',
   'aceite_compartilhamento',
   'inscrito_em',
-  'pitch',
+  'cockpit',
   'estado',
   'tempo',
   'tempo_ms',
@@ -82,7 +82,7 @@ function linhaCompleta(l: LinhaDaExportacao): string {
     iso(l.consentimentoRegistradoEm),
     sn(l.aceiteCompartilhamento),
     iso(l.inscritoEm),
-    l.pitch,
+    l.cockpit,
     l.estado,
     // Formatado e bruto: um para ler, outro para reprocessar sem ambiguidade.
     l.tempoMs === null ? '' : formatTempo(l.tempoMs),
@@ -148,7 +148,7 @@ export async function gerarPendencias(db: Db): Promise<string> {
 
   return (
     BOM +
-    linha(['tentativa_id', 'nome', 'sobrenome', 'ultimos4_telefone', 'pitch', 'inscrito_em']) +
+    linha(['tentativa_id', 'nome', 'sobrenome', 'ultimos4_telefone', 'cockpit', 'inscrito_em']) +
     linhas
       .map((l) =>
         linha([
@@ -156,7 +156,7 @@ export async function gerarPendencias(db: Db): Promise<string> {
           l.nome,
           l.sobrenome,
           l.ultimos4Telefone,
-          l.pitch,
+          l.cockpit,
           l.inscritoEm.toISOString(),
         ]),
       )

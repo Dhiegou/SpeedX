@@ -16,7 +16,7 @@ import type { Operador } from './modelo'
  *
  * **Múltiplas sessões simultâneas são o comportamento normal** (RF-12). Abrir
  * uma não encerra as outras, nem as do mesmo Operador: dois tablets no mesmo
- * Pitch, ou o mesmo supervisor no celular e no notebook, é o uso previsto no
+ * Cockpit, ou o mesmo supervisor no celular e no notebook, é o uso previsto no
  * dia. Nada aqui invalida sessão alheia exceto o logout explícito daquela
  * sessão e a desativação da conta.
  */

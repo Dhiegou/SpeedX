@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
-import type { Pitch } from '@/contexts/inscricao/contrato'
+import type { Cockpit } from '@/contexts/inscricao/contrato'
 import * as schema from '@/db/schema'
 import { normalizarNoBanco, padraoDeBusca } from './busca'
 import type {
@@ -15,7 +15,7 @@ import type {
  * As leituras do contexto: a Fila, a busca global e a trilha de auditoria.
  *
  * Ficam aqui, e não em T10, porque são domínio: a Fila **é** a definição de
- * "quem ainda não tem tempo neste Pitch" (RF-14), e a derivação dos quatro
+ * "quem ainda não tem tempo neste Cockpit" (RF-14), e a derivação dos quatro
  * últimos dígitos do telefone (RF-15) é uma regra de fronteira — o número
  * completo não atravessa o contexto (SDD §2). A rota apenas serializa.
  */
@@ -25,7 +25,7 @@ type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 /**
  * Teto de itens devolvidos.
  *
- * A Fila de um Pitch começa o dia com mais de mil pendentes. Mandar tudo de uma
+ * A Fila de um Cockpit começa o dia com mais de mil pendentes. Mandar tudo de uma
  * vez castiga a rede do tablet e a memória do navegador para mostrar uma lista
  * que ninguém rola até o fim — o Operador busca pelo nome (RF-16). Quem chama
  * recebe `truncado` junto e avisa na tela que há mais.
@@ -58,7 +58,7 @@ function casaONome(padrao: string) {
 }
 
 /**
- * A Fila de um Pitch: Tentativas Pendentes, da inscrição mais antiga para a mais
+ * A Fila de um Cockpit: Tentativas Pendentes, da inscrição mais antiga para a mais
  * recente (RF-14).
  *
  * Ausentes e resolvidas ficam de fora — é a definição de Fila, e é o que RF-21
@@ -70,7 +70,7 @@ function casaONome(padrao: string) {
  */
 export async function listarFila(
   db: Db,
-  pitch: Pitch,
+  cockpit: Cockpit,
   filtro: { busca?: string; limite?: number } = {},
 ): Promise<Pagina<ItemDaFila>> {
   const limite = filtro.limite ?? LIMITE_DA_FILA
@@ -91,7 +91,7 @@ export async function listarFila(
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
     .where(
       and(
-        eq(schema.tentativa.pitch, pitch),
+        eq(schema.tentativa.cockpit, cockpit),
         eq(schema.tentativa.estado, 'pendente'),
         padrao === null ? undefined : casaONome(padrao),
       ),
@@ -102,12 +102,12 @@ export async function listarFila(
   return paginar(linhas, limite)
 }
 
-/** Quantas Tentativas ainda esperam neste Pitch. O painel mostra em fonte grande. */
-export async function contarPendentes(db: Db, pitch: Pitch): Promise<number> {
+/** Quantas Tentativas ainda esperam neste Cockpit. O painel mostra em fonte grande. */
+export async function contarPendentes(db: Db, cockpit: Cockpit): Promise<number> {
   const [linha] = await db
     .select({ total: sql<number>`count(*)::int` })
     .from(schema.tentativa)
-    .where(and(eq(schema.tentativa.pitch, pitch), eq(schema.tentativa.estado, 'pendente')))
+    .where(and(eq(schema.tentativa.cockpit, cockpit), eq(schema.tentativa.estado, 'pendente')))
 
   return linha?.total ?? 0
 }
@@ -116,11 +116,11 @@ export async function contarPendentes(db: Db, pitch: Pitch): Promise<number> {
  * Busca global de Participante, **fora** da Fila.
  *
  * A Fila só mostra quem ainda não correu, e é isso que a torna útil. Mas RF-22
- * (corrigir um tempo) e RF-24 (incluir num Pitch adicional) tratam justamente
+ * (corrigir um tempo) e RF-24 (incluir num Cockpit adicional) tratam justamente
  * de quem **saiu** da Fila — já lançado ou marcado como ausente. Sem esta
  * consulta, o Operador não teria como alcançá-los.
  *
- * Devolve as Tentativas de cada pessoa nos dois Pitches, com estado e Tempo,
+ * Devolve as Tentativas de cada pessoa nos dois Cockpits, com estado e Tempo,
  * porque é essa a decisão que o Operador vai tomar em seguida: corrigir esta,
  * ou incluir naquele outro.
  */
@@ -155,7 +155,7 @@ export async function buscarParticipantes(
     .select({
       tentativaId: schema.tentativa.id,
       participanteId: schema.tentativa.participanteId,
-      pitch: schema.tentativa.pitch,
+      cockpit: schema.tentativa.cockpit,
       estado: schema.tentativa.estado,
       tempoMs: schema.tentativa.tempoMs,
       resolvidoEm: schema.tentativa.resolvidoEm,
@@ -167,7 +167,7 @@ export async function buscarParticipantes(
         pagina.itens.map((p) => p.participanteId),
       ),
     )
-    .orderBy(asc(schema.tentativa.pitch))
+    .orderBy(asc(schema.tentativa.cockpit))
 
   const porParticipante = new Map<string, TentativaDoParticipante[]>()
 
@@ -175,7 +175,7 @@ export async function buscarParticipantes(
     const lista = porParticipante.get(t.participanteId) ?? []
     lista.push({
       tentativaId: t.tentativaId,
-      pitch: t.pitch === 2 ? 2 : 1,
+      cockpit: t.cockpit === 2 ? 2 : 1,
       estado: t.estado,
       tempoMs: t.tempoMs,
       resolvidoEm: t.resolvidoEm,

@@ -31,7 +31,7 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] **Idempotência** de FL-03 e FL-06 validada sob reenvio deliberado (T05, T09).
 - [ ] **Sincronia de relógio** do servidor confirmada, e o instante de Lançamento é o do servidor (T19).
 - [ ] **Teste de carga** de FL-07 com 500 acessos concorrentes executado, com relatório (T18).
-- [ ] **Termo oficial** confirmado com o organizador: *Pitch* ou *Pista* — e a interface reflete a decisão (T06, T11, T13).
+- [x] **Termo oficial** confirmado com o organizador em 2026-08-25: **Cockpit** — nem *Pitch* nem *Pista*, porque o evento é de simulador (D-75). A interface reflete a decisão em T06, T11 e T13; o identificador interno segue `pitch`. Falta só conferir na leitura final que nenhuma tela voltou a escrever a palavra à mão.
 - [ ] **Ausência de campo pessoal** em toda resposta pública verificada (Parte 1).
 
 ## Parte 3 — Prontidão operacional
@@ -39,11 +39,11 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] Contas de Operador criadas e testadas por cada pessoa que vai operar, **antes** do dia.
 - [ ] Sessão testada para durar a janela inteira do evento.
 - [ ] Termo de consentimento aprovado por escrito pelo organizador (T03).
-- [ ] Prazo de retenção acordado e registrado (T15) — o procedimento está escrito em `docs/retencao.md`; o que falta marcar aqui é a **data-base** preenchida (PE-06) e o ensaio do expurgo total contra o banco real, que T15 deixou aberto para não apagar a massa de T18.
+- [ ] Prazo de retenção acordado e registrado (T15) — o procedimento está escrito em `docs/retencao.md` e a **data-base entrou em 2026-08-25**: evento em 24/10/2026, retenção vencendo em **04/11/2026, 00:00** em São Paulo. Falta o ensaio do expurgo total contra o banco real, que T15 deixou aberto para não apagar a massa de T18.
 - [ ] Material de contingência impresso e no local, com ensaio feito (T20).
 - [ ] Monitoramento ativo, alertas chegando no canal certo, com teste real de disparo (T16) — a especificação do monitor, dos limiares e do canal está em `docs/monitoramento.md`; falta contratar o serviço (PE-05) e disparar de verdade.
 - [ ] **Decidir sobre a métrica de uso da busca por nome** (PRD §7, ≥ 30%): ela **não é mensurável** neste desenho, porque a busca roda no navegador e não gasta rede (D-69). Ou cai do PRD, ou alguém aceita telemetria de navegador na página mais pública do evento. Decisão do organizador, não do código.
-- [ ] Snapshot manual do banco tirado no início do evento (T19).
+- [ ] Snapshot manual do banco tirado no início do evento, 24/10/2026 (T19).
 - [ ] Deploys congelados; plano de reversão distribuído (T19).
 - [ ] QR code impresso, testado com três leitores e posicionado (T07) — é o resíduo de RF-01: a parte automatizável já tem teste, e o ato de escanear precisa dos aparelhos.
 - [ ] **Os quatro requisitos sem verificação automática**, com as justificativas escritas em `tests/rastreabilidade.test.ts`: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (cinco pessoas cronometradas em cada perfil). O teste falha se a lista mudar sem alguém escrever o porquê.

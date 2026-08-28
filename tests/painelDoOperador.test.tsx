@@ -36,18 +36,18 @@ function resposta(corpo: unknown, status = 200): Response {
   } as Response
 }
 
-function filaDoPitch(pitch: number) {
-  // O Pitch 2 tem gente diferente: é como RF-13 se verifica.
+function filaDoCockpit(cockpit: number) {
+  // O Cockpit 2 tem gente diferente: é como RF-13 se verifica.
   const pessoas =
-    pitch === 1 ? FILA : [{ nome: 'Carla', sobrenome: 'Dias', ultimos4Telefone: '9900' }]
+    cockpit === 1 ? FILA : [{ nome: 'Carla', sobrenome: 'Dias', ultimos4Telefone: '9900' }]
 
   return {
-    pitch,
+    cockpit,
     pendentes: pessoas.length,
     truncado: false,
     itens: pessoas.map((p, i) => ({
-      tentativaId: `tentativa-${String(pitch)}-${String(i)}`,
-      participanteId: `participante-${String(pitch)}-${String(i)}`,
+      tentativaId: `tentativa-${String(cockpit)}-${String(i)}`,
+      participanteId: `participante-${String(cockpit)}-${String(i)}`,
       ...p,
       inscritoEm: new Date(2026, 8, 12, 8, i).toISOString(),
     })),
@@ -60,8 +60,8 @@ beforeEach(() => {
 
   vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
     if (url.startsWith('/api/painel/fila')) {
-      const pitch = Number(new URLSearchParams(url.split('?')[1] ?? '').get('pitch') ?? '1')
-      return Promise.resolve(resposta(filaDoPitch(pitch)))
+      const cockpit = Number(new URLSearchParams(url.split('?')[1] ?? '').get('cockpit') ?? '1')
+      return Promise.resolve(resposta(filaDoCockpit(cockpit)))
     }
 
     if (url.startsWith('/api/painel/participante')) {
@@ -92,7 +92,7 @@ afterEach(() => {
 
 function montar(): UserEvent {
   const teclado = userEvent.setup()
-  render(<Painel operador="Marina Costa" pitchInicial={1} />)
+  render(<Painel operador="Marina Costa" cockpitInicial={1} />)
   return teclado
 }
 
@@ -223,7 +223,7 @@ describe('a Fila (RF-13, RF-15)', () => {
     expect(itens[1]?.textContent).toContain('8765')
   })
 
-  it('Alt+1 e Alt+2 trocam de Pitch e a lista muda (RF-13)', async () => {
+  it('Alt+1 e Alt+2 trocam de Cockpit e a lista muda (RF-13)', async () => {
     const teclado = montar()
     await screen.findByRole('button', { name: /Bruno Souza/ })
 
@@ -233,7 +233,7 @@ describe('a Fila (RF-13, RF-15)', () => {
     expect(screen.queryByRole('button', { name: /Bruno Souza/ })).toBeNull()
   })
 
-  it('digitar no campo de busca não troca de Pitch', async () => {
+  it('digitar no campo de busca não troca de Cockpit', async () => {
     // Sem esta guarda, o Operador digitando "12345" no tempo trocaria de aba a
     // cada tecla — e é o número que ele mais digita no dia.
     const teclado = montar()

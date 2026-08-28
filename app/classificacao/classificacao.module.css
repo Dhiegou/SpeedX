@@ -10,7 +10,7 @@
  *  - **Números tabulares** nos tempos e nas posições: sem isso as colunas
  *    dançam e comparar duas linhas exige parar para ler.
  *  - **Controles fixos no topo**: quem rolou até a posição 400 e quer trocar de
- *    Pitch não deve ter de voltar ao começo.
+ *    Cockpit não deve ter de voltar ao começo.
  *  - **Sem fonte externa, sem imagem**: mesma rede congestionada do cadastro.
  */
 
@@ -145,7 +145,7 @@
   font-weight: 600;
 }
 
-.pitch {
+.cockpit {
   width: 4.5rem;
   color: #333;
   white-space: nowrap;

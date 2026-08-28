@@ -33,7 +33,7 @@ describe('RNF-02 — volume do evento', () => {
     expect(resumo.validas).toBeGreaterThan(1000)
   })
 
-  it('a Fila de um Pitch responde rápido com a base cheia (RNF-16)', async () => {
+  it('a Fila de um Cockpit responde rápido com a base cheia (RNF-16)', async () => {
     const inicio = performance.now()
 
     const fila = await banco.db
@@ -43,7 +43,7 @@ describe('RNF-02 — volume do evento', () => {
         inscritoEm: schema.tentativa.inscritoEm,
       })
       .from(schema.tentativa)
-      .where(sql`pitch = 1 and estado = 'pendente'`)
+      .where(sql`cockpit = 1 and estado = 'pendente'`)
       .orderBy(schema.tentativa.inscritoEm)
 
     const decorrido = performance.now() - inicio
@@ -59,10 +59,10 @@ describe('RNF-02 — volume do evento', () => {
       id: string
       nome: string
       sobrenome: string
-      pitch: number
+      cockpit: number
       tempo_ms: number
     }>(`
-      select t.id, p.nome, p.sobrenome, t.pitch, t.tempo_ms
+      select t.id, p.nome, p.sobrenome, t.cockpit, t.tempo_ms
       from tentativa t
       join participante p on p.id = t.participante_id
       where t.estado = 'valida'

@@ -1,4 +1,4 @@
-import type { LinhaCompacta, Pitch } from '@/contexts/classificacao'
+import type { LinhaCompacta, Cockpit } from '@/contexts/classificacao'
 import { normalizar } from '@/shared/texto'
 
 /**
@@ -18,31 +18,31 @@ import { normalizar } from '@/shared/texto'
 export type LinhaExibida = {
   readonly posicao: number
   readonly nomePublico: string
-  readonly pitch: Pitch
+  readonly cockpit: Cockpit
   readonly tempoMs: number
   /** Índice no conjunto filtrado. Serve de chave estável de renderização. */
   readonly indice: number
 }
 
-export type FiltroDePitch = 'todos' | Pitch
+export type FiltroDeCockpit = 'todos' | Cockpit
 
 /**
- * Aplica o filtro de Pitch e **renumera a partir de 1** (RF-29).
+ * Aplica o filtro de Cockpit e **renumera a partir de 1** (RF-29).
  *
  * A posição não é atributo persistido — é calculada na apresentação (SDD §3).
- * É o que torna correto dizer "3º no Pitch 2" para quem é 47º no geral: são
+ * É o que torna correto dizer "3º no Cockpit 2" para quem é 47º no geral: são
  * duas perguntas diferentes, e a segunda é a que a pessoa faz.
  */
 export function classificar(
   linhas: readonly LinhaCompacta[],
-  pitch: FiltroDePitch,
+  cockpit: FiltroDeCockpit,
 ): readonly LinhaExibida[] {
-  const escolhidas = pitch === 'todos' ? linhas : linhas.filter(([, p]) => p === pitch)
+  const escolhidas = cockpit === 'todos' ? linhas : linhas.filter(([, p]) => p === cockpit)
 
   return escolhidas.map(([nomePublico, p, tempoMs], indice) => ({
     posicao: indice + 1,
     nomePublico,
-    pitch: p,
+    cockpit: p,
     tempoMs,
     indice,
   }))

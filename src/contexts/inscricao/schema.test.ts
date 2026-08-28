@@ -25,7 +25,7 @@ function entrada(sobrescrever: Record<string, unknown> = {}) {
     email: 'marina@exemplo.com',
     telefone: '11987654321',
     idade: 30,
-    pitches: [1],
+    cockpits: [1],
     consentimento: true,
     ...sobrescrever,
   }
@@ -173,19 +173,19 @@ describe('RF-06 e RNF-07 — menor exige responsável completo', () => {
   })
 })
 
-describe('RF-03 — Pitches declarados', () => {
+describe('RF-03 — Cockpits declarados', () => {
   it('recusa lista vazia', () => {
-    expect(codigos(entrada({ pitches: [] }))).toContain('pitch_ausente')
+    expect(codigos(entrada({ cockpits: [] }))).toContain('cockpit_ausente')
   })
 
-  it('aceita um Pitch e aceita os dois', () => {
-    expect(validarInscricao(entrada({ pitches: [1] })).pitches).toEqual([1])
-    expect(validarInscricao(entrada({ pitches: [1, 2] })).pitches).toEqual([1, 2])
+  it('aceita um Cockpit e aceita os dois', () => {
+    expect(validarInscricao(entrada({ cockpits: [1] })).cockpits).toEqual([1])
+    expect(validarInscricao(entrada({ cockpits: [1, 2] })).cockpits).toEqual([1, 2])
   })
 
-  it('recusa pista inexistente e recusa repetição', () => {
-    expect(codigos(entrada({ pitches: [3] }))).toContain('pitch_invalido')
-    expect(codigos(entrada({ pitches: [1, 1] }))).toContain('pitch_repetido')
+  it('recusa Cockpit inexistente e recusa repetição', () => {
+    expect(codigos(entrada({ cockpits: [3] }))).toContain('cockpit_invalido')
+    expect(codigos(entrada({ cockpits: [1, 1] }))).toContain('cockpit_repetido')
   })
 })
 
@@ -220,7 +220,7 @@ describe('RF-08 e D-23 — os dois consentimentos', () => {
 })
 
 describe('RF-02 — campos obrigatórios e normalização', () => {
-  it.each(['nome', 'sobrenome', 'email', 'telefone', 'idade', 'pitches'])(
+  it.each(['nome', 'sobrenome', 'email', 'telefone', 'idade', 'cockpits'])(
     'recusa entrada sem %s',
     (campo) => {
       const dados = entrada()
@@ -271,9 +271,9 @@ describe('RF-02 — campos obrigatórios e normalização', () => {
 
 describe('RNF-17 — o erro diz qual campo e o que houve', () => {
   it('reporta todos os problemas de uma vez, não o primeiro', () => {
-    const problemas = campos(entrada({ nome: 'A1', email: 'x', idade: 12, pitches: [] }))
+    const problemas = campos(entrada({ nome: 'A1', email: 'x', idade: 12, cockpits: [] }))
 
-    expect(new Set(problemas)).toEqual(new Set(['nome', 'email', 'idade', 'pitches']))
+    expect(new Set(problemas)).toEqual(new Set(['nome', 'email', 'idade', 'cockpits']))
   })
 
   it('todo erro traz campo, código e mensagem preenchidos', () => {

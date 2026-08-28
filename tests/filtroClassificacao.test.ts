@@ -13,7 +13,7 @@ import type { LinhaCompacta } from '@/contexts/classificacao'
  * A lógica da página pública, sem DOM (T13).
  *
  * Dois requisitos vivem aqui e não na tela: a renumeração de RF-29, que é a
- * diferença entre "47º no geral" e "3º no Pitch 2", e a regra de vizinhança de
+ * diferença entre "47º no geral" e "3º no Cockpit 2", e a regra de vizinhança de
  * RF-30, que é o que separa "destacar" de "apenas filtrar".
  */
 
@@ -27,7 +27,7 @@ const DOC: readonly LinhaCompacta[] = [
   ['Gabriela Nunes', 1, 86_000],
 ]
 
-describe('filtro por Pitch e renumeração (RF-29)', () => {
+describe('filtro por Cockpit e renumeração (RF-29)', () => {
   it('sem filtro, a posição é a do documento', () => {
     const linhas = classificar(DOC, 'todos')
 
@@ -35,17 +35,17 @@ describe('filtro por Pitch e renumeração (RF-29)', () => {
     expect(linhas[0]?.nomePublico).toBe('Ana Lima')
   })
 
-  it('filtrar por Pitch renumera a partir de 1', () => {
-    const doPitch2 = classificar(DOC, 2)
+  it('filtrar por Cockpit renumera a partir de 1', () => {
+    const doCockpit2 = classificar(DOC, 2)
 
-    expect(doPitch2.map((l) => l.nomePublico)).toEqual([
+    expect(doCockpit2.map((l) => l.nomePublico)).toEqual([
       'Bruno Souza',
       'Diego Ferreira',
       'Fábio Assunção',
     ])
-    // Bruno é o 2º geral e o 1º do Pitch 2. São duas perguntas diferentes, e a
+    // Bruno é o 2º geral e o 1º do Cockpit 2. São duas perguntas diferentes, e a
     // segunda é a que a pessoa faz.
-    expect(doPitch2.map((l) => l.posicao)).toEqual([1, 2, 3])
+    expect(doCockpit2.map((l) => l.posicao)).toEqual([1, 2, 3])
   })
 
   it('a ordem do documento é preservada — o servidor já classificou', () => {
@@ -54,7 +54,7 @@ describe('filtro por Pitch e renumeração (RF-29)', () => {
     expect(linhas.map((l) => l.tempoMs)).toEqual([80_000, 82_000, 84_000, 86_000])
   })
 
-  it('Pitch sem ninguém devolve lista vazia, não erro', () => {
+  it('Cockpit sem ninguém devolve lista vazia, não erro', () => {
     expect(classificar([], 1)).toEqual([])
   })
 })
@@ -166,17 +166,17 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
   })
 })
 
-describe('busca sobre o conjunto já filtrado por Pitch', () => {
+describe('busca sobre o conjunto já filtrado por Cockpit', () => {
   it('a busca respeita o filtro ativo e a renumeração', () => {
-    const doPitch1 = classificar(DOC, 1)
-    const achados = encontrar(doPitch1, 'elisa')
+    const doCockpit1 = classificar(DOC, 1)
+    const achados = encontrar(doCockpit1, 'elisa')
 
-    const blocos = montarBlocos(doPitch1, achados, 100)
+    const blocos = montarBlocos(doCockpit1, achados, 100)
     const encontrada = blocos
       .flatMap((b): readonly LinhaExibida[] => (b.tipo === 'linhas' ? b.linhas : []))
       .find((l) => l.nomePublico === 'Elisa Marinho')
 
-    // Elisa é a 5ª no geral e a 3ª do Pitch 1.
+    // Elisa é a 5ª no geral e a 3ª do Cockpit 1.
     expect(encontrada?.posicao).toBe(3)
   })
 })

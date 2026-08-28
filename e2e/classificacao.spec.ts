@@ -96,9 +96,9 @@ test.describe('classificação pública', () => {
     expect(Array.isArray(primeira)).toBe(true)
     expect(primeira).toHaveLength(3)
 
-    const [nomePublico, pitch, tempoMs] = primeira as [unknown, unknown, unknown]
+    const [nomePublico, cockpit, tempoMs] = primeira as [unknown, unknown, unknown]
     expect(typeof nomePublico).toBe('string')
-    expect([1, 2]).toContain(pitch)
+    expect([1, 2]).toContain(cockpit)
     expect(typeof tempoMs).toBe('number')
 
     // E o que **não** está lá, dito por extenso: não existe posição no documento

@@ -13,9 +13,12 @@ import { FUSO_DO_EVENTO } from '@/shared/tempo'
  * rodar o comando faria o prazo depender da memória do operador, que é
  * exatamente o que um prazo existe para não depender.
  *
- * **O dia do evento ainda não tem data** (PE-06). Por isso não há valor padrão
- * em lugar nenhum deste módulo: quem expurga informa a data, e o comando recusa
- * rodar sem ela. Um padrão aqui seria um palpite com poder de apagar a base.
+ * **O evento é em 24 de outubro de 2026** (PE-06, decidida em 2026-08-25), e
+ * mesmo assim não há valor padrão em lugar nenhum deste módulo: quem expurga
+ * informa a data, e o comando recusa rodar sem ela. Um padrão aqui seria um
+ * palpite com poder de apagar a base — e a data já escrita em código é
+ * exatamente o palpite que ninguém confere no dia. A data mora em
+ * `docs/retencao.md`, que é documento, não configuração.
  */
 
 /** Dias de guarda depois do evento. Espelha o termo; não mude sozinho. */

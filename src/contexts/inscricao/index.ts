@@ -13,7 +13,7 @@
  *  - nenhum Participante existe sem Consentimento registrado (RF-08)
  *  - nenhum Participante menor de 18 existe sem Responsável completo (RF-06, RNF-07)
  *  - idade inferior a 13 não produz Participante (RF-04)
- *  - toda Inscrição declara ao menos um Pitch (RF-03)
+ *  - toda Inscrição declara ao menos um Cockpit (RF-03)
  *
  * Este módulo é a fachada pública do contexto: termo de consentimento (T03),
  * regra e caso de uso da Inscrição (T04) e a borda de rede (T05).

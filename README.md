@@ -1,6 +1,6 @@
 # SpeedX — Cadastro e Classificação de Corrida
 
-Sistema de inscrição, cronometragem e classificação pública para um evento presencial de corrida de um dia, com dois Pitches e 2000+ participantes. Substitui a ficha em papel e a planilha de resultados por um fluxo digital ponta a ponta: o participante se inscreve pelo celular escaneando um QR code, o Operador lança o tempo assim que a corrida termina, e a classificação fica pública e atualizada durante todo o evento.
+Sistema de inscrição, cronometragem e classificação pública para um evento presencial de corrida de simulador de um dia — **24 de outubro de 2026, em São Paulo** —, com dois Cockpits e 2000+ participantes. Substitui a ficha em papel e a planilha de resultados por um fluxo digital ponta a ponta: o participante se inscreve pelo celular escaneando um QR code, o Operador lança o tempo assim que a corrida termina, e a classificação fica pública e atualizada durante todo o evento.
 
 > **Estado:** trilha de Inscrição fechada (T01–T07) e acesso do Operador em pé (T08). Ver [Estado do projeto](#estado-do-projeto).
 
@@ -44,7 +44,7 @@ Definida em [T01](.claude/tasks/task-01-fundacao-do-projeto.md) como premissa �
 | PostgreSQL | **18** | Consistência forte para Inscrição e Cronometragem. A versão não é preferência: é a que o PGlite 0.5.5 executa nos testes (`select version()` → 18.3), e produção precisa casar com ela |
 | Playwright | a instalar (T17) | End-to-end, incluindo o fluxo só por teclado |
 | k6 ou Artillery | a definir (T18) | 500 acessos concorrentes à classificação |
-| Hospedagem com HTTP/3 | a definir (T19) | Exigido pelos fluxos FL-02 e FL-07 do SDD |
+| Hospedagem com HTTP/3 | **Vercel**, plano gratuito (D-76); a confirmar em T19 | Exigido pelos fluxos FL-02 e FL-07 do SDD. A borda da Vercel anuncia HTTP/3; o Postgres ainda não tem casa |
 
 ---
 
@@ -90,7 +90,7 @@ src/
       csv.ts          #   separador, BOM e escape — inclusive contra fórmula (D-60)
       consultas.ts    #   o cruzamento autorizado, lido em lotes por cursor
       exportacao.ts   #   os três documentos: completa, repasse e pendências
-      retencao.ts   #   o prazo de 10 dias, ancorado na data do evento (RNF-11)
+      retencao.ts   #   o prazo de 10 dias, ancorado em 24/10/2026 (RNF-11)
       expurgo.ts    #   expurgo total, exclusão a pedido e o resumo que sobrevive
       metricas.ts   #   o painel do dia: contagens que atravessam BC-01 e BC-02
   infra/            # abaixo dos contextos: fala com o banco, não conhece domínio
@@ -107,7 +107,7 @@ src/
     metricas.ts       # percentis, relatórios e alertas — a leitura do log (T16)
     texto.ts          # normalização de acento; o painel e a classificação usam a mesma
     requisicao.ts     # leitura de Content-Type e do endereço de origem
-    vocabulario.ts    # "Pitch" numa constante só, com gênero (PE-01, D-31)
+    vocabulario.ts    # "Cockpit" numa constante só, com gênero (D-75, D-31, T22)
     qr.ts             # tamanho mínimo de impressão do QR por distância de leitura
   db/
     schema.ts         # tabelas, constraints e índices
@@ -237,21 +237,21 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 |---|---|---|
 | `/` | Público | Formulário de inscrição — destino do QR code, sem redirecionamento |
 | `/termo` | Público | Texto integral do consentimento — estático, aberto em aba nova pelo formulário |
-| `/classificacao` | Público | Tabela com filtro por Pitch, busca com destaque e atualização a cada 15 s — filtro e busca rodam no dispositivo |
+| `/classificacao` | Público | Tabela com filtro por Cockpit, busca com destaque e atualização a cada 15 s — filtro e busca rodam no dispositivo |
 | `/api/classificacao` | Público, em cache | Documento completo (62,7 KB / 10,9 KB gzip com 2.422 linhas); `s-maxage=15`, ETag |
 | `/painel` | Autenticado | Fila, lançamento, correção, ausência e histórico — tudo por teclado |
 | `/painel/login` | Público | Autenticação de Operador |
 | `/api/painel/sessao` | Misto | `POST` login, `DELETE` logout, `GET` autenticado |
 | `/api/inscricao` | Público, com limite de taxa | Recebe o cadastro |
-| `/api/painel/fila` | Autenticado | `GET` — pendentes do Pitch, com busca (RF-13, RF-14, RF-16) |
+| `/api/painel/fila` | Autenticado | `GET` — pendentes do Cockpit, com busca (RF-13, RF-14, RF-16) |
 | `/api/painel/tempo` | Autenticado | `POST` registra, `PATCH` corrige (RF-17, RF-22) |
 | `/api/painel/ausencia` | Autenticado | `POST` — marca ausente (RF-21) |
-| `/api/painel/tentativa` | Autenticado | `POST` — inclui em Pitch adicional (RF-24) |
+| `/api/painel/tentativa` | Autenticado | `POST` — inclui em Cockpit adicional (RF-24) |
 | `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22, RF-24) |
 | `/api/painel/tentativa/:id/historico` | Autenticado | `GET` — trilha de auditoria (RF-23) |
 | `/api/exportacao?tipo=` | Autenticado | `completa` (base inteira), `repasse` (só quem autorizou) ou `pendencias` (métrica do PRD §7) |
 | `/api/saude` | Público | Health check do monitor externo: 200 com o banco de pé, 503 sem — e nada sobre infraestrutura no corpo |
-| `/api/metricas` | Autenticado | `GET` — painel do dia: inscritos por hora, situação de cada Pitch, ritmo de Lançamentos e pendências. Só contagens |
+| `/api/metricas` | Autenticado | `GET` — painel do dia: inscritos por hora, situação de cada Cockpit, ritmo de Lançamentos e pendências. Só contagens |
 
 Nenhuma resposta pública expõe e-mail, telefone, idade, dado de responsável, nem o sobrenome completo de participante menor de 18 anos.
 
@@ -261,7 +261,7 @@ Aceita `application/json` e exige o cabeçalho `Idempotency-Key` com um UUID ger
 
 | Status | Quando |
 |---|---|
-| 201 | Cadastro criado. Corpo: `{ nome, sobrenome, pitches }` |
+| 201 | Cadastro criado. Corpo: `{ nome, sobrenome, cockpits }` |
 | 200 | Reenvio da mesma chave — devolve a resposta da primeira vez, sem gravar de novo |
 | 400 | JSON quebrado, chave ausente, ou formulário aberto há horas demais |
 | 409 | A mesma chave chegou com outro envio |
@@ -376,11 +376,11 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
 | Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
-| Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. Falta a data do evento (PE-06) e tirar o site do ar (T19) |
+| Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); falta tirar o site do ar (T19) |
 | Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. Falta contratar o monitor externo (T19) |
 | Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
 | Qualidade e operação | T18–T21 | Não iniciado |
 
-**Pendências que bloqueiam:** nenhuma. O termo oficial (Pitch ou Pista) continua indefinido, mas deixou de bloquear: a palavra vive em `src/shared/vocabulario.ts` e trocá-la custa uma linha. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
+**Pendências que bloqueiam:** nenhuma no código. Resolvidas em 2026-08-25: o termo oficial é **Cockpit** — nem "Pitch" nem "Pista", porque o evento é de simulador (D-75) —, o evento é em **24/10/2026** e a aplicação vai para a **Vercel gratuita**. Continuam abertos, todos em T19: onde roda o Postgres, qual é o domínio (sem ele o QR é provisório) e o monitor externo. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
 
 O termo está aprovado desde 2026-08-19 (`v1.0-2026-08-19`). Se a versão vigente voltar a ser rascunho, `assegurarTermoAprovado()` recusa registrar consentimento: cadastro real sob texto não aprovado é impossível por construção, não por disciplina. Checklist e registro da aprovação em [docs/aprovacao-termo.md](docs/aprovacao-termo.md).

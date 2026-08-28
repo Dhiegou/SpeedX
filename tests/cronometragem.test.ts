@@ -18,7 +18,7 @@ import { criarBancoDeTeste, participanteValido, type BancoDeTeste } from './apoi
  *
  * Contra Postgres real, como o resto da suíte: as invariantes que mais importam
  * aqui — coerência entre estado e tempo, autoria obrigatória fora de Pendente,
- * unicidade por Participante e Pitch — são constraints do banco. Testá-las
+ * unicidade por Participante e Cockpit — são constraints do banco. Testá-las
  * contra um mock verificaria o mock.
  */
 
@@ -64,12 +64,12 @@ async function criarParticipante(sobrescrever: Record<string, unknown> = {}): Pr
   return p?.id ?? ''
 }
 
-async function criarTentativa(pitch: 1 | 2 = 1, inscritoEm?: Date): Promise<string> {
+async function criarTentativa(cockpit: 1 | 2 = 1, inscritoEm?: Date): Promise<string> {
   const participanteId = await criarParticipante()
 
   const [t] = await banco.db
     .insert(schema.tentativa)
-    .values({ participanteId, pitch, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
+    .values({ participanteId, cockpit, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
     .returning({ id: schema.tentativa.id })
 
   return t?.id ?? ''
@@ -222,7 +222,7 @@ describe('registrar tempo (RF-17, RF-23)', () => {
   })
 })
 
-describe('segundo lançamento no mesmo Pitch (RF-25)', () => {
+describe('segundo lançamento no mesmo Cockpit (RF-25)', () => {
   it('é recusado, e a recusa carrega o tempo que já está lá', async () => {
     const tentativaId = await criarTentativa()
 
@@ -579,12 +579,12 @@ describe('concorrência entre Operadores (RF-12)', () => {
   })
 })
 
-describe('incluir tentativa em Pitch adicional (RF-24)', () => {
-  it('participante do Pitch 1 passa a constar no Pitch 2, com um único cadastro', async () => {
+describe('incluir tentativa em Cockpit adicional (RF-24)', () => {
+  it('participante do Cockpit 1 passa a constar no Cockpit 2, com um único cadastro', async () => {
     const participanteId = await criarParticipante()
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
-    const r = await adicionarTentativa(banco.db, { participanteId, pitch: 2 })
+    const r = await adicionarTentativa(banco.db, { participanteId, cockpit: 2 })
 
     expect(r.situacao).toBe('criada')
     if (r.situacao !== 'criada') return
@@ -599,24 +599,24 @@ describe('incluir tentativa em Pitch adicional (RF-24)', () => {
     expect(await banco.db.select().from(schema.participante)).toHaveLength(1)
   })
 
-  it('incluir de novo no mesmo Pitch é recusado pelo banco, com mensagem de negócio', async () => {
+  it('incluir de novo no mesmo Cockpit é recusado pelo banco, com mensagem de negócio', async () => {
     const participanteId = await criarParticipante()
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
-    expect((await adicionarTentativa(banco.db, { participanteId, pitch: 1 })).situacao).toBe(
+    expect((await adicionarTentativa(banco.db, { participanteId, cockpit: 1 })).situacao).toBe(
       'ja_existe',
     )
   })
 
   it('participante inexistente é recusa de negócio, não erro', async () => {
     expect(
-      (await adicionarTentativa(banco.db, { participanteId: randomUUID(), pitch: 2 })).situacao,
+      (await adicionarTentativa(banco.db, { participanteId: randomUUID(), cockpit: 2 })).situacao,
     ).toBe('participante_inexistente')
   })
 })
 
 describe('a Fila (RF-14, RF-15, RF-16)', () => {
-  it('traz só pendentes do Pitch, do cadastro mais antigo para o mais recente', async () => {
+  it('traz só pendentes do Cockpit, do cadastro mais antigo para o mais recente', async () => {
     const base = new Date('2026-09-12T08:00:00Z').getTime()
 
     const antiga = await criarTentativa(1, new Date(base))
@@ -643,7 +643,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
 
   it('mostra os quatro últimos dígitos do telefone, e só eles (RF-15)', async () => {
     const participanteId = await criarParticipante({ telefone: '11987654321' })
-    await banco.db.insert(schema.tentativa).values({ participanteId, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
     const [item] = (await listarFila(banco.db, 1)).itens
 
@@ -654,7 +654,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
   it('distingue homônimos apenas pelo que a lista mostra (RF-15)', async () => {
     for (const telefone of ['11987654321', '11912345678']) {
       const id = await criarParticipante({ nome: 'Marina', sobrenome: 'Costa', telefone })
-      await banco.db.insert(schema.tentativa).values({ participanteId: id, pitch: 1 })
+      await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
     const fila = (await listarFila(banco.db, 1)).itens
@@ -671,7 +671,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
       ['Bruno', 'Souza'],
     ]) {
       const id = await criarParticipante({ nome, sobrenome, telefone: '11987654321' })
-      await banco.db.insert(schema.tentativa).values({ participanteId: id, pitch: 1 })
+      await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
     expect((await listarFila(banco.db, 1, { busca: 'mar' })).itens).toHaveLength(3)
@@ -684,7 +684,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
 
   it('o curinga do LIKE não vaza pela busca', async () => {
     const id = await criarParticipante({ nome: 'Marina', telefone: '11987654321' })
-    await banco.db.insert(schema.tentativa).values({ participanteId: id, pitch: 1 })
+    await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
 
     // Sem escape, `%` devolveria a fila inteira e `_` casaria qualquer letra —
     // a busca mentiria para quem está procurando uma pessoa específica.
@@ -695,7 +695,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
   it('respeita o teto de itens', async () => {
     for (let i = 0; i < 5; i += 1) {
       const id = await criarParticipante({ email: `p${String(i)}@exemplo.com` })
-      await banco.db.insert(schema.tentativa).values({ participanteId: id, pitch: 1 })
+      await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
     expect((await listarFila(banco.db, 1, { limite: 3 })).itens).toHaveLength(3)

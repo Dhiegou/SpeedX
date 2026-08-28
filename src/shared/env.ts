@@ -63,7 +63,7 @@ const esquema = z.object({
   // --- Sessão do Operador (BC-04, T08) ---
   //
   // Dezesseis horas cobrem a jornada inteira do evento com folga. O número não
-  // é conforto: um Operador deslogado no meio do dia para a fila do Pitch
+  // é conforto: um Operador deslogado no meio do dia para a fila do Cockpit
   // enquanto redigita a senha em tablet, e RNF-16 dá quinze segundos para um
   // lançamento inteiro. A renovação silenciosa desloca o prazo enquanto o
   // painel é usado; este teto é o que vale para quem logou e ficou parado.

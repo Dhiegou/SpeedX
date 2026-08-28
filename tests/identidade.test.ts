@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { autenticar } from '@/contexts/identidade/autenticar'
 import {
   criarOperador,
@@ -35,7 +35,21 @@ import { criarBancoDeTeste, type BancoDeTeste } from './apoio/bancoDeTeste'
  * Contra Postgres real, como o resto da suíte: a unicidade sem distinção de
  * caixa do nome de usuário e a coerência entre sessão e conta são constraints e
  * junções, e testá-las contra um mock verificaria o mock.
+ *
+ * **Este arquivo tem prazo próprio, e não é folga arbitrária.** A derivação de
+ * senha reserva 64 MiB e gasta uns 250 ms por conferência, de propósito (D-37);
+ * os testes do limite de login fazem vinte e uma delas em sequência, porque é
+ * assim que se prova que o balde conta tentativa errada. São ~6 s de scrypt num
+ * caso só — e, com dois workers disputando a máquina, os 30 s globais do
+ * `vitest.config.mts` viravam um teste que falhava na suíte cheia e passava
+ * sozinho. Falso vermelho intermitente é pior que teste lento: ensina o time a
+ * repetir a execução até passar.
+ *
+ * O que **não** foi feito: baixar o custo do scrypt em teste. Uma variável de
+ * ambiente que enfraquece a derivação de senha é uma variável que um dia vaza
+ * para produção, e o teste passaria a exercitar um algoritmo que ninguém usa.
  */
+vi.setConfig({ testTimeout: 120_000 })
 
 const SENHA = 'senha-de-operador-2026'
 const AGORA = new Date('2026-09-12T08:00:00Z').getTime()
@@ -293,7 +307,7 @@ describe('login (RF-11)', () => {
 
     // Senha de doze caracteres, tablet, de pé, sob sol, teclado capitalizando a
     // primeira letra: errar dez vezes não é hipótese remota, e quinze minutos
-    // de espera é a fila de um Pitch parada (RNF-16).
+    // de espera é a fila de um Cockpit parada (RNF-16).
     const { porConta, porOrigem } = await destravarLogin(banco.db, 'MARINA')
 
     expect(porConta).toBe(10)
@@ -408,7 +422,7 @@ describe('sessão (RF-12)', () => {
     expect((await resolverSessao(banco.db, sessaoJoao.token, AGORA))?.operador).toEqual(joao)
   })
 
-  it('duas sessões do mesmo Operador convivem — dois tablets no mesmo Pitch', async () => {
+  it('duas sessões do mesmo Operador convivem — dois tablets no mesmo Cockpit', async () => {
     const marina = await operadorDeTeste()
 
     const tablet = await abrirSessao(banco.db, marina.id, AGORA)

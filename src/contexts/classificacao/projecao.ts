@@ -3,7 +3,7 @@ import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import { db } from '@/db'
 import * as schema from '@/db/schema'
 import { compactar, etiquetaDe, type DocumentoTransmitido } from './documento'
-import type { DocumentoClassificacao, LinhaClassificacao, Pitch } from './modelo'
+import type { DocumentoClassificacao, LinhaClassificacao, Cockpit } from './modelo'
 import { deveAbreviarSobrenome, paraNomePublico } from './nomePublico'
 
 /**
@@ -45,7 +45,7 @@ export async function projetarClassificacao(
   const linhas = await db
     .select({
       id: schema.tentativa.id,
-      pitch: schema.tentativa.pitch,
+      cockpit: schema.tentativa.cockpit,
       tempoMs: schema.tentativa.tempoMs,
       resolvidoEm: schema.tentativa.resolvidoEm,
       nome: schema.participante.nome,
@@ -78,7 +78,7 @@ export async function projetarClassificacao(
       nomePublico: paraNomePublico(l.nome, l.sobrenome, {
         abreviarSobrenome: deveAbreviarSobrenome(l.idade),
       }),
-      pitch: (l.pitch === 2 ? 2 : 1) satisfies Pitch,
+      cockpit: (l.cockpit === 2 ? 2 : 1) satisfies Cockpit,
       tempoMs: l.tempoMs ?? 0,
       registradoEm: (l.resolvidoEm ?? agora).toISOString(),
     })),

@@ -213,8 +213,8 @@ export const sessao = pgTable(
 /**
  * Tentativa — agregado raiz da Cronometragem.
  *
- * Carrega o Pitch, e não o Participante, porque a mesma pessoa pode disputar as
- * duas pistas (RF-03, RF-24). Nasce Pendente na Inscrição.
+ * Carrega o Cockpit, e não o Participante, porque a mesma pessoa pode disputar
+ * os dois (RF-03, RF-24). Nasce Pendente na Inscrição.
  */
 export const tentativa = pgTable(
   'tentativa',
@@ -223,7 +223,7 @@ export const tentativa = pgTable(
     participanteId: uuid('participante_id')
       .notNull()
       .references(() => participante.id, { onDelete: 'cascade' }),
-    pitch: smallint('pitch').notNull(),
+    cockpit: smallint('cockpit').notNull(),
     estado: estadoTentativa('estado').notNull().default('pendente'),
     /** Milissegundos. Presente se e somente se o estado for `valida`. */
     tempoMs: integer('tempo_ms'),
@@ -238,11 +238,11 @@ export const tentativa = pgTable(
     operadorId: uuid('operador_id').references(() => operador.id, { onDelete: 'restrict' }),
   },
   (t) => [
-    // RF-25: no máximo um tempo por Participante por Pitch. Esta linha é a
+    // RF-25: no máximo um tempo por Participante por Cockpit. Esta linha é a
     // única forma de a regra sobreviver a dois operadores lançando juntos.
-    unique('tentativa_participante_pitch_unica').on(t.participanteId, t.pitch),
+    unique('tentativa_participante_cockpit_unica').on(t.participanteId, t.cockpit),
 
-    check('tentativa_pitch_valido', sql`${t.pitch} in (1, 2)`),
+    check('tentativa_cockpit_valido', sql`${t.cockpit} in (1, 2)`),
 
     // Válida sempre possui Tempo; Pendente e Ausente nunca possuem (SDD BC-02).
     check(
@@ -268,9 +268,9 @@ export const tentativa = pgTable(
       sql`(${t.estado} = 'pendente') = (${t.resolvidoEm} is null)`,
     ),
 
-    // Fila do painel: pendentes de um Pitch, da inscrição mais antiga para a
+    // Fila do painel: pendentes de um Cockpit, da inscrição mais antiga para a
     // mais recente (RF-14).
-    index('tentativa_fila_idx').on(t.pitch, t.estado, t.inscritoEm),
+    index('tentativa_fila_idx').on(t.cockpit, t.estado, t.inscritoEm),
 
     // Classificação: tempo crescente, desempate pelo lançamento mais antigo
     // (RF-31). Cobre a leitura da projeção sem tocar na tabela.

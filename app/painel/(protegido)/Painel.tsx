@@ -5,7 +5,7 @@ import * as api from './api'
 import { focoDe, INICIAL, nomeCompleto, reduzir, type Alvo, type Estado } from './fluxo'
 import { digitosDoCampo, formatarDigitacao, pareceCompleto } from './mascaraDeTempo'
 import estilos from './painel.module.css'
-import { PISTA, nomeDaPista } from '@/shared/vocabulario'
+import { COCKPIT, nomeDoCockpit } from '@/shared/vocabulario'
 
 /**
  * O painel do Operador (T11 — RF-13 a RF-22, RF-24, RNF-16).
@@ -33,12 +33,12 @@ const DURACAO_DO_AVISO_MS = 4_000
 
 type Props = {
   readonly operador: string
-  readonly pitchInicial: 1 | 2
+  readonly cockpitInicial: 1 | 2
 }
 
-export default function Painel({ operador, pitchInicial }: Props) {
+export default function Painel({ operador, cockpitInicial }: Props) {
   const [estado, despachar] = useReducer(reduzir, INICIAL)
-  const [pitch, setPitch] = useState<1 | 2>(pitchInicial)
+  const [cockpit, setCockpit] = useState<1 | 2>(cockpitInicial)
   const [busca, setBusca] = useState('')
   const [foraDaFila, setForaDaFila] = useState(false)
   const [fila, setFila] = useState<api.RespostaDaFila | null>(null)
@@ -61,8 +61,8 @@ export default function Painel({ operador, pitchInicial }: Props) {
   // ---------------------------------------------------------------- dados
 
   const consultarFila = useCallback(
-    (sinal?: AbortSignal) => api.buscarFila(pitch, foraDaFila ? '' : busca, sinal),
-    [pitch, busca, foraDaFila],
+    (sinal?: AbortSignal) => api.buscarFila(cockpit, foraDaFila ? '' : busca, sinal),
+    [cockpit, busca, foraDaFila],
   )
 
   /**
@@ -233,12 +233,15 @@ export default function Painel({ operador, pitchInicial }: Props) {
     })
   }, [])
 
-  async function incluirNoOutroPitch(p: api.ParticipanteEncontrado, destino: 1 | 2): Promise<void> {
-    const r = await api.incluirNoPitch(p.participanteId, destino)
+  async function incluirNoOutroCockpit(
+    p: api.ParticipanteEncontrado,
+    destino: 1 | 2,
+  ): Promise<void> {
+    const r = await api.incluirNoCockpit(p.participanteId, destino)
 
     setSucesso(
       r.ok
-        ? `${p.nome} ${p.sobrenome} entrou na fila do ${nomeDaPista(destino)}.`
+        ? `${p.nome} ${p.sobrenome} entrou na fila do ${nomeDoCockpit(destino)}.`
         : r.falha.mensagem,
     )
     if (r.ok) recarregar()
@@ -254,7 +257,7 @@ export default function Painel({ operador, pitchInicial }: Props) {
   /**
    * Atalhos globais (RF-13, RF-19).
    *
-   * `1` e `2` só trocam de Pitch quando o foco **não** está num campo de texto —
+   * `1` e `2` só trocam de Cockpit quando o foco **não** está num campo de texto —
    * senão o Operador digitando "12345" no tempo trocaria de aba a cada tecla.
    */
   useEffect(() => {
@@ -267,14 +270,14 @@ export default function Painel({ operador, pitchInicial }: Props) {
         return
       }
 
-      // A T11 pede `1` e `2` para trocar de Pitch. Sozinho, o atalho é
+      // A T11 pede `1` e `2` para trocar de Cockpit. Sozinho, o atalho é
       // inutilizável: o foco vive no campo de busca durante toda a navegação da
       // Fila, e `1` e `2` são justamente os dígitos que mais se digita no
       // campo de tempo. `Alt` desempata sem tirar a mão do teclado, e as teclas
       // sozinhas continuam valendo quando o foco não está num campo de texto.
       if ((evento.altKey || !digitando) && (evento.key === '1' || evento.key === '2')) {
         evento.preventDefault()
-        setPitch(evento.key === '1' ? 1 : 2)
+        setCockpit(evento.key === '1' ? 1 : 2)
         return
       }
 
@@ -361,20 +364,20 @@ export default function Painel({ operador, pitchInicial }: Props) {
       <div
         className={estilos.abas}
         role="tablist"
-        aria-label={`Escolha ${PISTA.artigo} ${PISTA.singular}`}
+        aria-label={`Escolha ${COCKPIT.artigo} ${COCKPIT.singular}`}
       >
         {([1, 2] as const).map((numero) => (
           <button
             key={numero}
             type="button"
             role="tab"
-            aria-selected={pitch === numero}
-            className={`${estilos.aba} ${pitch === numero ? estilos.abaAtiva : ''}`}
+            aria-selected={cockpit === numero}
+            className={`${estilos.aba} ${cockpit === numero ? estilos.abaAtiva : ''}`}
             onClick={() => {
-              setPitch(numero)
+              setCockpit(numero)
             }}
           >
-            {nomeDaPista(numero)}
+            {nomeDoCockpit(numero)}
           </button>
         ))}
 
@@ -484,7 +487,7 @@ export default function Painel({ operador, pitchInicial }: Props) {
           {itens.length === 0 && (
             <li className={estilos.vazio}>
               {busca.trim() === ''
-                ? `Nenhuma tentativa pendente ${PISTA.artigo === 'o' ? 'neste' : 'nesta'} ${PISTA.singular}.`
+                ? `Nenhuma tentativa pendente ${COCKPIT.artigo === 'o' ? 'neste' : 'nesta'} ${COCKPIT.singular}.`
                 : 'Ninguém na fila com esse nome. F3 busca em todos os inscritos.'}
             </li>
           )}
@@ -503,7 +506,7 @@ export default function Painel({ operador, pitchInicial }: Props) {
                 <div className={estilos.historico}>
                   {p.tentativas.map((t) => (
                     <span key={t.tentativaId}>
-                      {nomeDaPista(t.pitch)}: {t.estado === 'valida' ? t.tempo : t.estado}{' '}
+                      {nomeDoCockpit(t.cockpit)}: {t.estado === 'valida' ? t.tempo : t.estado}{' '}
                       {t.estado === 'valida' && (
                         <button
                           type="button"
@@ -525,15 +528,15 @@ export default function Painel({ operador, pitchInicial }: Props) {
                     </span>
                   ))}
                   {([1, 2] as const)
-                    .filter((n) => !p.tentativas.some((t) => t.pitch === n))
+                    .filter((n) => !p.tentativas.some((t) => t.cockpit === n))
                     .map((n) => (
                       <button
                         key={n}
                         type="button"
                         className={estilos.botao}
-                        onClick={() => void incluirNoOutroPitch(p, n)}
+                        onClick={() => void incluirNoOutroCockpit(p, n)}
                       >
-                        Incluir {PISTA.artigo === 'o' ? 'no' : 'na'} {nomeDaPista(n)}
+                        Incluir {COCKPIT.artigo === 'o' ? 'no' : 'na'} {nomeDoCockpit(n)}
                       </button>
                     ))}
                 </div>
@@ -627,8 +630,8 @@ export default function Painel({ operador, pitchInicial }: Props) {
 
       <footer className={estilos.rodape}>
         <span>
-          Alt+1 / Alt+2 troca de {PISTA.singular} · ↑ ↓ navega · Enter seleciona · F2 ausência · F3
-          busca global · Esc cancela
+          Alt+1 / Alt+2 troca de {COCKPIT.singular} · ↑ ↓ navega · Enter seleciona · F2 ausência ·
+          F3 busca global · Esc cancela
         </span>
         {fila?.truncado === true && (
           <span>Mostrando os primeiros {itens.length} — refine a busca.</span>

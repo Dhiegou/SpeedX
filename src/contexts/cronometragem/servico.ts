@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import type { Pitch } from '@/contexts/inscricao/contrato'
+import type { Cockpit } from '@/contexts/inscricao/contrato'
 import {
   adicionarTentativa,
   type ComandoDeInclusao,
@@ -58,10 +58,10 @@ export function incluirTentativa(comando: ComandoDeInclusao): Promise<ResultadoD
 }
 
 export function fila(
-  pitch: Pitch,
+  cockpit: Cockpit,
   filtro?: { busca?: string; limite?: number },
 ): Promise<Pagina<ItemDaFila>> {
-  return listarFila(db(), pitch, filtro)
+  return listarFila(db(), cockpit, filtro)
 }
 
 export function procurarParticipantes(filtro: {
@@ -75,8 +75,8 @@ export function estadoDe(tentativaId: string): Promise<EstadoDaTentativa | null>
   return estadoDaTentativa(db(), tentativaId)
 }
 
-export function pendentes(pitch: Pitch): Promise<number> {
-  return contarPendentes(db(), pitch)
+export function pendentes(cockpit: Cockpit): Promise<number> {
+  return contarPendentes(db(), cockpit)
 }
 
 export function historico(tentativaId: string): Promise<readonly LancamentoRegistrado[]> {
