@@ -19,24 +19,35 @@
   padding: 1rem 1rem 6rem;
 }
 
+/*
+ * Cabeçalho em barra escura.
+ *
+ * O painel e a página pública são abertos no mesmo tablet, no mesmo dia. A
+ * barra existe para que o Operador saiba, de relance, em qual dos dois está
+ * antes de digitar um tempo.
+ */
 .cabecalho {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem 1.5rem;
   align-items: baseline;
   justify-content: space-between;
-  border-bottom: 2px solid #d4d4d4;
-  padding-bottom: 0.75rem;
+  background: var(--marca-escura);
+  color: #fff;
+  border-radius: var(--raio);
+  padding: 0.875rem 1rem;
   margin-bottom: 1rem;
 }
 
 .titulo {
   font-size: 1.25rem;
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 .identidade {
-  color: #444;
+  /* Sobre a barra escura: cinza claro, ainda acima de 4.5:1. */
+  color: #cbd5e1;
   font-size: 0.95rem;
 }
 
@@ -69,15 +80,15 @@
   font-weight: 700;
   padding: 0.75rem 1.25rem;
   min-height: 3rem;
-  border: 2px solid #12306b;
+  border: 2px solid var(--marca);
   border-radius: 0.25rem;
   background: #fff;
-  color: #12306b;
+  color: var(--marca);
   cursor: pointer;
 }
 
 .abaAtiva {
-  background: #12306b;
+  background: var(--marca);
   color: #fff;
 }
 
@@ -90,7 +101,7 @@
 
 .contagemRotulo {
   font-size: 0.9rem;
-  color: #444;
+  color: var(--tinta-suave);
   font-weight: 400;
 }
 
@@ -110,7 +121,7 @@
   font-size: 1.25rem;
   padding: 0.75rem;
   min-height: 3rem;
-  border: 2px solid #767676;
+  border: 2px solid var(--borda-forte);
   border-radius: 0.25rem;
   background: #fff;
   color: inherit;
@@ -127,15 +138,25 @@
 .aba:focus-visible,
 .item:focus-visible,
 .botao:focus-visible {
-  outline: 4px solid #1a4ed8;
+  outline: 4px solid var(--marca);
   outline-offset: 2px;
 }
 
+/*
+ * A Fila num cartão.
+ *
+ * Ela é o objeto que o Operador olha o dia inteiro; separá-la do fundo da
+ * página é o que evita procurar onde a lista começa a cada troca de Cockpit.
+ */
 .lista {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid #d4d4d4;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  overflow: hidden;
 }
 
 .item {
@@ -150,14 +171,19 @@
   padding: 0.85rem 0.5rem;
   min-height: 3rem;
   border: 0;
-  border-bottom: 1px solid #d4d4d4;
-  background: #fff;
+  border-bottom: 1px solid var(--borda);
+  background: var(--superficie);
   cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.item:hover:not(.itemSelecionado) {
+  background: var(--superficie-alt);
 }
 
 .itemSelecionado {
-  background: #eaf0fb;
-  box-shadow: inset 4px 0 0 #12306b;
+  background: var(--marca-clara);
+  box-shadow: inset 4px 0 0 var(--marca);
 }
 
 .nome {
@@ -168,13 +194,13 @@
    um detalhe cinza pequeno. */
 .digitos {
   font-variant-numeric: tabular-nums;
-  color: #333;
+  color: var(--tinta-suave);
   white-space: nowrap;
 }
 
 .vazio {
   padding: 2rem 0.5rem;
-  color: #444;
+  color: var(--tinta-suave);
 }
 
 .botao {
@@ -182,21 +208,21 @@
   font-weight: 600;
   min-height: 3rem;
   padding: 0.75rem 1.25rem;
-  border: 2px solid #12306b;
+  border: 2px solid var(--marca);
   border-radius: 0.25rem;
-  background: #12306b;
+  background: var(--marca);
   color: #fff;
   cursor: pointer;
 }
 
 .botaoSecundario {
   background: #fff;
-  color: #12306b;
+  color: var(--marca);
 }
 
 .botao:disabled {
-  background: #6b7280;
-  border-color: #6b7280;
+  background: var(--tinta-fraca);
+  border-color: var(--tinta-fraca);
   cursor: progress;
 }
 
@@ -227,7 +253,7 @@
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #444;
+  color: var(--tinta-suave);
   margin: 0 0 0.5rem;
 }
 
@@ -247,7 +273,7 @@
 }
 
 .anterior {
-  color: #444;
+  color: var(--tinta-suave);
   text-decoration: line-through;
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
@@ -261,7 +287,7 @@
 
 .dica {
   margin-top: 1rem;
-  color: #444;
+  color: var(--tinta-suave);
   font-size: 0.9rem;
 }
 
@@ -290,7 +316,7 @@
 .historico {
   margin-top: 0.75rem;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--tinta-suave);
 }
 
 .historico li {
@@ -300,8 +326,8 @@
 .rodape {
   margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid #d4d4d4;
-  color: #444;
+  border-top: 1px solid var(--borda);
+  color: var(--tinta-suave);
   font-size: 0.9rem;
   display: flex;
   gap: 1rem;

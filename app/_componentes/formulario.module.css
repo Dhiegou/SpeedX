@@ -13,7 +13,7 @@
 .pagina {
   max-width: 32rem;
   margin: 0 auto;
-  padding: 1.5rem 1rem 4rem;
+  padding: 2rem 1rem 4rem;
   /*
    * O texto do termo tem palavras longas e o participante digita e-mails
    * longos. Sem isto, uma única palavra que não cabe em 360px estende a página
@@ -23,13 +23,39 @@
 }
 
 .titulo {
-  font-size: 1.5rem;
-  margin: 0 0 0.25rem;
+  /* Escala fluida: 1.75rem em 360px, 2.125rem em tela grande, sem passo seco. */
+  font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.125rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.375rem;
 }
 
 .subtitulo {
-  color: #555;
-  margin: 0 0 1.5rem;
+  color: var(--tinta-suave);
+  font-size: 1.0625rem;
+  margin: 0 0 2rem;
+}
+
+/*
+ * O formulário inteiro num cartão.
+ *
+ * Não é enfeite: ele separa "o que você preenche" do resto da página, e
+ * quem chega com o celular na fila precisa achar o primeiro campo sem ler
+ * o que vem antes. Em 360px a margem lateral encolhe para não roubar
+ * largura útil da coluna de campos.
+ */
+.formulario {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 1.5rem 1.25rem;
+}
+
+@media (max-width: 24rem) {
+  .formulario {
+    padding: 1.25rem 0.875rem;
+  }
 }
 
 .formulario {
@@ -49,9 +75,12 @@
 
 .legenda {
   font-size: 1.125rem;
-  font-weight: 600;
-  padding: 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 0 0 0.5rem;
   margin-bottom: 0.25rem;
+  border-bottom: 2px solid var(--marca-clara);
+  width: 100%;
 }
 
 .campo {
@@ -62,6 +91,8 @@
 
 .rotulo {
   font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--tinta);
 }
 
 .entrada {
@@ -76,33 +107,46 @@
    */
   font-size: 1rem;
   font-family: inherit;
-  color: #111;
-  background: #fff;
-  border: 1px solid #767676;
-  border-radius: 6px;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-pequeno);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+/* Em foco, a borda vira a da marca: o anel sozinho some sob sol forte. */
+.entrada:focus {
+  border-color: var(--marca);
+  box-shadow: 0 0 0 3px var(--marca-clara);
 }
 
 /* Foco sempre visível: o formulário também é preenchido por teclado. */
 .entrada:focus-visible,
 .opcao:focus-within,
 .aceite:focus-within {
-  outline: 3px solid #111;
-  outline-offset: 2px;
+  outline: var(--foco);
+  outline-offset: var(--foco-recuo);
 }
 
 .entradaInvalida {
-  border-color: #b00020;
+  border-color: var(--erro);
   border-width: 2px;
 }
 
+.entradaInvalida:focus {
+  box-shadow: 0 0 0 3px var(--erro-fundo);
+}
+
 .erro {
-  color: #b00020;
+  color: var(--erro);
   font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .dica {
-  color: #555;
+  color: var(--tinta-suave);
   font-size: 0.9375rem;
 }
 
@@ -121,15 +165,21 @@
   gap: 0.625rem;
   min-height: 56px;
   padding: 0.75rem 1rem;
-  border: 1px solid #767676;
-  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
   cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .opcaoMarcada {
-  border-color: #111;
+  border-color: var(--marca);
   border-width: 2px;
-  background: #f4f4f4;
+  background: var(--marca-clara);
+  color: var(--marca-escura);
 }
 
 .caixa {
@@ -137,7 +187,7 @@
   width: 24px;
   height: 24px;
   flex: 0 0 auto;
-  accent-color: #111;
+  accent-color: var(--marca);
 }
 
 /* --- Aceites (RF-08, RF-09, D-23) --- */
@@ -153,8 +203,9 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.875rem;
-  border: 1px solid #d4d4d4;
-  border-radius: 6px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
   cursor: pointer;
 }
 
@@ -164,7 +215,7 @@
  * desmarcada — um opcional que parece obrigatório é obrigatório na prática.
  */
 .aceiteOpcional {
-  background: #fafafa;
+  background: var(--superficie-alt);
   border-style: dashed;
 }
 
@@ -174,7 +225,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #555;
+  color: var(--tinta-suave);
   margin-bottom: 0.25rem;
 }
 
@@ -183,28 +234,31 @@
 }
 
 .destaque {
-  border-left: 6px solid #111;
-  background: #fafafa;
+  border-left: 6px solid var(--marca);
+  border-radius: 0 var(--raio-pequeno) var(--raio-pequeno) 0;
+  background: var(--marca-clara);
   padding: 0.875rem 1rem;
   font-size: 0.9375rem;
 }
 
 .link {
-  color: #111;
+  color: var(--marca);
+  font-weight: 600;
 }
 
 /* --- Avisos --- */
 
 .aviso {
-  border: 1px solid #d4d4d4;
-  border-left: 6px solid #111;
-  background: #fff8e1;
+  border: 1px solid var(--borda);
+  border-left: 6px solid var(--acento);
+  border-radius: 0 var(--raio-pequeno) var(--raio-pequeno) 0;
+  background: var(--acento-claro);
   padding: 0.875rem 1rem;
 }
 
 .avisoErro {
-  border-left-color: #b00020;
-  background: #fdf0f2;
+  border-left-color: var(--erro);
+  background: var(--erro-fundo);
 }
 
 .resumo {
@@ -221,27 +275,49 @@
   font-size: 1.0625rem;
   font-weight: 700;
   font-family: inherit;
+  letter-spacing: 0.01em;
   color: #fff;
-  background: #111;
-  border: 2px solid #111;
-  border-radius: 6px;
+  background: var(--marca);
+  border: 2px solid var(--marca);
+  border-radius: var(--raio-pequeno);
+  box-shadow: var(--sombra);
   cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    transform 60ms ease;
+}
+
+.botao:hover:not(:disabled) {
+  background: var(--marca-escura);
+  border-color: var(--marca-escura);
+}
+
+/* Retorno do toque, e o único movimento da tela além do foco. */
+.botao:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .botao:disabled {
-  background: #767676;
-  border-color: #767676;
+  background: var(--tinta-fraca);
+  border-color: var(--tinta-fraca);
+  box-shadow: none;
   cursor: progress;
 }
 
 .botaoSecundario {
   composes: botao;
-  color: #111;
-  background: #fff;
+  color: var(--marca);
+  background: var(--superficie);
+}
+
+.botaoSecundario:hover:not(:disabled) {
+  background: var(--marca-clara);
+  border-color: var(--marca);
+  color: var(--marca-escura);
 }
 
 .botao:focus-visible {
-  outline: 3px solid #111;
+  outline: var(--foco);
   outline-offset: 3px;
 }
 
@@ -272,5 +348,6 @@
 
 .cockpitsConfirmados {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--marca-escura);
 }

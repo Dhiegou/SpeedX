@@ -150,7 +150,8 @@ docs/
   relatorio-carga.md  # números medidos: leitura, escrita, cadastro, índices (T18)
   contingencia.md     # o que fazer quando a internet cai; para imprimir (T20)
   contingencia/       # ficha, termo e folha de tempos, prontos para impressão (T20)
-  checklist-pre-evento.md # a auditoria de privacidade e o que falta antes do dia (T21)
+  o-que-falta-para-voce.md # a lista prática do que depende de decisão e de gente
+  checklist-pre-evento.md # a auditoria de privacidade, com evidência item a item (T21)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)

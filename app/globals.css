@@ -1,4 +1,75 @@
-/* Base mínima. O sistema visual do cadastro entra em T06. */
+/*
+ * Sistema visual do SpeedX.
+ *
+ * **Tudo aqui é token e nenhuma regra é decoração solta.** As telas leem estas
+ * variáveis; nenhuma cor é escrita à mão dentro de um módulo. Isso não é
+ * organização por gosto — é o que permite ajustar a identidade inteira sem
+ * abrir cinco arquivos na véspera do evento.
+ *
+ * **O que a estética não pode custar**, e por isso não custa:
+ *
+ *  - **Nenhuma fonte externa, nenhuma imagem, nenhum ícone baixado** (RNF-04).
+ *    A rede do dia é celular em rede congestionada, e cada byte é multiplicado
+ *    por duas mil pessoas. Toda a identidade sai de cor, espaço e tipografia do
+ *    sistema — que é o que carrega em zero byte.
+ *  - **Nenhuma animação de entrada.** Movimento custa quadro em aparelho
+ *    fraco, e a única transição aqui é a de estado de controle, medida em
+ *    milissegundos e desligada por `prefers-reduced-motion`.
+ *  - **Nenhuma regra que dependa de largura fixa** (RNF-18): 360px continua
+ *    sem rolagem horizontal.
+ *
+ * **Contraste antes de tom.** O evento é ao ar livre, com sol na tela. Os
+ * pares de texto e fundo aqui ficam acima de 4.5:1; onde a cor sozinha
+ * comunicaria algo, há também peso, borda ou texto.
+ */
+
+:root {
+  /* --- Identidade ---
+   *
+   * Grafite e azul de pista, com âmbar de bandeira para o que precisa saltar.
+   * O azul é escuro o bastante para receber texto branco com folga; o âmbar
+   * nunca carrega texto, só marca.
+   */
+  --tinta: #0f172a;
+  --tinta-suave: #475569;
+  --tinta-fraca: #64748b;
+
+  --fundo: #f8fafc;
+  --superficie: #ffffff;
+  --superficie-alt: #f1f5f9;
+
+  --marca: #12306b;
+  --marca-escura: #0b1f47;
+  --marca-clara: #e8eefb;
+  --acento: #b45309;
+  --acento-claro: #fffbeb;
+
+  --borda: #cbd5e1;
+  --borda-forte: #94a3b8;
+
+  --erro: #b00020;
+  --erro-fundo: #fdf0f2;
+  --sucesso: #166534;
+
+  /* --- Forma --- */
+  --raio: 0.625rem;
+  --raio-pequeno: 0.375rem;
+
+  /*
+   * Sombras curtas e de baixa opacidade. Sombra longa em tela sob sol vira
+   * borrão cinza, e o que separa um cartão do fundo passa a ser nada.
+   */
+  --sombra: 0 1px 2px rgb(15 23 42 / 0.06), 0 2px 8px rgb(15 23 42 / 0.04);
+  --sombra-alta: 0 2px 4px rgb(15 23 42 / 0.08), 0 8px 24px rgb(15 23 42 / 0.08);
+
+  /* --- Foco ---
+   *
+   * Um anel só, usado em toda parte. O painel é operado por teclado (RF-19), e
+   * foco que muda de aparência entre telas é foco que se perde de vista.
+   */
+  --foco: 3px solid var(--marca);
+  --foco-recuo: 2px;
+}
 
 *,
 *::before,
@@ -19,8 +90,10 @@ body {
     Roboto,
     sans-serif;
   line-height: 1.5;
-  color: #111;
-  background: #fff;
+  color: var(--tinta);
+  background: var(--fundo);
+  /* Melhora o desenho das fontes do sistema sem custar byte nenhum. */
+  -webkit-font-smoothing: antialiased;
 }
 
 /* RNF-18: nenhuma rolagem horizontal em 360px. */
@@ -29,6 +102,34 @@ svg,
 video {
   max-width: 100%;
   height: auto;
+}
+
+/*
+ * Faixa da marca no topo de toda página.
+ *
+ * Feita com gradiente no `body`, e não com um elemento novo: a alternativa
+ * seria um cabeçalho no layout raiz, que apareceria também no painel — onde a
+ * altura da tela é orçamento, porque a Fila precisa caber sem rolagem.
+ */
+body::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, var(--marca) 0%, var(--marca) 55%, var(--acento) 55%);
+}
+
+/*
+ * Movimento é conforto, não informação. Quem pediu menos movimento no sistema
+ * recebe menos movimento aqui, sem perder nenhum estado de controle — todos
+ * eles também mudam cor, borda ou peso.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /*
