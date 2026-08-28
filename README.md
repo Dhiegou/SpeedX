@@ -42,9 +42,11 @@ Definida em [T01](.claude/tasks/task-01-fundacao-do-projeto.md) como premissa �
 | node-postgres (`pg`) | 8.23 | Driver de produção |
 | PGlite | 0.5 | PostgreSQL 18.3 em WebAssembly para os testes: constraints reais, sem serviço externo |
 | PostgreSQL | **18** | Consistência forte para Inscrição e Cronometragem. A versão não é preferência: é a que o PGlite 0.5.5 executa nos testes (`select version()` → 18.3), e produção precisa casar com ela |
-| Playwright | a instalar (T17) | End-to-end, incluindo o fluxo só por teclado |
+| Playwright | 1.62 | End-to-end, incluindo o fluxo só por teclado (T17) |
 | k6 ou Artillery | a definir (T18) | 500 acessos concorrentes à classificação |
-| Hospedagem com HTTP/3 | **Vercel**, plano gratuito (D-76); a confirmar em T19 | Exigido pelos fluxos FL-02 e FL-07 do SDD. A borda da Vercel anuncia HTTP/3; o Postgres ainda não tem casa |
+| Hospedagem com HTTP/3 | **Vercel**, plano gratuito, funções em `gru1` (D-76, D-79) | Exigido pelos fluxos FL-02 e FL-07 do SDD. A borda anuncia HTTP/3; falta o `curl --http3` contra um domínio que ainda não existe |
+| Banco em produção | **Neon**, gratuito, `aws-sa-east-1` (D-79) | Mesma cidade das funções: a Classificação é `force-dynamic`, então cada primeira pintura atravessa essa distância |
+| Monitor externo | **UptimeRobot**, gratuito (D-82) | Só algo de fora distingue "caiu" de "estava tranquilo". A configurar quando houver domínio |
 
 ---
 
@@ -143,6 +145,8 @@ docs/
   retencao.md         # prazo, quem executa e o passo a passo do expurgo (T15)
   monitoramento.md    # o que observar no dia, limiares e canal de alerta (T16)
   testes.md           # o mapa da suíte e o que só se verifica com gente (T17)
+  deploy.md           # onde roda, o que verificar e como desligar no fim (T19)
+  plano-do-dia.md     # uma página, para imprimir: quem acionar e o que fazer (T19)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
@@ -190,7 +194,8 @@ A aplicação recusa subir se a configuração estiver incompleta, listando cada
 | `SESSAO_RENOVACAO_MINUTOS` | não | Intervalo mínimo entre renovações gravadas (padrão 30) |
 | `LOGIN_TENTATIVAS_POR_JANELA` | não | Tentativas de login recusadas por IP e por conta (padrão 10) |
 | `LOGIN_JANELA_SEGUNDOS` | não | Janela do limite de login (padrão 900) |
-| `APP_VERSION` | não | Versão publicada, devolvida por `/api/saude`; T19 preenche com o commit |
+| `DB_POOL_MAX` | não | Conexões por instância (padrão 5). Quem protege o banco é o pooler, não este número |
+| `APP_VERSION` | não | Versão publicada, devolvida por `/api/saude`. **Não preencher em produção**: o commit publicado vira a versão sozinho |
 
 Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `process.env`.
 
@@ -344,16 +349,16 @@ Cada teste é nomeado pelo requisito que verifica (ex.: `RF-07 — idade corrigi
 
 ## Deploy
 
-Detalhes em [T19](.claude/tasks/task-19-deploy-e-infraestrutura.md).
+**Vercel** (funções em `gru1`) + **Neon** (Postgres em `aws-sa-east-1`) + **UptimeRobot** no `/api/saude`. O desenho inteiro, as variáveis de produção e o checklist com os comandos de verificação estão em [docs/deploy.md](docs/deploy.md); a página para imprimir e levar no dia é [docs/plano-do-dia.md](docs/plano-do-dia.md).
 
-Verificar antes de qualquer publicação para produção:
+**Duas coisas que quem publica precisa saber antes:**
 
-- HTTP/3 anunciado (`curl --http3 -I`, conferir `alt-svc: h3=...`);
-- cache de borda respeitando `s-maxage` na classificação, e `no-store` no painel e na exportação;
-- relógio do servidor sincronizado — todo instante gravado vem do servidor, nunca do dispositivo do Operador;
-- restauração de backup testada.
+- **`DATABASE_URL` de produção é a string do pooler** do provedor. Cada instância de função abre o próprio pool, e é o PgBouncer que impede que isso vire mais conexões do que o banco oferece (D-80). **`npm run db:migrate` é a exceção** e quer a string direta.
+- **`APP_VERSION` não se preenche.** O commit publicado vira a versão sozinho e sai em `/api/saude` — é assim que se responde "qual código está no ar" sem entrar na máquina.
 
-No dia do evento: snapshot manual do banco antes de começar, deploys congelados exceto correção crítica, plano de reversão distribuído ao time.
+O que o repositório já garante por teste (`tests/deploy.test.ts`): nenhuma rota fora da Classificação é cacheável, nenhum esquema de entrada aceita instante do cliente, e a região da função continua colada à do banco. O que **ainda depende de um domínio publicado**: HTTP/3 anunciado, `HIT` de borda, sincronia de relógio conferida e restauração de backup testada.
+
+No dia do evento: snapshot manual do banco antes de começar, deploys congelados exceto correção crítica, plano de reversão impresso e distribuído. Em 04/11/2026 o site sai do ar, junto com o expurgo.
 
 ---
 
@@ -376,11 +381,13 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Classificação | T12 | **Concluído** — projeção, documento compacto e endpoint público com cache de borda |
 | Classificação | T13 | **Concluído** — tabela pública, filtro, busca com destaque e paginação. Falta conferir 360px em aparelho (RNF-18) |
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
-| Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); falta tirar o site do ar (T19) |
-| Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. Falta contratar o monitor externo (T19) |
+| Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); o procedimento de tirar o site do ar está escrito em `docs/deploy.md` §6 |
+| Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. O monitor externo foi escolhido em T19 (UptimeRobot); falta configurá-lo, o que depende do domínio |
 | Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
-| Qualidade e operação | T18–T21 | Não iniciado |
+| Qualidade e operação | T18 | Não iniciado — depende de T19 publicada |
+| Qualidade e operação | T19 | **Parcial** — código, configuração e os dois documentos de operação prontos, com Vercel, Neon e UptimeRobot escolhidos. Faltam as contas criadas e um domínio: quatro dos sete critérios só se verificam contra um endereço publicado |
+| Qualidade e operação | T20–T21 | Não iniciado |
 
-**Pendências que bloqueiam:** nenhuma no código. Resolvidas em 2026-08-25: o termo oficial é **Cockpit** — nem "Pitch" nem "Pista", porque o evento é de simulador (D-75) —, o evento é em **24/10/2026** e a aplicação vai para a **Vercel gratuita**. Continuam abertos, todos em T19: onde roda o Postgres, qual é o domínio (sem ele o QR é provisório) e o monitor externo. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
+**Pendências que bloqueiam:** uma, e ela tem prazo. **O domínio não existe** — sem endereço publicado, quatro critérios de T19 não têm contra o que rodar e o QR de T07 continua provisório; material impresso precisa de folga antes de 24/10, e uma URL de comprimento diferente muda o número de módulos do código. Resolvidas em 2026-08-27: o Postgres é o **Neon em São Paulo** (D-79) e o monitor é o **UptimeRobot gratuito** (D-82). Resolvidas em 2026-08-25: o termo oficial é **Cockpit** — nem "Pitch" nem "Pista", porque o evento é de simulador (D-75) —, o evento é em **24/10/2026** e a aplicação vai para a **Vercel gratuita**. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
 
 O termo está aprovado desde 2026-08-19 (`v1.0-2026-08-19`). Se a versão vigente voltar a ser rascunho, `assegurarTermoAprovado()` recusa registrar consentimento: cadastro real sob texto não aprovado é impossível por construção, não por disciplina. Checklist e registro da aprovação em [docs/aprovacao-termo.md](docs/aprovacao-termo.md).

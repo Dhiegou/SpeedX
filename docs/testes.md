@@ -24,7 +24,7 @@ npm run test:e2e      # ponta a ponta (precisa de Postgres de pé)
 npm run test:e2e:ui   # o mesmo, com o inspetor do Playwright
 ```
 
-**Medido:** 594 testes de unidade e integração em **79 s**. O critério de T17 é
+**Medido:** 609 testes de unidade e integração em ~100 s. O critério de T17 é
 dez minutos; a folga existe para que ninguém aprenda a pular a suíte.
 
 ---
@@ -124,6 +124,29 @@ Três detalhes que o tornam útil em vez de decorativo:
   o registro vira depósito de dispensas, e a auditoria de T21 leria "verificado
   à mão" sobre algo que a suíte já verifica em três segundos.
 - **Justificativa curta é recusada.** Menos de 80 caracteres não explica nada.
+
+---
+
+## 4.1. Os testes que vigiam a infraestrutura
+
+`tests/deploy.test.ts` (T19) cobre três promessas de ambiente que **quebram
+caladas**, e é o único arquivo da suíte que lê código-fonte em vez de executá-lo:
+
+- **Cache.** Nenhuma rota fora da Classificação pode ser cacheável, e toda rota
+  precisa de `no-store` — próprio ou herdado de `app/api/painel/_apoio.ts`.
+  Porque aceita a herança, o teste verifica também o elo: se `SEM_CACHE` virar
+  outra coisa, seis rotas mudam de comportamento sem mencionar cache.
+- **Relógio.** Nenhum esquema Zod de entrada aceita data, toda coluna de instante
+  é `withTimezone: true`, nenhuma rota repassa `agora`. **Um teste de
+  comportamento não pegaria isto:** com um campo `dataHora` na API o
+  comportamento continua o mesmo — o que muda é de quem é o relógio que decide o
+  desempate de RF-31.
+- **Região.** `vercel.json` e `docs/deploy.md` têm de continuar concordando.
+  A escolha de `gru1` só faz sentido colada à do banco (D-79).
+
+O resto de T19 — HTTP/3, `HIT` de borda, sincronia de relógio, restauração de
+backup — não é verificável daqui e mora no checklist de
+[`deploy.md`](deploy.md) §8, com o comando ao lado de cada linha.
 
 ---
 

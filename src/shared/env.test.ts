@@ -17,7 +17,38 @@ describe('validarAmbiente', () => {
     expect(env.RATE_LIMIT_JANELA_SEGUNDOS).toBe(600)
     expect(env.RATE_LIMIT_CADASTROS_POR_HORA).toBe(100)
     expect(env.FORMULARIO_SEGUNDOS_MINIMOS).toBe(3)
+    expect(env.DB_POOL_MAX).toBe(5)
     expect(env.APP_VERSION).toBe('desconhecida')
+  })
+
+  it('T19 — a versão publicada sai do commit sem ninguém preencher nada', () => {
+    // A pergunta que isto responde é a das onze da manhã do evento: qual código
+    // está no ar agora. Depender de alguém editar uma variável a cada deploy é
+    // depender de alguém lembrar, e a resposta errada é pior que nenhuma.
+    const env = validarAmbiente({
+      ...valido,
+      VERCEL_GIT_COMMIT_SHA: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+    })
+
+    expect(env.APP_VERSION).toBe('1a2b3c4')
+  })
+
+  it('T19 — uma APP_VERSION escrita à mão vence o commit', () => {
+    // Existe para o ambiente sem plataforma de deploy, e para o caso de alguém
+    // precisar rotular uma publicação com outra coisa.
+    const env = validarAmbiente({
+      ...valido,
+      APP_VERSION: 'ensaio-do-dia',
+      VERCEL_GIT_COMMIT_SHA: '1a2b3c4d5e6f',
+    })
+
+    expect(env.APP_VERSION).toBe('ensaio-do-dia')
+  })
+
+  it('T19 — o pool por instância tem teto, porque o do banco também tem', () => {
+    expect(validarAmbiente({ ...valido, DB_POOL_MAX: '12' }).DB_POOL_MAX).toBe(12)
+    expect(() => validarAmbiente({ ...valido, DB_POOL_MAX: '500' })).toThrow(/DB_POOL_MAX/)
+    expect(() => validarAmbiente({ ...valido, DB_POOL_MAX: '0' })).toThrow(/DB_POOL_MAX/)
   })
 
   it('T01 — falha nomeando a variável ausente', () => {

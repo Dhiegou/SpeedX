@@ -39,7 +39,11 @@ T21 Auditoria de privacidade e checklist pré-evento  (última)
 
 Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronometragem (T08–T11) e Classificação (T12–T13).
 
-**Concluídas:** T01 a T17, mais a T22 (renomeação de `pitch` para `cockpit`, fora da ordem porque nasceu de uma decisão do organizador). As cinco trilhas de produto estão fechadas — Inscrição, Cronometragem, Classificação e Custódia, esta última com exportação (T14) e ciclo de vida do dado (T15). A observabilidade (T16) está de pé e a suíte (T17) cobre os 53 requisitos do PRD, com rastreabilidade verificada por teste. Restam T18 a T21.
+**Concluídas:** T01 a T17, mais a T22 (renomeação de `pitch` para `cockpit`, fora da ordem porque nasceu de uma decisão do organizador). As cinco trilhas de produto estão fechadas — Inscrição, Cronometragem, Classificação e Custódia, esta última com exportação (T14) e ciclo de vida do dado (T15). A observabilidade (T16) está de pé e a suíte (T17) cobre os 53 requisitos do PRD, com rastreabilidade verificada por teste.
+
+**T19 está parcial**, e a divisão é limpa: tudo o que é código, configuração e documento está pronto — Vercel em `gru1`, Neon em São Paulo, UptimeRobot, `docs/deploy.md` e `docs/plano-do-dia.md`. Faltam as contas criadas e **um domínio**, e é ele que segura quatro dos sete critérios de aceitação, o QR definitivo de T07 e a partida de T18.
+
+Restam T18, T20, T21 e a metade externa de T19.
 
 ---
 
@@ -65,7 +69,7 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 | [T16](task-16-observabilidade.md) ✅ | Observabilidade, métricas e alertas | — | RNF-05, métricas do PRD §7 |
 | [T17](task-17-testes-automatizados.md) ✅ | Testes automatizados | todos | verificações do PRD §5 e §6 |
 | [T18](task-18-testes-de-carga.md) | Testes de carga e desempenho | BC-03 | RNF-01 a RNF-04 |
-| [T19](task-19-deploy-e-infraestrutura.md) | Deploy e infraestrutura | — | RNF-01, RNF-04, RNF-05, RF-23, RF-31 |
+| [T19](task-19-deploy-e-infraestrutura.md) ◐ | Deploy e infraestrutura | — | RNF-01, RNF-04, RNF-05, RF-23, RF-31 |
 | [T20](task-20-contingencia-offline.md) | Contingência offline | — | RNF-06 |
 | [T21](task-21-auditoria-e-checklist.md) | Auditoria de privacidade e checklist pré-evento | todos | RNF-08 a RNF-10, SDD §6 |
 | [T22](task-22-renomear-pitch-para-cockpit.md) ✅ | Renomear `pitch` para `cockpit` no código e no banco | §3 | — (dívida de linguagem) |
@@ -106,6 +110,6 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 3. ~~Canal de contato para solicitação de exclusão (RF-09)~~ — resolvido em 2026-08-19: presencial, no ponto de inscrição durante o evento.
 4. ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — resolvida em 2026-08-19: `v1.0-2026-08-19` aprovada e registrada em `docs/aprovacao-termo.md`.
 5. ~~Data do evento (PE-06)~~ — resolvida em 2026-08-25: **24 de outubro de 2026**, em São Paulo. A retenção vence em 04/11/2026, e é essa a data-base de `docs/retencao.md`.
-6. Hospedagem (PE-05) — **parcial**. A aplicação vai para a **Vercel gratuita** (D-76); faltam onde roda o Postgres, o domínio (sem ele o QR segue provisório) e o monitor externo de T16. Tudo em T19.
+6. Hospedagem (PE-05) — **quase fechada**. A aplicação vai para a **Vercel gratuita**, funções em `gru1` (D-76, D-79); o Postgres vai para o **Neon**, `aws-sa-east-1` (D-79); o monitor é o **UptimeRobot gratuito** (D-82). **Falta o domínio**, e sem ele o QR de T07 segue provisório e quatro critérios de T19 não têm contra o que rodar. É o item de maior prazo do projeto.
 
 O raciocínio por trás das decisões já tomadas está em [CONTEXT.md](../../CONTEXT.md).

@@ -32,8 +32,14 @@ next-env.d.ts
 # Um `git add .` distraído com qualquer um deles na pasta publica a base do
 # evento no GitHub, e o expurgo de T15 não alcança o que já foi para fora.
 # ------------------------------------------------------------------
-exportacao/
-exportacoes/
+# As duas barras iniciais **não** são decoração. Sem elas o padrão casa em
+# qualquer nível, e `app/api/exportacao/` — a rota de T14 — sumia do repositório
+# sem aviso: o arquivo existia no disco, a suíte passava, e quem clonasse
+# recebia um sistema sem exportação. Descoberto em T19, ao publicar.
+# O que protege o dado continua valendo em qualquer pasta: são as extensões
+# abaixo, e é o arquivo despejado que carrega a base, não o diretório.
+/exportacao/
+/exportacoes/
 *.csv
 *.sql.gz
 *.dump

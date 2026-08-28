@@ -91,26 +91,37 @@ que nunca roda contra o log de verdade.
 
 ---
 
-## 3. Monitor externo — a configurar em T19
+## 3. Monitor externo — **UptimeRobot**, decidido em T19
 
 **Não está implementado, e não pode estar.** Se a aplicação caiu, ela não
 escreve log; a ausência de linha é indistinguível de um período tranquilo. Só
 algo **de fora** distingue as duas coisas, e por isso este é o único item de T16
-que depende de contratar um serviço (PE-05).
+que depende de contratar um serviço.
 
-|               |                                                              |
-| ------------- | ------------------------------------------------------------ |
-| Alvos         | `/api/saude`, `/` e `/classificacao`                         |
-| Intervalo     | 60 s                                                         |
-| Falha         | 2 verificações seguidas (detecção em ≤ 2 min)                |
-| Canal         | **SMS, WhatsApp ou Telegram** — nunca e-mail                 |
-| Destinatários | pelo menos duas pessoas, com telefone conferido antes do dia |
+**O serviço é o UptimeRobot, plano gratuito** (D-82). Falta configurá-lo, o que
+depende do domínio (PE-05).
 
-O canal não é preferência. No dia do evento ninguém abre caixa de entrada; o
-alerta precisa vibrar no bolso de quem pode agir.
+|               | pedido em T16                                | o que o plano gratuito dá       |
+| ------------- | -------------------------------------------- | ------------------------------- |
+| Alvos         | `/api/saude`, `/` e `/classificacao`         | os três, sem custo              |
+| Intervalo     | 60 s                                         | **5 min** — ver abaixo          |
+| Falha         | 2 verificações seguidas                      | 2 seguidas, configurável        |
+| Canal         | **SMS, WhatsApp ou Telegram** — nunca e-mail | **push do aplicativo** + e-mail |
+| Destinatários | pelo menos duas pessoas                      | ilimitado                       |
 
-Serviços que atendem sem custo relevante nesta escala: UptimeRobot, Better
-Stack, Healthchecks.io. A escolha entra no mesmo pacote de T19.
+**Duas diferenças ficam registradas, e nenhuma das duas é silenciosa:**
+
+1. **O intervalo é de 5 minutos, não 60 segundos.** Uma queda pode passar até
+   cinco minutos sem alerta. Aceitável porque, na janela do evento, quem
+   descobre uma queda antes disso é o Operador na frente da fila. O monitor
+   existe para o resto do calendário: a madrugada anterior, o intervalo do
+   almoço, a hora em que ninguém está olhando.
+2. **O canal é push do aplicativo, e não SMS.** O requisito escrito em T16 não
+   era "SMS"; era **vibrar no bolso de quem pode agir**, porque no dia ninguém
+   abre caixa de entrada. O aplicativo do UptimeRobot instalado nos dois
+   celulares atende a isso; o e-mail fica como segundo canal, não como o
+   primeiro. **Testar o disparo antes do dia** — um alerta que ninguém viu
+   chegar é um alerta que não existe (item do checklist de T21).
 
 ---
 

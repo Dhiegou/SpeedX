@@ -17,7 +17,7 @@ declare global {
 }
 
 function criarPool(): Pool {
-  const { DATABASE_URL, NODE_ENV } = env()
+  const { DATABASE_URL, NODE_ENV, DB_POOL_MAX } = env()
 
   return new Pool({
     connectionString: DATABASE_URL,
@@ -26,8 +26,14 @@ function criarPool(): Pool {
     // O painel precisa de resposta previsível sob pressão: melhor falhar rápido
     // e o Operador repetir do que a requisição pendurar sem retorno (RNF-16).
     connectionTimeoutMillis: 5_000,
-    idleTimeoutMillis: 30_000,
-    max: 10,
+    // Em função efêmera a instância congela entre requisições, e uma conexão
+    // ociosa segurada por trinta segundos é uma conexão que o pooler não pode
+    // dar a mais ninguém. Dez segundos devolvem o assento entre picos sem
+    // pagar o custo de reconectar dentro de uma rajada (T19 §5).
+    idleTimeoutMillis: 10_000,
+    // Por instância. Quem protege o Postgres do produto disto pelo número de
+    // instâncias é o pooler do provedor, não este número (D-80).
+    max: DB_POOL_MAX,
   })
 }
 

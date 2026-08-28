@@ -8,11 +8,13 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
-**2026-08-24.** Dezessete tarefas entregues (T01–T17) e **613 testes passando** — 594 de unidade e integração em 79 s, mais 19 de ponta a ponta em 42 s. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
+**2026-08-27.** Dezenove tarefas entregues (T01–T17, T22 e a parte de código da T19) e **628 testes passando** — 609 de unidade e integração, mais 19 de ponta a ponta. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
 **As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
 
-Restam T18 a T21: carga, deploy, contingência em papel e o ensaio no mundo físico.
+Restam T18, T20 e T21 — carga, contingência em papel e o ensaio no mundo físico —, mais **a metade da T19 que não é código**.
+
+**A T19 está parcial, e a divisão é limpa.** Tudo o que o repositório decide sozinho está decidido, testado e escrito: região da função colada à do banco, pool dimensionado contra o pooler e não contra o número (D-80), HSTS com prazo (D-81), a versão publicada saindo do commit, `docs/deploy.md` e `docs/plano-do-dia.md`. O que falta são sete verificações que exigem **um endereço publicado e três contas criadas** — HTTP/3 anunciado, `HIT` de borda, sincronia de relógio, restauração de backup. Estão no checklist de `docs/deploy.md` §8, cada uma com o comando ao lado.
 
 **Quatro requisitos continuam sem verificação automática**, cada um com justificativa escrita que um teste obriga a existir: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (gente com cronômetro). **RNF-18 saiu dessa lista em T17** — 360 px é uma largura, e um navegador sabe ser 360 px.
 
@@ -22,9 +24,29 @@ Restam T18 a T21: carga, deploy, contingência em papel e o ensaio no mundo fís
 - **PE-06 fechou.** O evento é em **24 de outubro de 2026**. Preenche a última linha vazia de `docs/retencao.md` e data o vencimento da retenção: **4 de novembro de 2026, 00:00** em São Paulo. O comando de expurgo continua sem valor padrão, de propósito (D-63).
 - **PE-05 fechou mais um terço.** A aplicação vai para a **Vercel, plano gratuito** (D-76). Continuam sem destino **quem hospeda o Postgres**, qual é o **domínio** e o **monitor externo** — e são eles, não a aplicação, que ainda seguram o QR definitivo (T07), a T19 e o desligamento do site prometido no termo.
 
+**2026-08-27 — sobrou uma coisa de PE-05, e é a que tem o maior prazo.** O banco é o **Neon em São Paulo** (D-79) e o monitor é o **UptimeRobot gratuito** (D-82). **O domínio não existe**, e é ele que segura o resto: sem endereço publicado não há `curl --http3`, não há `HIT` de borda para conferir e o QR de T07 continua provisório. Material impresso precisa de folga antes de 24/10, e uma URL de comprimento diferente muda o número de módulos do código — o QR se refaz, não se corrige.
+
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-27 — Sessão 22: T22 commitada e execução da T19
+
+**Pedido:** ver em que tarefa o projeto parou e seguir com a próxima.
+
+**A T22 estava pronta e fora do histórico.** 83 arquivos modificados na árvore, nenhum commit desde T17: a renomeação inteira, a migração `0004` e o snapshot escrito à mão viviam só no disco. Rodei a suíte (594 verdes), o `check` (limpo) e commitei. A varredura de `pitch` achou **uma sobra real** — a `description` do `package.json`, que a auditoria de T22 não cobriu porque o critério listava `src/`, `app/`, `tests/`, `e2e/` e `scripts/`. Uma segunda apareceu depois, num comentário do `.env.example`.
+
+**Depois, T19.** Três decisões do usuário nesta sessão: o banco é o **Neon em São Paulo** (D-79), o monitor é o **UptimeRobot gratuito** (D-82), e o **domínio continua sem existir** — hoje o item de maior prazo do projeto, porque QR impresso não se corrige, se refaz.
+
+**O item 5 da task pedia "pool dimensionado", e a leitura óbvia era a errada** (D-80). Não existe *o* pool: cada instância de função abre o seu, e o `max: 10` que estava lá desde T02 vira trezentas conexões pedidas a um banco que oferece cem. Baixar para 1 também não serve — a Classificação é `force-dynamic` e uma instância atende várias requisições. Quem resolve é o **pooler** do provedor; o número por instância é teto local, não defesa. Junto veio a pegadinha que agora está escrita em dois lugares: migração quer a string **direta**, porque PgBouncer não repassa comando com estado de sessão.
+
+**Três promessas passaram a quebrar alto** (`tests/deploy.test.ts`, 11 casos). A que mais me interessa é a segunda: bastaria um campo `dataHora` num esquema Zod para o relógio de um tablet decidir o desempate de RF-31, e **nenhum teste de comportamento pegaria** — o comportamento não muda, muda de quem é o relógio.
+
+**Um defeito de dois meses apareceu na conferência final, e não era de código** (D-83). Uma alteração em `app/api/exportacao/route.ts` não aparecia no `git status`: o padrão `exportacao/` do `.gitignore` de T14, escrito contra CSV despejado, casa em qualquer nível e levava a rota inteira junto. **A exportação de T14 nunca esteve no repositório** — o arquivo no disco, a suíte verde, o build compilando, e um clone limpo produzindo um sistema sem `/api/exportacao`. A correção é uma barra; o que fica é o teste que pergunta ao `git` o que as outras ferramentas não sabem perguntar.
+
+**O que não foi feito, e não dá para fazer daqui:** criar as contas, publicar, apontar domínio e testar a restauração de backup. Quatro dos sete critérios de aceitação de T19 dependem de um endereço publicado. Estão no checklist de `docs/deploy.md` §8, cada um com o comando ao lado, e a task ficou marcada como **parcial** em vez de concluída.
+
+---
 
 ### 2026-08-25 — Sessão 21: levantamento de pendências e três respostas do organizador
 
@@ -1266,14 +1288,79 @@ Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em
 
 ---
 
+### D-79 — O banco é o Neon, em São Paulo, e a região não é preferência
+
+**Decidido em 2026-08-27, pelo usuário**, ao executar T19: **Neon, plano gratuito, região `aws-sa-east-1`**, com as funções da Vercel fixadas em `gru1` (`vercel.json`).
+
+**Por que a região é decisão de arquitetura, e não de conforto.** A página da Classificação é `force-dynamic` (D-59): não há pré-renderização, então **cada primeira pintura atravessa a distância entre a função e o banco**. A região padrão da Vercel é `iad1`, na Virgínia. Função em Washington com banco em São Paulo custa cerca de 120 ms de ida e volta por consulta, e é exatamente esse número que RNF-01 mede. Duas linhas de configuração compram o que nenhuma otimização de consulta compraria.
+
+**Por que o Neon e não o Supabase**, entre os dois que oferecem São Paulo de graça: o pooler vem embutido e é o que este sistema mais precisa (D-80), e o Supabase gratuito **pausa projeto ocioso** — o que é um risco real para um sistema que fica parado até 24 de outubro e precisa estar de pé às oito da manhã daquele sábado.
+
+**O que continua a verificar, e não daqui:** TLS exigido pelo servidor, backup automático e, principalmente, **a restauração testada**. Backup não testado não é backup, e a linha para anotar a data já está no checklist de `docs/deploy.md` §8.
+
+---
+
+### D-80 — Em função efêmera, quem protege o banco é o pooler, não o tamanho do pool
+
+**Decidido em 2026-08-27**, ao ler o item 5 de T19 com a hospedagem já escolhida.
+
+**O item pedia "pool de conexões dimensionado", e a leitura óbvia é a errada.** Não existe *o* pool: cada instância de função que a plataforma acorda abre o seu. Trinta instâncias no pico de cadastro, com o `max: 10` que estava no código desde T02, pedem **trezentas** conexões a um Postgres gratuito que oferece cem. O que o participante vê não é lentidão — é o cadastro recusado com `too many clients already`.
+
+**E a correção intuitiva também é errada.** Baixar para 1 transformaria concorrência em fila dentro do processo, e a Classificação é `force-dynamic`: uma instância atende mais de uma requisição ao mesmo tempo.
+
+**O que resolve é o pooler do provedor.** A função fala com o PgBouncer, que multiplexa milhares de clientes sobre poucas conexões reais. `DB_POOL_MAX=5` por instância vira teto local, não defesa. Junto veio `idleTimeoutMillis` de 30 s para 10 s: em função que congela entre requisições, conexão ociosa segurada é assento que o pooler não pode dar a mais ninguém.
+
+**A pegadinha que fica escrita em dois lugares** (`.env.example` e `docs/deploy.md` §3): `npm run db:migrate` quer a string **direta**. PgBouncer em modo transação não repassa comando que dependa de estado de sessão, e uma migração que falha no meio falha no pior lugar possível.
+
+---
+
+### D-81 — HSTS de 180 dias, sem `preload`, porque o site tem data para morrer
+
+**Decidido em 2026-08-27**, ao escrever os cabeçalhos de segurança em `next.config.ts`.
+
+A recomendação de manual — dois anos com `includeSubDomains; preload` — pressupõe um site que continua existindo. **Este não continua:** o termo de consentimento promete que ele sai do ar dez dias depois do evento (D-22), e a data é 4 de novembro de 2026.
+
+Entrar na lista de pré-carga dos navegadores é fácil e **sair leva meses**. Deixaríamos um domínio morto marcado como somente-HTTPS no mundo inteiro, e quem o registrasse depois herdaria a marca sem ter pedido. Cento e oitenta dias cobrem a vida do site com folga e vencem sozinhos.
+
+**Também de propósito:** o HSTS só é emitido quando `NODE_ENV=production`. Gravar `localhost` como somente-HTTPS no navegador de quem desenvolve quebra outros projetos da mesma máquina, e isso não é hipótese.
+
+---
+
+### D-82 — O monitor externo é o UptimeRobot, e as duas diferenças ficam escritas
+
+**Decidido em 2026-08-27, pelo usuário:** UptimeRobot, plano gratuito, apontado para `/api/saude`, `/` e `/classificacao`.
+
+T16 tinha escrito o requisito com duas exigências que o plano gratuito não cumpre ao pé da letra, e a resposta honesta é registrar a diferença, não silenciá-la (`docs/monitoramento.md` §3):
+
+1. **Intervalo de 5 minutos, não 60 segundos.** Uma queda pode passar cinco minutos sem alerta. Aceitável porque, dentro da janela do evento, quem percebe antes disso é o Operador na frente da fila. **O monitor existe para o resto do calendário** — a madrugada anterior, o intervalo do almoço, a hora em que ninguém está olhando.
+2. **Canal por push do aplicativo, não SMS.** Lendo o requisito de T16 de novo, ele não pedia SMS: pedia **vibrar no bolso de quem pode agir**, porque no dia ninguém abre caixa de entrada. O aplicativo instalado nos dois celulares atende; o e-mail fica como segundo canal. **Testar o disparo antes do dia** — alerta que ninguém viu chegar é alerta que não existe.
+
+---
+
+### D-83 — Padrão de `.gitignore` que come código, e o teste que o denuncia
+
+**Descoberto em 2026-08-27**, ao conferir por que uma alteração em `app/api/exportacao/route.ts` não aparecia no `git status`.
+
+**O defeito.** O `.gitignore` de T14 traz um bloco cuidadoso contra vazamento: nenhum CSV, nenhum dump, nenhuma pasta de exportação. Duas das linhas eram `exportacao/` e `exportacoes/` — e padrão de gitignore sem barra inicial casa em **qualquer** nível. `app/api/exportacao/` entrava junto.
+
+**O que isso significava:** a rota de exportação de T14, com sessão obrigatória e rastro de auditoria, **nunca esteve no repositório**. O arquivo existia no disco desta máquina, a suíte rodava sobre ele, o `npm run build` o compilava e o `git status` estava limpo. Um clone teria produzido um sistema sem `/api/exportacao` — e ninguém descobriria antes de tentar exportar a base no fim do evento.
+
+**A correção é uma barra:** `/exportacao/` e `/exportacoes/`, ancoradas na raiz. O que protege o dado continua valendo em qualquer pasta, porque são as **extensões** (`*.csv`, `*.dump`, `*.sql.gz`) que barram o arquivo despejado, e é o arquivo que carrega a base — não o nome do diretório.
+
+**O que fica é o teste** (`tests/deploy.test.ts`): `git status --ignored` sobre `app`, `src`, `tests`, `e2e` e `scripts` tem de devolver lista vazia. Conferi que ele falha de verdade, remontando o padrão largo: a mensagem nomeia `app/api/exportacao/`.
+
+**A lição, e ela é maior que o defeito:** um arquivo não rastreado é invisível para **toda** ferramenta que este projeto usa para se vigiar. Lint, tipos, testes, build e o teste de rastreabilidade de T17 leem o disco, e o disco estava certo. A única ferramenta que sabia da ausência era o `git`, e ninguém estava perguntando a ele.
+
+---
+
 ## 4. Premissas assumidas
 
 | # | Premissa | Se cair |
 |---|---|---|
 | P-01 | ~~Stack Next.js + PostgreSQL (D-03)~~ — **deixou de ser premissa em 2026-08-18**: Next 16.3, React 19.2, TypeScript 6.0, Zod 4.4 e ESLint 9.39 estão instalados e verificados | — |
 | P-07 | PostgreSQL segue como escolha de banco, ainda não instalado nem provisionado | T02 muda; os contextos não, pois nenhum depende do banco ainda |
-| P-02 | A hospedagem anunciará HTTP/3 | FL-02 e FL-07 caem para TCP e RNF-04 fica em risco; verificação obrigatória em T19/T21 |
-| P-03 | Dois Pitches, valores 1 e 2, fixos | `CHECK (pitch IN (1,2))` e a UI de duas abas precisam mudar |
+| P-02 | A hospedagem anunciará HTTP/3. **A Vercel anuncia** (D-76); o que falta é o `curl --http3` contra o domínio de verdade | FL-02 e FL-07 caem para TCP e RNF-04 fica em risco; verificação obrigatória assim que o domínio existir (`docs/deploy.md` §4), com o risco declarado em T21 |
+| P-03 | Dois Cockpits, valores 1 e 2, fixos | `tentativa_cockpit_valido` e a UI de duas abas precisam mudar |
 | P-04 | Um único evento, sem multi-evento | O esquema não tem `evento_id`; acrescentar depois é migração custosa |
 | P-05 | Operadores em número pequeno, criados por CLI | Se forem muitos, será preciso uma tela de administração |
 | P-06 | Idade é informada, não derivada de data de nascimento | Segue o PRD (RF-02 pede "idade"); se virar data de nascimento, T02, T04 e T06 mudam |
@@ -1288,7 +1375,7 @@ Nenhuma era defeito do produto. As três eram do teste, e as três se repetem em
 | PE-02 | ~~Prazo de retenção dos dados após o evento (RNF-11)~~ — **resolvida em 2026-08-19**: máximo de 10 dias após o evento, definido pelo usuário. Já escrito na seção `retencao` do termo; T15 usa a data do evento (PE-06) como base da contagem | — | — |
 | PE-03 | ~~Canal para solicitação de exclusão de dados (RF-09)~~ — **resolvida em 2026-08-19**: presencial, no ponto de inscrição durante o evento; sem canal remoto (D-20). Já escrito na `v0.2` do termo | — | — |
 | PE-04 | ~~Aprovação por escrito do texto de consentimento (RF-09)~~ — **resolvida em 2026-08-19**: `v1.0-2026-08-19` aprovada por Dhiego, registro em `docs/aprovacao-termo.md`. Se o organizador formal do NEXT for outra pessoa, cabe contra-assinar, sem custo de versão | — | — |
-| PE-05 | Hospedagem e banco. **Resolvida em dois terços.** Em 2026-08-23 o banco virou **PostgreSQL 18** (D-14); em 2026-08-25 a aplicação ganhou casa: **Vercel, plano gratuito** (D-76). Faltam três coisas, e nenhuma é a aplicação: **onde roda o Postgres** (com TLS, backup e restauração testada), qual é o **domínio** — sem ele o QR de `docs/qr/inscricao.svg` segue provisório (D-35) — e o **monitor externo**. O uso não comercial do plano Hobby deixou de ser risco em 2026-08-25: é iniciação científica em nome da universidade, sem marca de patrocinador na página (D-76) | Time técnico | T19, material impresso de T07, o desligamento do site prometido no termo (T15 §3, passo 5), o monitor externo de T16 |
+| PE-05 | Hospedagem, banco e domínio. **Resolvida em cinco sextos.** Banco: **PostgreSQL 18** (D-14, 2026-08-23), hospedado no **Neon, região `aws-sa-east-1`** (D-79, 2026-08-27). Aplicação: **Vercel gratuita**, funções em `gru1` (D-76). Monitor externo: **UptimeRobot gratuito** (D-82). **Falta o domínio**, e ele sozinho segura quatro critérios de T19, o QR definitivo de T07 (D-35) e o desligamento do site prometido no termo. O uso não comercial do plano Hobby deixou de ser risco em 2026-08-25: é iniciação científica em nome da universidade, sem marca de patrocinador na página (D-76) | Time técnico | T19 (quatro critérios), material impresso de T07, o desligamento do site (T15 §3, passo 5), a configuração do monitor |
 | PE-06 | ~~Data do evento e janela de operação~~ — **resolvida em 2026-08-25**: **24 de outubro de 2026**, em São Paulo (o local já estava confirmado desde 2026-08-23, e é o que fixa `America/Sao_Paulo`). A retenção vence em **4 de novembro de 2026, 00:00**, escrito em `docs/retencao.md` §2. `npm run expurgar` continua exigindo `--evento 2026-10-24` escrito à mão: a data existir não a torna valor padrão (D-63) | — | — |
 
 ---
