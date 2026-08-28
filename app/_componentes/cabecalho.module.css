@@ -1,0 +1,102 @@
+/*
+ * Cabeçalho das páginas públicas.
+ *
+ * Barra escura, cheia de largura, com o conteúdo alinhado ao mesmo eixo das
+ * páginas. Ela substitui a faixa decorativa que ficava no `body`: onde há
+ * cabeçalho, ele mesmo carrega a marca.
+ */
+
+.cabecalho {
+  background: var(--marca-escura);
+  color: #fff;
+  /* O quadriculado da bandeira, em duas linhas de gradiente: zero requisição. */
+  border-bottom: 3px solid var(--acento);
+}
+
+.interior {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0.625rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: 1.125rem;
+}
+
+/*
+ * A bandeira quadriculada, desenhada com gradiente cônico repetido.
+ *
+ * Oito bytes de CSS no lugar de um arquivo de imagem, e escala sem serrilhar.
+ * É decoração: `aria-hidden` no elemento mantém o leitor de tela fora dela.
+ */
+.bandeira {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background:
+    conic-gradient(#fff 90deg, transparent 90deg 180deg, #fff 180deg 270deg, transparent 270deg) 0
+      0 / 50% 50%,
+    var(--acento);
+}
+
+.navegacao {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.link {
+  /* 44px de alvo de toque, como o resto da interface (RNF-18). */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border-radius: var(--raio-pequeno);
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: background-color 120ms ease;
+}
+
+.link:hover {
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+}
+
+.link:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+/*
+ * A página atual: fundo, peso e branco pleno.
+ *
+ * Três sinais e não só cor — o `aria-current` no elemento diz o mesmo a quem
+ * não vê a tela.
+ */
+.linkAtual {
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+}
+
+@media (max-width: 24rem) {
+  .interior {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .link {
+    padding: 0 0.5rem;
+  }
+}

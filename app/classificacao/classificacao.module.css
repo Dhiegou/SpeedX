@@ -242,3 +242,91 @@
   margin-top: 1.5rem;
   text-align: center;
 }
+
+/* --- Pódio (as três primeiras posições) ---
+ *
+ * A marca fica na célula da posição, não na linha: pintar a linha inteira
+ * competiria com o destaque amarelo da busca, e as duas coisas juntas viram
+ * ruído para quem chegou em terceiro e está se procurando.
+ *
+ * Cor não carrega a informação sozinha — o número continua ali, e é ele que o
+ * leitor de tela anuncia. O peso extra e o fundo são reforço, não substituto.
+ */
+.ouro,
+.prata,
+.bronze {
+  font-weight: 800;
+  border-radius: var(--raio-pequeno);
+}
+
+.ouro {
+  background: #fef3c7;
+  color: #78350f;
+  box-shadow: inset 3px 0 0 #d97706;
+}
+
+.prata {
+  background: #f1f5f9;
+  color: #334155;
+  box-shadow: inset 3px 0 0 #94a3b8;
+}
+
+.bronze {
+  background: #fdf0e3;
+  color: #7c2d12;
+  box-shadow: inset 3px 0 0 #c2703a;
+}
+
+/* --- Faixa de números do topo ---
+ *
+ * Antes daqui, "2420 tempo(s) registrado(s)" era uma linha de texto solta
+ * acima da tabela. Quem projeta a Classificação num telão precisa que o total
+ * seja legível de longe, e quem abre no celular precisa saber num relance se a
+ * página está fresca — as duas coisas são o mesmo número em tamanhos
+ * diferentes.
+ */
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.numero {
+  flex: 1 1 8rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 0.625rem 0.875rem;
+}
+
+.numeroValor {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--marca-escura);
+}
+
+.numeroRotulo {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+  margin-top: 0.125rem;
+}
+
+/* O bloco de estado, agora só com a atualização e o botão. */
+.atualizacao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0.5rem 0 0.75rem;
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+}

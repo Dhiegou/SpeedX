@@ -52,10 +52,29 @@
 }
 
 /* Indicador de conectividade (escopo 4): sempre visível, nunca discreto. */
+/*
+ * Estado da conexão.
+ *
+ * O ponto antes do texto existe porque a barra do cabeçalho é escura e o
+ * par verde/vermelho sozinho é justamente o que menos gente distingue. O
+ * texto ("conectado" / "sem conexão") continua sendo a informação; o ponto
+ * e a cor são reforço.
+ */
 .conexao {
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 700;
   padding: 0.15rem 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: var(--raio-pequeno);
+}
+
+.conexao::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .online {
@@ -68,10 +87,28 @@
   color: #7a1c20;
 }
 
+/*
+ * A faixa de controle acompanha a rolagem.
+ *
+ * Com a Fila cheia, o Operador rola a lista e perde de vista as abas e o
+ * número de pendentes — e volta ao topo só para trocar de Cockpit. Cada
+ * viagem dessas é tempo dentro dos quinze segundos de RNF-16, gasto em
+ * navegação em vez de lançamento.
+ *
+ * Fica opaca de propósito: a lista passa por baixo, e uma faixa translúcida
+ * sobre nomes em movimento é pior que nenhuma.
+ */
 .abas {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+  background: var(--fundo);
+  padding: 0.5rem 0;
   margin-bottom: 1rem;
+  border-bottom: 2px solid var(--borda);
 }
 
 .aba {
@@ -93,10 +130,23 @@
 }
 
 /* A contagem de pendentes, "em fonte grande o suficiente para leitura rápida". */
+/*
+ * Quantos faltam.
+ *
+ * É o número que o Operador olha entre um lançamento e outro, e o que o
+ * supervisor pergunta de longe. Alinhado à direita da faixa, tabular para
+ * não dançar ao mudar de 100 para 99.
+ */
 .contagem {
-  font-size: 2rem;
-  font-weight: 700;
+  margin: 0 0 0 auto;
+  padding-left: 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--marca-escura);
+  white-space: nowrap;
 }
 
 .contagemRotulo {

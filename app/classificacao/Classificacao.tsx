@@ -91,6 +91,23 @@ function rotuloDeAtualizacao(geradoEm: string, agora: number | null): string {
   return `atualizado ${tempoRelativo(geradoEm, agora)}`
 }
 
+/**
+ * A classe do pódio, para as três primeiras posições.
+ *
+ * **Ouro, prata e bronze marcam a célula da posição, e não a linha inteira.**
+ * Pintar a linha competiria com o destaque da busca — que é amarelo e existe
+ * para responder "onde eu estou" —, e as duas coisas juntas na mesma linha
+ * viram ruído justamente para quem chegou em terceiro e está se procurando.
+ *
+ * A cor não carrega a informação sozinha: o número da posição continua ali,
+ * e é ele que o leitor de tela anuncia.
+ */
+function podio(posicao: number): string {
+  if (posicao === 1) return estilos.ouro ?? ''
+  if (posicao === 2) return estilos.prata ?? ''
+  if (posicao === 3) return estilos.bronze ?? ''
+  return ''
+}
 export default function Classificacao({ inicial }: Props) {
   const [documento, setDocumento] = useState(inicial)
   const [cockpit, setCockpit] = useState<FiltroDeCockpit>('todos')
@@ -197,12 +214,37 @@ export default function Classificacao({ inicial }: Props) {
         />
       </div>
 
-      <div className={estilos.estado}>
-        <span>
-          {buscando
-            ? `${String(achados.size)} encontrado(s) de ${String(linhas.length)}`
-            : `${String(linhas.length)} tempo(s) registrado(s)`}
-        </span>
+      {/*
+        Os números em destaque, e não numa linha de texto solta.
+
+        A Classificação é projetada num telão e aberta no celular ao mesmo
+        tempo. O total precisa ser legível de longe; a defasagem precisa ser
+        conferível de perto. São o mesmo dado em dois tamanhos.
+      */}
+      <div className={estilos.numeros}>
+        <p className={estilos.numero}>
+          <span className={estilos.numeroValor}>{linhas.length}</span>
+          <span className={estilos.numeroRotulo}>
+            {cockpit === 'todos' ? 'tempos registrados' : `tempos ${nomeDoCockpit(cockpit)}`}
+          </span>
+        </p>
+
+        {buscando && (
+          <p className={estilos.numero}>
+            <span className={estilos.numeroValor}>{achados.size}</span>
+            <span className={estilos.numeroRotulo}>encontrados na busca</span>
+          </p>
+        )}
+
+        {!buscando && linhas.length > 0 && (
+          <p className={estilos.numero}>
+            <span className={estilos.numeroValor}>{formatTempo(linhas[0]?.tempoMs ?? 0)}</span>
+            <span className={estilos.numeroRotulo}>melhor tempo</span>
+          </p>
+        )}
+      </div>
+
+      <div className={estilos.atualizacao}>
         <span>
           {/* RF-32: relativo na tela, absoluto no `title`. */}
           <span title={formatDataHoraDoEvento(new Date(documento.geradoEm))}>
@@ -266,7 +308,9 @@ export default function Classificacao({ inicial }: Props) {
                     className={achados.has(linha.indice) ? estilos.destacada : undefined}
                     aria-current={achados.has(linha.indice) ? 'true' : undefined}
                   >
-                    <td className={estilos.posicao}>{linha.posicao}</td>
+                    <td className={`${estilos.posicao} ${podio(linha.posicao)}`}>
+                      {linha.posicao}
+                    </td>
                     <td className={estilos.nome}>{linha.nomePublico}</td>
                     <td className={estilos.cockpit}>{nomeDoCockpit(linha.cockpit)}</td>
                     <td className={estilos.tempo}>{formatTempo(linha.tempoMs)}</td>

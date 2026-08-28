@@ -418,9 +418,35 @@ export default function FormularioInscricao({
           <strong>
             Faltou corrigir {erros.length === 1 ? 'um item' : `${String(erros.length)} itens`}:
           </strong>
+          {/*
+            Cada erro é um link para o campo que o causou.
+
+            O foco já vai para o primeiro campo inválido ao enviar, mas quem
+            tem três erros precisa alcançar o segundo e o terceiro — e rolar
+            um formulário longo procurando qual campo está vermelho é o que
+            faz alguém desistir na fila (RNF-15).
+          */}
           <ul className={estilos.resumo}>
             {erros.map((erro) => (
-              <li key={`${erro.campo}-${erro.codigo}`}>{erro.mensagem}</li>
+              <li key={`${erro.campo}-${erro.codigo}`}>
+                <a
+                  className={estilos.linkErro}
+                  href={`#${idDoCampo(erro.campo)}`}
+                  onClick={(evento) => {
+                    // `preventDefault` porque o salto por âncora não move o
+                    // foco do teclado: quem navega sem mouse ficaria com a
+                    // tela no campo certo e o cursor onde estava.
+                    evento.preventDefault()
+                    const alvo =
+                      elementos.current[erro.campo] ??
+                      elementos.current[erro.campo.split('.')[0] ?? '']
+                    alvo?.focus()
+                    alvo?.scrollIntoView({ block: 'center' })
+                  }}
+                >
+                  {erro.mensagem}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
@@ -625,9 +651,24 @@ export default function FormularioInscricao({
           />
         </div>
 
-        <button className={estilos.botao} type="submit" disabled={enviando}>
-          {enviando ? 'Enviando…' : 'Concluir inscrição'}
-        </button>
+        {/*
+          O envio fica preso ao rodapé em tela de celular.
+
+          O formulário tem cinco campos, mais três de responsável quando é o
+          caso, mais três aceites: em 360px isso passa de duas telas de rolagem.
+          Com o botão no fim do documento, quem termina de marcar os aceites
+          ainda precisa rolar para achar como enviar — e o participante na fila
+          interpreta isso como "travou". Preso ao rodapé, ele está sempre a um
+          toque.
+
+          Em tela grande a barra volta a ser um botão comum: ali o formulário
+          inteiro cabe à vista, e uma barra fixa só roubaria altura.
+        */}
+        <div className={estilos.envio}>
+          <button className={estilos.botao} type="submit" disabled={enviando}>
+            {enviando ? 'Enviando…' : 'Concluir inscrição'}
+          </button>
+        </div>
 
         <p className={estilos.dica}>Termo {versaoTermo}.</p>
       </form>
@@ -669,30 +710,39 @@ function Aviso({ contratempo }: { contratempo: Contratempo }) {
 function Confirmado({ dados }: { dados: Confirmacao }) {
   return (
     <main className={estilos.confirmacao}>
-      <h1 className={estilos.titulo}>Inscrição concluída</h1>
+      <div className={estilos.cartaoSucesso}>
+        {/*
+          A marca de concluído é forma e cor, nunca só cor: o círculo com o
+          traço continua legível para quem não distingue verde de cinza, e o
+          título ao lado diz a mesma coisa em palavras.
+        */}
+        <p className={estilos.selo} aria-hidden="true">
+          ✓
+        </p>
 
-      <p>
-        <strong>
+        <h1 className={estilos.tituloSucesso}>Inscrição concluída</h1>
+
+        <p className={estilos.nomeConfirmado}>
           {dados.nome} {dados.sobrenome}
-        </strong>
-        , sua inscrição está registrada.
+        </p>
+
+        <p className={estilos.cockpitsConfirmados}>
+          {dados.cockpits.length === 1
+            ? nomeDoCockpit(dados.cockpits[0] ?? 1)
+            : dados.cockpits.map(nomeDoCockpit).join(' e ')}
+        </p>
+      </div>
+
+      <p className={estilos.proximoPasso}>
+        <strong>Agora:</strong> procure a organização no ponto de inscrição para saber o horário da
+        sua largada.
       </p>
 
-      <p className={estilos.cockpitsConfirmados}>
-        {dados.cockpits.length === 1
-          ? nomeDoCockpit(dados.cockpits[0] ?? 1)
-          : dados.cockpits.map(nomeDoCockpit).join(' e ')}
-      </p>
-
-      <p className={estilos.dica}>
-        Procure a organização no ponto de inscrição para saber o horário da sua largada.
-      </p>
-
-      <p>
-        <a className={estilos.link} href="/classificacao">
+      <div className={estilos.acoes}>
+        <a className={estilos.botaoLink} href="/classificacao">
           Ver a classificação
         </a>
-      </p>
+      </div>
     </main>
   )
 }

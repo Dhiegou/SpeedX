@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Classificacao from './Classificacao'
+import Cabecalho from '../_componentes/Cabecalho'
 import { documentoDaClassificacao } from '@/contexts/classificacao/projecao'
 
 /**
@@ -42,5 +43,10 @@ export const dynamic = 'force-dynamic'
 export default async function PaginaDaClassificacao() {
   const { documento } = await documentoDaClassificacao()
 
-  return <Classificacao inicial={documento} />
+  return (
+    <>
+      <Cabecalho atual="classificacao" />
+      <Classificacao inicial={documento} />
+    </>
+  )
 }

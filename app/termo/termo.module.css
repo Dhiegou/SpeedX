@@ -1,0 +1,206 @@
+/*
+ * Página do termo de consentimento (T03, item 5).
+ *
+ * **Esta página é lida, não operada**, e a diferença dita tudo aqui: medida de
+ * linha curta, corpo de texto maior que o do formulário e espaço generoso entre
+ * seções. Quem abre isto está decidindo se entrega os próprios dados — ou os do
+ * filho —, e um texto legal apertado numa coluna larga é o formato que faz as
+ * pessoas desistirem de ler e marcarem o aceite assim mesmo.
+ *
+ * Antes daqui, os estilos moravam em atributos `style` dentro do componente.
+ * Saíram por um motivo prático: eram os únicos do projeto que não liam os
+ * tokens, então a página não acompanhava a identidade das outras.
+ */
+
+.pagina {
+  /* 34rem ≈ 70 caracteres por linha: a medida em que se lê sem se perder. */
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  overflow-wrap: anywhere;
+}
+
+.titulo {
+  font-size: clamp(1.625rem, 1.4rem + 1.2vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+
+.versao {
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem;
+}
+
+/*
+ * O índice.
+ *
+ * O termo tem oito seções e a pergunta que traz a pessoa até aqui costuma ser
+ * uma só: "o que vocês publicam?" ou "como apago meus dados?". Sem índice, ela
+ * rola o documento inteiro procurando — e rolar procurando é o começo de
+ * desistir de ler.
+ */
+.indice {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1rem 1.25rem;
+  margin: 0 0 2rem;
+}
+
+.indiceTitulo {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+  margin: 0 0 0.625rem;
+}
+
+.indiceLista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.indiceLink {
+  display: block;
+  /* Alvo de toque: uma lista de links finos é inutilizável no celular. */
+  min-height: 2.25rem;
+  padding: 0.375rem 0;
+  color: var(--marca);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.indiceLink:hover {
+  text-decoration: underline;
+}
+
+.secao {
+  margin: 0 0 2rem;
+}
+
+.secaoTitulo {
+  font-size: 1.1875rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.625rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 2px solid var(--marca-clara);
+}
+
+/*
+ * A seção destacada.
+ *
+ * O destaque vem do dado, não de uma escolha feita aqui: RF-09 exige que a
+ * exposição pública do nome seja declarada de forma destacada, e é o termo que
+ * sabe qual seção é essa.
+ */
+.secaoDestaque {
+  background: var(--marca-clara);
+  border-left: 6px solid var(--marca);
+  border-radius: 0 var(--raio) var(--raio) 0;
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.secaoDestaque .secaoTitulo {
+  border-bottom-color: var(--marca);
+}
+
+.secao p {
+  margin: 0 0 0.875rem;
+  font-size: 1.0625rem;
+}
+
+.secao ul {
+  margin: 0 0 0.875rem;
+  padding-left: 1.5rem;
+  font-size: 1.0625rem;
+}
+
+.secao li {
+  margin-bottom: 0.25rem;
+}
+
+/* Aviso de rascunho: visível ao público de propósito (ver o componente). */
+.rascunho {
+  border: 1px solid var(--acento);
+  border-left-width: 6px;
+  border-radius: 0 var(--raio-pequeno) var(--raio-pequeno) 0;
+  background: var(--acento-claro);
+  padding: 1rem 1.25rem;
+  margin: 0 0 2rem;
+}
+
+/* --- Os aceites, reproduzidos como aparecem no formulário --- */
+
+.aceite {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.aceiteOpcional {
+  background: var(--superficie-alt);
+  border-style: dashed;
+}
+
+.etiqueta {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin: 0 0 0.5rem;
+}
+
+.textoAceite {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* --- Volta para o formulário --- */
+
+.rodape {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--borda);
+}
+
+/*
+ * O caminho de volta.
+ *
+ * Quem chega aqui veio do formulário, numa aba nova (D-... do link de T03), e
+ * fechar a aba devolve o preenchimento intacto. Mas parte das pessoas chega
+ * pelo endereço direto — da ficha de papel, por exemplo —, e para essas o botão
+ * é o único caminho até a inscrição.
+ */
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  border: 2px solid var(--marca);
+  border-radius: var(--raio-pequeno);
+  background: var(--marca);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.voltar:hover {
+  background: var(--marca-escura);
+  border-color: var(--marca-escura);
+}
+
+.voltar:focus-visible {
+  outline: var(--foco);
+  outline-offset: 3px;
+}

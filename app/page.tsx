@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { connection } from 'next/server'
+import Cabecalho from './_componentes/Cabecalho'
 import FormularioInscricao from './_componentes/FormularioInscricao'
 import { LINK_TERMO, TERMO_VIGENTE } from '@/contexts/inscricao/consentimento'
 import { emitirTokenFormulario } from '@/contexts/inscricao/tokenFormulario'
@@ -36,11 +37,14 @@ export default async function Home() {
   registrarOperacao({ evento: 'inscricao.formulario_aberto', resultado: 'sucesso' })
 
   return (
-    <FormularioInscricao
-      token={emitirTokenFormulario()}
-      aceites={TERMO_VIGENTE.aceites}
-      versaoTermo={TERMO_VIGENTE.versao}
-      linkTermo={LINK_TERMO}
-    />
+    <>
+      <Cabecalho atual="inscricao" />
+      <FormularioInscricao
+        token={emitirTokenFormulario()}
+        aceites={TERMO_VIGENTE.aceites}
+        versaoTermo={TERMO_VIGENTE.versao}
+        linkTermo={LINK_TERMO}
+      />
+    </>
   )
 }
