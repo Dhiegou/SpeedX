@@ -124,7 +124,9 @@ O dimensionamento sustenta essa escolha: 4000 Tentativas em formato compacto pro
 
 **Responsabilidade.** Exportação completa, retenção e exclusão.
 
-**Por que é um contexto próprio.** É o **único** contexto autorizado a reunir dados pessoais de Inscrição com resultados de Cronometragem no mesmo documento. Essa autorização precisa ser um ponto único, nomeado e auditável — não uma capacidade difusa. É também o contexto com ciclo de vida distinto: sua atividade principal ocorre depois que todos os outros já pararam.
+**Por que é um contexto próprio.** É o **único** contexto autorizado a reunir o **registro pessoal completo** — e-mail, telefone inteiro, idade e dados de Responsável — com resultados de Cronometragem no mesmo documento. Essa autorização precisa ser um ponto único, nomeado e auditável, não uma capacidade difusa. É também o contexto com ciclo de vida distinto: sua atividade principal ocorre depois que todos os outros já pararam.
+
+> **Esta frase foi corrigida pela auditoria de T21, em 2026-08-28.** Ela dizia "reunir dados pessoais de Inscrição com resultados de Cronometragem", e nessa forma o código a violava: a busca do painel (RF-16) devolve nome, sobrenome e os quatro últimos dígitos do telefone **junto** com as Tentativas da pessoa, tempo incluído — e precisa devolver, porque é assim que o Operador distingue dois homônimos antes de lançar. O que de fato vale, e o que o código sempre respeitou, é mais estreito: fora da Custódia ninguém lê e-mail, idade nem dados de Responsável, e o telefone é reduzido a quatro dígitos **no banco**, de modo que o número inteiro não chega a trafegar. `tests/auditoria.test.ts` fixa a invariante nessa forma (D-88).
 
 **Requisitos que ancora.** RF-34, RF-35, RNF-10, RNF-11.
 

@@ -20,6 +20,7 @@
     "db:studio": "drizzle-kit studio",
     "qr": "tsx scripts/gerar-qr.ts",
     "fichas": "tsx scripts/gerar-fichas.ts",
+    "auditar": "tsx scripts/auditar-privacidade.ts",
     "orcamento": "node scripts/orcamento.mjs",
     "criar-operador": "tsx scripts/criar-operador.ts",
     "expurgar": "tsx scripts/expurgar.ts",

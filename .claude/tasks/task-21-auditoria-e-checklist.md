@@ -68,3 +68,98 @@ Método: **leitura do código produzido**, não inspeção pelo navegador (restr
 - [ ] **Abrir a Classificação em 360px de largura real e confirmar que não há rolagem horizontal (RNF-18, vindo de T13).** O CSS foi escrito para isso — coluna de nome elástica com `overflow-wrap`, números tabulares, controles fixos —, mas a confirmação depende de aparelho. Testar com o sobrenome mais longo da massa real.
 
 - [ ] **Abrir as três exportações no Excel de verdade, em português (vindo de T14).** Separador `;`, BOM UTF-8 e escape foram escritos para o Excel pt-BR e conferidos byte a byte, mas "abre corretamente em Excel" é afirmação sobre um programa que não está no repositório. Conferir: acento legível, colunas separadas, e **um participante cujo nome comece com `=`** — o apóstrofo de proteção (D-60) deve sumir na exibição e a célula não pode virar fórmula.
+
+---
+
+## Resultado da execução — 2026-08-28
+
+**Parte 1 fechada. Partes 2 e 3 levantadas, com dono e consequência por item.**
+O consolidado está em [`docs/checklist-pre-evento.md`](../../docs/checklist-pre-evento.md).
+
+A T21 não podia fechar hoje e isso não é falha de execução: ela depende de um
+endereço publicado, de três contas contratadas e de uma tarde de ensaios. O que
+dava para fazer sem nada disso está feito, com evidência.
+
+### A auditoria virou comando, e não só leitura
+
+`npm run auditar` confere o **corpo que sai de verdade** contra o **banco de
+verdade**, e aceita um alvo: `npm run auditar -- https://<dominio>`. A T21 pedia
+leitura de código; leitura confere o código de hoje contra a massa de hoje. O
+comando pode ser repetido contra homologação, contra produção na véspera e no
+meio do evento — que é quando o dado deixa de ser sintético.
+
+Resultado contra 2000 Participantes: corpo público com três campos e 83 KB, nove
+rotas protegidas em 401, e 261 Tentativas de menores publicadas com sobrenome
+abreviado.
+
+### A primeira versão da verificação de RNF-09 era inútil, e o número denunciou
+
+Perguntar "o nome completo do menor aparece no corpo?" obriga a ressalva "a não
+ser que exista um adulto homônimo que o tenha publicado". Contra a massa real a
+ressalva dispensou **151 de 151** menores — vinte nomes e vinte sobrenomes em
+duas mil pessoas colidem sempre. O script dizia "ok" **sem ter verificado nada**,
+e só o "151 de 151" no relatório entregou isso.
+
+A verificação passou a ser por **contagem**: para cada nome, as ocorrências
+publicadas têm de bater com as Tentativas Válidas de quem tem aquele nome,
+adultos e menores separados. Nenhum homônimo esconde uma ocorrência a mais.
+
+**Confirmei que morde**, desligando a abreviação de propósito e republicando:
+`"Pedro R.": esperadas 2, publicadas 0`, mais a inflação nas contagens dos
+adultos, e saída com código 1.
+
+### O achado: o SDD estava mais forte que o código
+
+§BC-05 dizia que a Custódia é o único contexto autorizado a "reunir dados
+pessoais de Inscrição com resultados de Cronometragem no mesmo documento". **Ao
+pé da letra, o painel violava isso** — a busca de RF-16 devolve nome, sobrenome
+e quatro dígitos do telefone junto com as Tentativas e os tempos. E precisa: é
+assim que o Operador distingue homônimos antes de lançar.
+
+A invariante que de fato vale é mais estreita, e o código sempre a respeitou:
+fora da Custódia ninguém lê e-mail, idade nem Responsável, e o telefone é
+reduzido a quatro dígitos **no banco**. A frase do SDD foi corrigida e a
+invariante virou teste (D-88). Documento mudou; comportamento, não.
+
+### Evidência que só o tráfego real dava
+
+O log do teste de carga de T18 tem **141.463 linhas**, geradas por 200 cadastros
+com e-mail e telefone verdadeiros no corpo. Zero e-mails, zero sequências de dez
+dígitos, zero ocorrências do prefixo usado no teste. Nenhum teste de unidade
+prova isso com essa força.
+
+### Critérios de aceitação
+
+- [x] **Parte 1 inteira**, com evidência item a item — inventário de rotas
+      públicas, modelo sem campo pessoal, `paraNomePublico` como ponto único,
+      corpo público auditado contra a base, bundle do cliente sem credencial,
+      nove rotas em 401, log de tráfego real limpo, e o cruzamento pessoal ×
+      resultado reconciliado com o SDD.
+- [ ] **Partes 2 e 3**: levantadas, com dono e consequência. Quatro itens de
+      Parte 2 fechados; o resto depende de ambiente publicado.
+- [x] Resultado consolidado em `docs/checklist-pre-evento.md`, datado. **Falta a
+      assinatura** — e falta de propósito: a rodada auditou o que é código, e
+      não autoriza o evento.
+- [x] Riscos abertos listados para aceite por escrito. Seis, cada um com
+      mitigação no dia e linha para assinar.
+
+### Aberto — e é a lista que decide o evento
+
+1. **O domínio.** Segura HTTP/3, cache de borda, QR definitivo e a próxima
+   rodada desta auditoria. Maior prazo de todos: material impresso se refaz.
+2. **Publicar** — Vercel, Neon, UptimeRobot.
+3. **Uma tarde de ensaios**: contingência, lançamento cronometrado, cadastro com
+   cinco pessoas de cada perfil, 360 px em aparelho, Excel pt-BR, QR com três
+   leitores.
+4. **Quatro decisões do organizador**: calibrar o limite de taxa (T18 mediu),
+   a métrica de busca que não é mensurável, rastro de autoria na inclusão, e o
+   termo que ainda diz "pista".
+
+---
+
+## Estado
+
+**Parte 1 concluída em 2026-08-28**; Partes 2 e 3 levantadas e datadas. 9 testes
+novos, 636 no total, mais `npm run auditar` para repetir a auditoria contra
+qualquer ambiente. **A T21 fecha quando existir domínio publicado e a tarde de
+ensaios acontecer** — não antes, e o checklist diz isso por escrito.

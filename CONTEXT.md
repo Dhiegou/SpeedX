@@ -12,7 +12,7 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 **As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
 
-Resta **T21** — a auditoria e o ensaio no mundo físico —, mais a metade de T18 e T19 que não é código.
+**Não resta tarefa por começar.** O que resta é o que nenhuma delas podia resolver de dentro do repositório: **um domínio publicado, três contas contratadas e uma tarde de ensaios**. A T21 auditou o que é código e deixou tudo isso escrito em `docs/checklist-pre-evento.md`, com dono e consequência por item — e o checklist **não tem assinatura**, de propósito: a rodada não autoriza o evento.
 
 **A T20 fechou o que é código.** `npm run fichas` gera a ficha numerada, o termo integral e a folha de tempos, todos lendo o mesmo `TERMO_VIGENTE` que a tela; um teste compara papel e esquema nos dois sentidos (D-86). O que falta é imprimir e ensaiar, e as duas coisas são do dia.
 
@@ -33,6 +33,24 @@ Resta **T21** — a auditoria e o ensaio no mundo físico —, mais a metade de 
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-28 — Sessão 25: execução da T21
+
+**Pedido:** fazer a T21.
+
+**Entregue:** `npm run auditar`, `tests/auditoria.test.ts` e `docs/checklist-pre-evento.md`. **Parte 1 fechada com evidência item a item**; Partes 2 e 3 levantadas, cada pendência com dono e consequência.
+
+**A auditoria virou comando.** A task pedia leitura de código, e leitura confere o código de hoje contra a massa de hoje. `npm run auditar` confere o corpo que sai de verdade contra o banco de verdade, aceita um alvo (`-- https://<dominio>`) e pode ser repetido na véspera e no meio do evento — quando o dado deixa de ser sintético.
+
+**A primeira verificação de RNF-09 era inútil, e o próprio número denunciou** (D-89). Perguntar "o nome completo do menor aparece no corpo?" exige a ressalva "a não ser que exista adulto homônimo". Contra a massa real a ressalva dispensou **151 de 151** menores — vinte nomes e vinte sobrenomes em duas mil pessoas colidem sempre —, e o script dizia "ok" sem ter verificado nada. Virou verificação por **contagem**, e confirmei que morde: com a abreviação desligada de propósito, ele acusa `"Pedro R.": esperadas 2, publicadas 0` e sai com código 1.
+
+**O achado da auditoria foi no documento, não no código** (D-88). O SDD §BC-05 dizia que a Custódia é o único contexto autorizado a reunir dados pessoais com resultados; ao pé da letra, a busca do painel violava isso — e precisa violar, porque é assim que o Operador distingue homônimos. A invariante real é mais estreita: fora da Custódia ninguém lê e-mail, idade nem Responsável, e o telefone vira quatro dígitos **no banco**. Corrigi a frase e fixei a invariante em teste.
+
+**Evidência que só o tráfego real dava:** o log do teste de carga de T18 tem 141.463 linhas geradas por 200 cadastros com e-mail e telefone verdadeiros. Zero e-mails, zero sequências de dez dígitos, zero ocorrências do prefixo de teste.
+
+**O que a T21 não fecha, e não fecharia de jeito nenhum hoje:** domínio, contas publicadas e uma tarde de ensaios. O checklist diz isso por escrito e **não tem assinatura**, de propósito.
+
+---
 
 ### 2026-08-28 — Sessão 24: execução da T20
 
@@ -1443,6 +1461,37 @@ A regra de T02 era `ssl: NODE_ENV === 'production' ? { rejectUnauthorized: true 
 A ficha carrega os **aceites palavra por palavra** e a versão do termo. O texto integral vai numa peça separada, em cópias no balcão — e não impresso no verso de cada ficha, o que custaria 400 folhas para resolver menos: o que a pessoa assina são os aceites.
 
 **A alternativa que parecia óbvia e é errada** era imprimir na ficha o endereço da rota `/termo`, como a tela faz com o link. A ficha de papel **só existe quando não há internet**; mandar quem vai assinar consultar uma URL é oferecer exatamente o que acabou de cair. Por isso o termo impresso é item do checklist de contingência, com quantidade, e não uma linha de rodapé.
+
+---
+
+### D-88 — A auditoria corrigiu o SDD, e não o código
+
+**Descoberto em 2026-08-28**, na Parte 1 da T21.
+
+O SDD §BC-05 afirmava que a Custódia é o **único** contexto autorizado a "reunir dados pessoais de Inscrição com resultados de Cronometragem no mesmo documento". Auditando o cruzamento, encontrei que a busca do painel (`cronometragem/consultas.ts`) devolve nome, sobrenome e os quatro últimos dígitos do telefone **junto** com as Tentativas da pessoa, tempo incluído.
+
+**A tentação era tratar isso como violação e mexer no código.** Seria errado: é exatamente assim que o Operador distingue dois homônimos antes de lançar um tempo (RF-15, RF-16). Sem nome e sem os quatro dígitos, a fila do dia para.
+
+**O que estava errado era a frase.** A invariante que de fato vale, e que o código sempre respeitou, é mais estreita: fora da Custódia ninguém lê **e-mail, idade ou dados de Responsável**, e o telefone é reduzido a quatro dígitos **no banco** (`right(telefone, 4)`), de modo que o número inteiro não chega a trafegar até a aplicação. A Custódia é única por reunir o **registro pessoal completo** com resultados — não por reunir "dados pessoais", que é vago demais para ser verificável.
+
+Corrigi §BC-05 com a distinção, deixei a correção datada dentro do próprio SDD, e fixei a invariante em `tests/auditoria.test.ts`. **Uma invariante que não dá para verificar não é invariante; é intenção.**
+
+---
+
+### D-89 — Uma verificação que não pode falhar não está verificando
+
+**Aprendido em 2026-08-28**, escrevendo a auditoria de RNF-09.
+
+A primeira versão perguntava: "o nome completo de algum menor aparece no corpo público?". Isso obriga uma ressalva, porque um adulto homônimo publica o mesmo nome legitimamente — então virou "a não ser que exista adulto com o mesmo nome".
+
+Contra a massa real, a ressalva dispensou **151 de 151** menores. Vinte nomes e vinte sobrenomes em duas mil pessoas colidem sempre, e o script passou a responder "ok" sem ter verificado nada. **O que denunciou foi o próprio relatório**, porque ele imprimia o número de dispensas: "151 têm adulto homônimo, conferido" ao lado de "151 menores" é uma frase que se lê duas vezes.
+
+A correção foi trocar presença por **contagem**: para cada nome, as ocorrências publicadas têm de bater com as Tentativas Válidas de quem tem aquele nome, adultos e menores separados. Um sobrenome que escape produz uma ocorrência a mais, e nenhum homônimo esconde isso.
+
+**As duas lições, e a segunda é a que fica:**
+
+1. Uma exceção larga demais transforma verificação em cerimônia.
+2. **Guarda que ninguém viu falhar é guarda que ninguém sabe se funciona.** Desliguei a abreviação de propósito, republiquei e rodei: `"Pedro R.": esperadas 2, publicadas 0`, código de saída 1. Sem esse passo, o "ok" da versão quebrada e o "ok" da versão certa são a mesma linha de texto.
 
 ---
 

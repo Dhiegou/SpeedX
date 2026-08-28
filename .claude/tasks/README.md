@@ -47,7 +47,9 @@ Depois de T02, três trilhas correm em paralelo: Inscrição (T03–T07), Cronom
 
 **T20 está concluída, menos o ensaio**: `npm run fichas` gera a ficha numerada, o termo integral e a folha de tempos, todos lendo o mesmo termo que a tela, e um teste compara papel e esquema nos dois sentidos. Imprimir e ensaiar são do dia.
 
-Resta **T21**, mais a metade externa de T18 e T19.
+**T21 auditou o que é código** (`docs/checklist-pre-evento.md`): Parte 1 fechada com evidência, Partes 2 e 3 levantadas com dono e consequência. Ela encontrou uma frase do SDD mais forte que o código e a corrigiu (D-88).
+
+**Nenhuma tarefa por começar.** O que resta é o que nenhuma delas resolvia de dentro do repositório: um domínio publicado, três contas contratadas e uma tarde de ensaios.
 
 ---
 
@@ -75,7 +77,7 @@ Resta **T21**, mais a metade externa de T18 e T19.
 | [T18](task-18-testes-de-carga.md) ◐ | Testes de carga e desempenho | BC-03 | RNF-01 a RNF-04 |
 | [T19](task-19-deploy-e-infraestrutura.md) ◐ | Deploy e infraestrutura | — | RNF-01, RNF-04, RNF-05, RF-23, RF-31 |
 | [T20](task-20-contingencia-offline.md) ✅ | Contingência offline | — | RNF-06 |
-| [T21](task-21-auditoria-e-checklist.md) | Auditoria de privacidade e checklist pré-evento | todos | RNF-08 a RNF-10, SDD §6 |
+| [T21](task-21-auditoria-e-checklist.md) ◐ | Auditoria de privacidade e checklist pré-evento | todos | RNF-08 a RNF-10, SDD §6 |
 | [T22](task-22-renomear-pitch-para-cockpit.md) ✅ | Renomear `pitch` para `cockpit` no código e no banco | §3 | — (dívida de linguagem) |
 
 ---

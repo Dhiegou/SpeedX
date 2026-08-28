@@ -150,6 +150,7 @@ docs/
   relatorio-carga.md  # números medidos: leitura, escrita, cadastro, índices (T18)
   contingencia.md     # o que fazer quando a internet cai; para imprimir (T20)
   contingencia/       # ficha, termo e folha de tempos, prontos para impressão (T20)
+  checklist-pre-evento.md # a auditoria de privacidade e o que falta antes do dia (T21)
                       # contingência, relatórios e checklist chegam com suas tasks
 .claude/
   tasks/              # plano de execução (21 tarefas + índice)
@@ -390,7 +391,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Qualidade e operação | T18 | **Parcial** — 200 req/s com p95 de 7,9 ms e zero 5xx, documento de 14 KB gzip, propagação de ~20 s. Achou o que procurava: o limite de taxa, como configurado, recusaria a fila do evento. Faltam borda, 3G real e o ensaio longo |
 | Qualidade e operação | T19 | **Parcial** — código, configuração e os dois documentos de operação prontos, com Vercel, Neon e UptimeRobot escolhidos. Faltam as contas criadas e um domínio: quatro dos sete critérios só se verificam contra um endereço publicado |
 | Qualidade e operação | T20 | **Concluído, menos o ensaio** — ficha de papel, termo impresso e folha de tempos gerados do mesmo termo que a tela, com teste comparando papel e esquema nos dois sentidos. Falta imprimir e ensaiar com o time |
-| Qualidade e operação | T21 | Não iniciado |
+| Qualidade e operação | T21 | **Parcial** — auditoria de privacidade fechada com evidência (`npm run auditar` contra a base de 2000: corpo público com três campos, nove rotas em 401, 261 tentativas de menores abreviadas). Partes 2 e 3 levantadas com dono. Fecha quando houver domínio e a tarde de ensaios |
 
 **Pendências que bloqueiam:** uma, e ela tem prazo. **O domínio não existe** — sem endereço publicado, quatro critérios de T19 não têm contra o que rodar e o QR de T07 continua provisório; material impresso precisa de folga antes de 24/10, e uma URL de comprimento diferente muda o número de módulos do código. Resolvidas em 2026-08-27: o Postgres é o **Neon em São Paulo** (D-79) e o monitor é o **UptimeRobot gratuito** (D-82). Resolvidas em 2026-08-25: o termo oficial é **Cockpit** — nem "Pitch" nem "Pista", porque o evento é de simulador (D-75) —, o evento é em **24/10/2026** e a aplicação vai para a **Vercel gratuita**. Definidos em 2026-08-19: retenção de **no máximo 10 dias após o evento**, com o site saindo do ar ao fim do prazo; pedido de exclusão por **e-mail** ou presencialmente durante o evento; e repasse do telefone à FIAP e à escolinha do Lélio Assumpção mediante **autorização opcional**, em caixa separada do aceite do termo. Lista completa em [CONTEXT.md §5](CONTEXT.md).
 
