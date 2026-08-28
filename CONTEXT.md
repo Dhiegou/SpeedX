@@ -12,13 +12,15 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 **As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
 
-Restam T20 e T21 — contingência em papel e o ensaio no mundo físico —, mais **a metade de T18 e T19 que não é código**.
+Resta **T21** — a auditoria e o ensaio no mundo físico —, mais a metade de T18 e T19 que não é código.
+
+**A T20 fechou o que é código.** `npm run fichas` gera a ficha numerada, o termo integral e a folha de tempos, todos lendo o mesmo `TERMO_VIGENTE` que a tela; um teste compara papel e esquema nos dois sentidos (D-86). O que falta é imprimir e ensaiar, e as duas coisas são do dia.
 
 **A T18 mediu e achou o que procurava.** Leitura sustentada a 200 req/s com p95 de 7,9 ms e zero 5xx; documento público de 14 KB comprimidos; propagação de ~20 s com borda. E um reprovado: **o limite de taxa, como está configurado, recusaria a fila do evento** — 200 cadastros do mesmo IP viraram 30 aceitos e 170 recusados. A proposta de calibração está em `docs/relatorio-carga.md`; a decisão é de T21.
 
 **A T19 está parcial, e a divisão é limpa.** Tudo o que o repositório decide sozinho está decidido, testado e escrito: região da função colada à do banco, pool dimensionado contra o pooler e não contra o número (D-80), HSTS com prazo (D-81), a versão publicada saindo do commit, `docs/deploy.md` e `docs/plano-do-dia.md`. O que falta são sete verificações que exigem **um endereço publicado e três contas criadas** — HTTP/3 anunciado, `HIT` de borda, sincronia de relógio, restauração de backup. Estão no checklist de `docs/deploy.md` §8, cada uma com o comando ao lado.
 
-**Quatro requisitos continuam sem verificação automática**, cada um com justificativa escrita que um teste obriga a existir: RNF-04 (rede real), RNF-05 (o dia do evento), RNF-06 (T20) e RNF-15 (gente com cronômetro). **RNF-18 saiu dessa lista em T17** — 360 px é uma largura, e um navegador sabe ser 360 px.
+**Três requisitos continuam sem verificação automática**, cada um com justificativa escrita que um teste obriga a existir: RNF-04 (rede real), RNF-05 (o dia do evento) e RNF-15 (gente com cronômetro). **RNF-18 saiu dessa lista em T17** — 360 px é uma largura, e um navegador sabe ser 360 px. **RNF-06 saiu em T20**: a ficha de papel virou artefato gerado e comparado com o esquema por teste (D-86); o que sobrou de manual é o ensaio, que é item de T21.
 
 **2026-08-25 — o organizador respondeu três pendências, e uma delas mudou uma palavra do produto.**
 
@@ -31,6 +33,22 @@ Restam T20 e T21 — contingência em papel e o ensaio no mundo físico —, mai
 ---
 
 ## 2. Linha do tempo das sessões
+
+### 2026-08-28 — Sessão 24: execução da T20
+
+**Pedido:** conferir se a finalização anterior deixou algo pendente e seguir com a T20.
+
+**Entregue:** `npm run fichas`, que gera as três peças impressas em `docs/contingencia/` — ficha numerada, termo integral e folha de tempos —, mais `docs/contingencia.md` com o procedimento de uma página e `tests/contingencia.test.ts` com 14 casos. Quatro dos cinco critérios fechados; o ensaio com o time entra em T21.
+
+**A peça que T03 tinha preparado apareceu.** O termo é dado estruturado desde a T03 justamente porque o mesmo texto precisaria sair em três lugares: a rota `/termo`, o formulário e a ficha impressa (D-09). Quatro meses depois, a ficha lê `TERMO_VIGENTE` e não copia uma palavra. E o gerador recusa rodar sob rascunho, pela mesma função que barra o cadastro (D-18): duzentas fichas impressas com texto não aprovado parecem válidas e colhem assinatura que não vale.
+
+**O teste que importa compara papel e esquema nos dois sentidos** (D-86). O defeito que ele impede é lento: alguém acrescenta um campo ao cadastro em setembro, as fichas foram para a gráfica em agosto, e no dia a digitação recusa duzentas fichas. Ninguém pega isso em revisão — a ficha é um script e o cadastro é um Zod. Verifiquei que o teste morde: renomeando `email` na lista da ficha, dois casos falham nomeando o campo.
+
+**A sonda do esquema precisou de dois corpos.** Submeter `{}` não alcança o `superRefine`, e as exigências de Responsável — as de RNF-07 — não apareciam. A segunda sonda é um menor sem responsável.
+
+**RNF-06 saiu do registro de verificação manual, e não fui eu que decidi.** A suíte completa falhou no teste de rastreabilidade de T17: existe teste citando RNF-06, logo a justificativa manual tem de sair. É o mecanismo de D-71 funcionando sozinho, quatro tarefas depois de escrito. O que continua manual é o **ensaio**, e ele está no checklist de T21, não no registro de dispensas.
+
+---
 
 ### 2026-08-28 — Sessão 23: execução da T18
 
@@ -1399,6 +1417,32 @@ A regra de T02 era `ssl: NODE_ENV === 'production' ? { rejectUnauthorized: true 
 **O que decide é se existe rede a proteger.** Contra `localhost`, `127.0.0.1` ou `::1` o pacote não sai da máquina; contra qualquer outro host, TLS com certificado conferido. Uma `DATABASE_URL` de produção apontando para o Neon continua exigindo TLS, e **não existe variável de ambiente capaz de desligar** — a alternativa óbvia seria um `DB_SSL=false`, e uma variável que enfraquece a proteção é uma variável que um dia vaza para produção. URL que não se analisa também exige: a dúvida não relaxa a regra.
 
 `tests/deploy.test.ts` guarda os três casos, e mais um: que `ssl:` nunca volte a olhar para `NODE_ENV`.
+
+---
+
+### D-86 — O papel e a tela são comparados por teste, não por revisão
+
+**Decidido em 2026-08-28**, ao escrever a ficha de contingência de T20.
+
+**O defeito a impedir é de calendário, não de código.** Alguém acrescenta um campo ao cadastro em setembro; as fichas foram para a gráfica em agosto. No dia do evento, com o sistema fora do ar, duzentas pessoas preenchem um papel que não tem onde escrever o dado novo — e a digitação posterior, que passa pelo **mesmo** caso de uso e pelas mesmas validações (RNF-13), recusa cada uma delas. O prejuízo é duzentos cadastros perdidos, descobertos tarde demais para refazer.
+
+**Nenhuma revisão pega isso.** A ficha é um script de geração; o cadastro é um esquema Zod. São dois arquivos que ninguém lê lado a lado, e a divergência não quebra nada até o dia em que o papel é usado.
+
+`tests/contingencia.test.ts` compara os dois **nos dois sentidos**: todo campo que o esquema exige tem onde ser escrito, e a ficha não pede nada que o cadastro não saiba receber — porque campo a mais no papel é dado pessoal coletado sem finalidade, o oposto do que o termo promete.
+
+**A extração dos campos exigidos é uma sonda, não uma leitura de `.shape`.** `esquemaInscricao` é um esquema transformado, e o que interessa não é a forma declarada: é o que ele de fato recusa quando falta. Submeter `{}` e colher os caminhos das reclamações responde isso — mas só até certo ponto, e essa foi a lição: **o corpo vazio nunca alcança o `superRefine`**, então as exigências de Responsável, que são as de RNF-07 e as mais caras de descobrir tarde, não apareciam. Duas sondas, e a segunda é um menor de idade sem responsável nenhum.
+
+**Confirmei que o teste morde**, renomeando `email` na lista da ficha: dois casos falham nomeando o campo. Guarda que ninguém viu falhar é guarda que ninguém sabe se funciona.
+
+---
+
+### D-87 — O termo impresso é peça obrigatória, e não um endereço no rodapé
+
+**Decidido em 2026-08-28**, ao montar a ficha de papel.
+
+A ficha carrega os **aceites palavra por palavra** e a versão do termo. O texto integral vai numa peça separada, em cópias no balcão — e não impresso no verso de cada ficha, o que custaria 400 folhas para resolver menos: o que a pessoa assina são os aceites.
+
+**A alternativa que parecia óbvia e é errada** era imprimir na ficha o endereço da rota `/termo`, como a tela faz com o link. A ficha de papel **só existe quando não há internet**; mandar quem vai assinar consultar uma URL é oferecer exatamente o que acabou de cair. Por isso o termo impresso é item do checklist de contingência, com quantidade, e não uma linha de rodapé.
 
 ---
 

@@ -46,10 +46,6 @@ const VERIFICACAO_MANUAL: Readonly<Record<string, string>> = {
     'têm teste (observabilidade.test.ts), mas disponibilidade durante a janela do evento ' +
     'só se observa no evento, e o monitor externo depende de contratar serviço (PE-05).',
 
-  'RNF-06':
-    'Procedimento de contingência offline com material impresso no local. É o escopo ' +
-    'inteiro de T20, e a verificação é o ensaio com papel — não há o que executar aqui.',
-
   'RNF-15':
     'A verificação do PRD é "teste cronometrado com cinco pessoas reais em cada perfil". ' +
     'O tempo de preenchimento é medido em produção pelo token assinado e sai no relatório ' +

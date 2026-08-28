@@ -24,7 +24,7 @@ npm run test:e2e      # ponta a ponta (precisa de Postgres de pé)
 npm run test:e2e:ui   # o mesmo, com o inspetor do Playwright
 ```
 
-**Medido:** 613 testes de unidade e integração em ~100 s. O critério de T17 é
+**Medido:** 627 testes de unidade e integração em ~100 s. O critério de T17 é
 dez minutos; a folga existe para que ninguém aprenda a pular a suíte.
 
 ---
@@ -152,22 +152,25 @@ backup — não é verificável daqui e mora no checklist de
 
 ## 5. O que não se verifica por código
 
-Cinco requisitos, todos no checklist de T21. As justificativas por extenso estão
+Três requisitos, todos no checklist de T21. As justificativas por extenso estão
 em `tests/rastreabilidade.test.ts`, onde o teste as obriga a existir.
 
 | Requisito | Por que é manual                                                                                                                                             | Onde fecha |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
 | RNF-04    | Carga em 3G com limitação de rede real. A conta de T13 mostrou que o critério não fecha nem com página vazia; precisa ser reescrito contra um perfil nomeado | T18, T21   |
 | RNF-05    | "Monitoramento contínuo no dia" — disponibilidade durante a janela só se observa no evento; o monitor externo depende de PE-05                               | T19, T21   |
-| RNF-06    | Contingência offline com material impresso: é o escopo de T20, e a verificação é o ensaio com papel                                                          | T20, T21   |
 | RNF-15    | Cronometrar cinco pessoas em cada perfil                                                                                                                     | T21        |
 
-**Dois saíram desta lista em T17**, e valem como exemplo do que a automação
-alcança:
+**Três saíram desta lista**, e valem como exemplo do que a automação alcança:
 
 - **RNF-18** era "depende de aparelho". Não dependia: 360 px é uma largura, e um
   navegador sabe ser 360 px. O que depende de aparelho é o toque, a rede e a
   leitura sob sol — esses continuam em T21.
+- **RNF-06 saiu em T20.** Parecia inteiramente manual — "material impresso e
+  ensaio com papel". A metade que não era: a ficha virou artefato **gerado** do
+  mesmo termo que a tela, e `tests/contingencia.test.ts` compara os campos do
+  papel com os que o esquema de cadastro exige, nos dois sentidos (D-86). O que
+  sobrou de manual é o ensaio, que é item de T21 e não dispensa de teste.
 - **RF-01 e RF-09** estavam prestes a entrar como manuais. A parte automatizável
   de cada um já tinha teste (`entrada.test.ts`, `qr.test.ts`,
   `consentimento.test.ts`); o resíduo é escanear com três leitores e a

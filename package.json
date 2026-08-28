@@ -19,6 +19,7 @@
     "db:seed": "tsx src/db/seed-cli.ts",
     "db:studio": "drizzle-kit studio",
     "qr": "tsx scripts/gerar-qr.ts",
+    "fichas": "tsx scripts/gerar-fichas.ts",
     "orcamento": "node scripts/orcamento.mjs",
     "criar-operador": "tsx scripts/criar-operador.ts",
     "expurgar": "tsx scripts/expurgar.ts",

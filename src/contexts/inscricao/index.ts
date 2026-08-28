@@ -36,6 +36,18 @@ export type { ExameDoToken, VereditoToken } from './tokenFormulario'
 export { ESCOPO_CADASTRO } from './limiteDeTaxa'
 
 /**
+ * Contingência em papel (T20). A ficha impressa coleta os mesmos campos que a
+ * tela porque a digitação posterior passa pelo mesmo caso de uso (RNF-13).
+ */
+export {
+  CAMPO_COCKPITS,
+  CAMPOS_DO_PARTICIPANTE,
+  CAMPOS_DO_RESPONSAVEL,
+  CHAVES_DA_FICHA,
+} from './ficha'
+export type { CampoDaFicha } from './ficha'
+
+/**
  * Termo de consentimento (T03). A base legal do contexto é artefato versionado,
  * não texto de rodapé: ver `./consentimento`.
  */

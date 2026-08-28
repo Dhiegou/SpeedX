@@ -8,3 +8,8 @@ CONTEXT.md
 README.md
 .claude/tasks
 .claude/skills
+
+# Material impresso gerado por `npm run fichas` (T20). Formatar aqui só
+# garantiria que a próxima geração deixasse a árvore suja de novo — o formato
+# de saída é decisão de `scripts/gerar-fichas.ts`, não do Prettier.
+docs/contingencia/*.html
