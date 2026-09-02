@@ -7,6 +7,7 @@ import {
   identificarOrigem,
 } from '@/contexts/inscricao/limiteDeTaxa'
 import { emitirTokenFormulario } from '@/contexts/inscricao/tokenFormulario'
+import { env } from '@/shared/env'
 import * as schema from '@/db/schema'
 import { criarBancoDeTeste, type BancoDeTeste } from './apoio/bancoDeTeste'
 
@@ -215,10 +216,18 @@ describe('POST /api/inscricao — recusas', () => {
 
   it('RNF-12 — 429 com Retry-After quando a origem excede o limite', async () => {
     const identificador = identificarOrigem(ORIGEM)
+    if (identificador === null) throw new Error('esperava identificador de origem')
 
-    for (let i = 0; i < 30; i += 1) {
-      await consumirLimite(banco.db, ESCOPO_CADASTRO, identificador)
-    }
+    // A janela é preenchida a partir do valor **configurado**, e não de um
+    // número escrito à mão. T23 subiu o padrão de 30 para 800, e um teste que
+    // soubesse "30" de cor teria passado a medir outra coisa sem avisar —
+    // gravando 30 marcas numa janela de 800 e concluindo que o limite não pega.
+    // Em lote porque encher a janela uma linha por vez custa segundos.
+    const limite = env().RATE_LIMIT_CADASTROS_POR_JANELA
+
+    await banco.db
+      .insert(schema.limiteTaxa)
+      .values(Array.from({ length: limite }, () => ({ escopo: ESCOPO_CADASTRO, identificador })))
 
     const resposta = await POST(requisicao(corpo()))
 

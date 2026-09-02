@@ -93,3 +93,4 @@ desktop.ini
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.neon

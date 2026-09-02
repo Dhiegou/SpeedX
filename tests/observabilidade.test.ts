@@ -529,6 +529,71 @@ describe('os alertas', () => {
     expect(avaliarAlertas(registros).map((a) => a.nome)).not.toContain('cadastro_silencioso')
   })
 
+  it('T23 — dispara na primeira recusa do limite de taxa no cadastro', () => {
+    // O alerta que fecha a calibração de T23. Com os valores calibrados,
+    // participante legítimo não deveria alcançar o limite nenhuma vez.
+    const alertas = avaliarAlertas([
+      reg({
+        evento: 'inscricao.cadastro',
+        resultado: 'limitada',
+        motivo: 'limite_ip',
+        status: 429,
+      }),
+    ])
+
+    expect(alertas.map((a) => a.nome)).toContain('cadastro_limitado')
+    expect(alertas.find((a) => a.nome === 'cadastro_limitado')?.gravidade).toBe('critico')
+  })
+
+  it('T23 — o detalhe diz o que fazer, e não só que aconteceu', () => {
+    const alertas = avaliarAlertas([
+      reg({
+        evento: 'inscricao.cadastro',
+        resultado: 'limitada',
+        motivo: 'limite_ip',
+        status: 429,
+      }),
+    ])
+
+    // Quem lê isso às onze da manhã do evento precisa sair sabendo qual é a
+    // alavanca, não só que houve um 429.
+    const detalhe = alertas.find((a) => a.nome === 'cadastro_limitado')?.detalhe ?? ''
+
+    expect(detalhe).toMatch(/T23/)
+    expect(detalhe).toMatch(/relatorio-carga/)
+  })
+
+  it('T23 — a recusa por anti-automação não conta como erro de calibração', () => {
+    // A outra defesa de RNF-12: tempo mínimo de formulário, que não depende de
+    // IP. Confundir as duas faria o alerta pedir para subir um limite que não
+    // foi o que recusou.
+    const alertas = avaliarAlertas([
+      reg({
+        evento: 'inscricao.cadastro',
+        resultado: 'limitada',
+        motivo: 'anti_automacao',
+        status: 429,
+      }),
+    ])
+
+    expect(alertas.map((a) => a.nome)).not.toContain('cadastro_limitado')
+  })
+
+  it('T23 — o limite do login do painel não dispara o alerta do cadastro', () => {
+    // Faixas próprias, decisão própria: afrouxar o cadastro não afrouxa a senha
+    // do Operador (D-27), e um 429 de senha não é sinal de fila recusada.
+    const alertas = avaliarAlertas([
+      reg({
+        evento: 'identidade.login',
+        resultado: 'limitada',
+        motivo: 'limite_ip',
+        status: 429,
+      }),
+    ])
+
+    expect(alertas.map((a) => a.nome)).not.toContain('cadastro_limitado')
+  })
+
   it('um dia tranquilo não produz alerta nenhum', () => {
     const registros = Array.from({ length: 50 }, (_, i) =>
       reg({

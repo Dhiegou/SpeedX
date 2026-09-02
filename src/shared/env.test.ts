@@ -13,9 +13,10 @@ describe('validarAmbiente', () => {
     const env = validarAmbiente(valido)
 
     expect(env.DATABASE_URL).toBe(valido.DATABASE_URL)
-    expect(env.RATE_LIMIT_CADASTROS_POR_JANELA).toBe(30)
+    // Calibrados em T23; o piso e o porquê estão em tests/deploy.test.ts.
+    expect(env.RATE_LIMIT_CADASTROS_POR_JANELA).toBe(800)
     expect(env.RATE_LIMIT_JANELA_SEGUNDOS).toBe(600)
-    expect(env.RATE_LIMIT_CADASTROS_POR_HORA).toBe(100)
+    expect(env.RATE_LIMIT_CADASTROS_POR_HORA).toBe(2400)
     expect(env.FORMULARIO_SEGUNDOS_MINIMOS).toBe(3)
     expect(env.DB_POOL_MAX).toBe(5)
     expect(env.APP_VERSION).toBe('desconhecida')
@@ -71,6 +72,22 @@ describe('validarAmbiente', () => {
 
   it('rejeita SESSION_SECRET curto demais para assinar sessão', () => {
     expect(() => validarAmbiente({ ...valido, SESSION_SECRET: 'curto' })).toThrow(/SESSION_SECRET/)
+  })
+
+  it('D-80 — a conexão direta é opcional, e validada como URL PostgreSQL', () => {
+    // Opcional porque contra um Postgres local ela não existe nem faz falta:
+    // não há pooler no laço local, e as duas conexões seriam a mesma string.
+    expect(validarAmbiente(valido).DATABASE_URL_UNPOOLED).toBeUndefined()
+
+    const direta = 'postgresql://u:s@ep-abc-123.sa-east-1.aws.neon.tech/speedx'
+    expect(
+      validarAmbiente({ ...valido, DATABASE_URL_UNPOOLED: direta }).DATABASE_URL_UNPOOLED,
+    ).toBe(direta)
+
+    // Preenchida com lixo, falha no boot em vez de falhar na migração.
+    expect(() => validarAmbiente({ ...valido, DATABASE_URL_UNPOOLED: 'mysql://x/y' })).toThrow(
+      /DATABASE_URL_UNPOOLED/,
+    )
   })
 
   it('rejeita DATABASE_URL que não seja PostgreSQL', () => {

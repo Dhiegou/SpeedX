@@ -90,9 +90,13 @@ com `429`** — trinta é exatamente `RATE_LIMIT_CADASTROS_POR_JANELA`. O limite
 funcionou como configurado; a configuração é que está errada para um evento onde
 dezenas de celulares saem do mesmo NAT.
 
-O relatório traz a conta e a proposta (300 por janela, 1200 por hora). **A
-decisão continua sendo de T21**, como o plano previa — o que mudou é que agora
-existe número no lugar do palpite (D-27).
+O relatório traz a conta e a proposta (300 por janela, 1200 por hora), e o que
+T18 entregou foi o número no lugar do palpite (D-27).
+
+**Decidido em T23 (2026-09-01, D-90): 800 por janela e 2400 por hora**, acima da
+proposta deste relatório. A premissa de três a cinco IPs de saída não se
+confirmou — não há garantia de Wi-Fi no local, e sem ele o CGNAT da operadora
+concentra tudo do mesmo jeito. Ver `docs/relatorio-carga.md` §4.
 
 ### D-56 se resolve, e a resposta é remover
 
@@ -135,7 +139,8 @@ dispensa, qualquer host de rede exige, e não há variável que desligue.
 - [ ] Página de cadastro interativa em ≤ 3 s em 3G simulado (RNF-04). —
       **não medido.** Precisa de limitação de rede em aparelho; T21.
 - [x] Pico de 100 cadastros do mesmo IP não bloqueia legítimos. — **reprovou**,
-      e é o achado principal. Proposta de calibração no relatório; decisão em T21.
+      e é o achado principal. Proposta de calibração no relatório; **calibrado em
+      T23** (800/2400, D-90), com o cenário reproduzido e passando.
 - [x] Relatório publicado com números. — `docs/relatorio-carga.md`.
 
 ### Acrescentado por T12
@@ -155,7 +160,9 @@ dispensa, qualquer host de rede exige, e não há variável que desligue.
 - [ ] **Trinta minutos contínuos de escrita.** Medidos cinco; o ensaio longo é
       o de T21.
 - [ ] **A migração que remove os três índices.**
-- [ ] **Decidir a calibração do limite de taxa** (T21, D-27).
+- [x] ~~**Decidir a calibração do limite de taxa**~~ — **feito em T23**
+      (2026-09-01, D-90): 800 por janela, 2400 por hora, padrões trocados no
+      código e protegidos por teste de piso.
 
 ---
 

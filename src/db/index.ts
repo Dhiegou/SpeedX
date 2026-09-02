@@ -44,6 +44,43 @@ export function exigeTls(urlDoBanco: string): boolean {
   }
 }
 
+/** Host do pooler do provedor. No Neon é o mesmo endpoint com o sufixo. */
+const MARCA_DO_POOLER = '-pooler.'
+
+/**
+ * Verdadeiro se a URL aponta para o pooler, e não para o Postgres.
+ *
+ * Serve para o comando de migração **avisar** em vez de descobrir tarde: uma
+ * migração que precise de bloqueio de sessão não falha no primeiro comando,
+ * falha no que o PgBouncer não repassa — com o que veio antes já aplicado.
+ */
+export function pareceComPooler(urlDoBanco: string): boolean {
+  try {
+    return new URL(urlDoBanco).hostname.includes(MARCA_DO_POOLER)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * A conexão que as migrações usam: a direta, quando ela existe (D-80).
+ *
+ * Servir requisição e migrar querem coisas opostas. A aplicação quer o pooler,
+ * porque é ele que multiplexa as funções efêmeras contra um banco de cem
+ * conexões. A migração quer o Postgres, porque o pooler em modo transação não
+ * repassa `CREATE INDEX CONCURRENTLY` nem bloqueio de sessão.
+ *
+ * Sem `DATABASE_URL_UNPOOLED` a resposta é `DATABASE_URL`, e é a resposta
+ * certa: contra um Postgres local — desenvolvimento, teste, o banco de carga de
+ * T18 — não há pooler nenhum e as duas são a mesma string.
+ */
+export function urlDeMigracao(cfg: {
+  DATABASE_URL: string
+  DATABASE_URL_UNPOOLED?: string
+}): string {
+  return cfg.DATABASE_URL_UNPOOLED ?? cfg.DATABASE_URL
+}
+
 function criarPool(): Pool {
   const { DATABASE_URL, DB_POOL_MAX } = env()
 

@@ -323,6 +323,11 @@ export type LimiaresDeAlerta = {
   readonly taxaDe5xx: number
   /** Silêncio no cadastro que indica falha silenciosa, em minutos. */
   readonly silencioDeCadastroMinutos: number
+  /**
+   * Quantos cadastros o limite de taxa pode recusar antes de acordar alguém
+   * (T23 §5). Zero: a primeira recusa já alerta.
+   */
+  readonly cadastrosRecusadosPorLimite: number
 }
 
 export const LIMIARES_PADRAO: LimiaresDeAlerta = {
@@ -330,12 +335,13 @@ export const LIMIARES_PADRAO: LimiaresDeAlerta = {
   minutosSeguidosAcimaDoP95: 2,
   taxaDe5xx: 0.01,
   silencioDeCadastroMinutos: 10,
+  cadastrosRecusadosPorLimite: 0,
 }
 
 const minutoDe = (instante: string): number => Math.floor(Date.parse(instante) / 60_000)
 
 /**
- * Os quatro alertas de T16 §6, avaliados sobre uma janela de log.
+ * Os alertas de T16 §6, mais o de T23 §5, avaliados sobre uma janela de log.
  *
  * **Avaliar aqui, e não só no provedor, é o que torna o alerta testável.** Um
  * limiar configurado no painel de um serviço externo é uma afirmação que
@@ -444,6 +450,39 @@ export function avaliarAlertas(
         `a partir de ${new Date(cadastros[i - 1] ?? 0).toISOString()}.`,
     })
     break
+  }
+
+  // 5. Cadastro recusado pelo limite de taxa (T23 §5).
+  //
+  // **Este é o alerta que fecha a calibração.** T18 mediu o limite recusando
+  // 170 de 200 cadastros legítimos do mesmo IP, e T23 subiu os padrões para que
+  // isso não aconteça com a fila do evento. Se mesmo assim um 429 `limite_ip`
+  // aparecer no dia, a premissa de chegada errou — e é um sinal que chega tarde
+  // demais se só existir como contagem num relatório que alguém precisa lembrar
+  // de rodar.
+  //
+  // O limiar é zero de propósito. Com os valores calibrados, participante
+  // legítimo não deveria alcançar o limite nenhuma vez; uma recusa já significa
+  // ou que o número está baixo, ou que alguém está automatizando. Os dois casos
+  // pedem uma pessoa olhando, e a alavanca `RATE_LIMIT_ATIVO=false` só serve a
+  // quem soube a tempo de puxá-la.
+  //
+  // Só `limite_ip` conta. A recusa por `anti_automacao` é a outra defesa, que
+  // não depende de IP e não fala sobre esta calibração.
+  const recusadosPorLimite = registros.filter(
+    (r) => r.evento === 'inscricao.cadastro' && r.motivo === 'limite_ip',
+  ).length
+
+  if (recusadosPorLimite > limiares.cadastrosRecusadosPorLimite) {
+    alertas.push({
+      nome: 'cadastro_limitado',
+      gravidade: 'critico',
+      detalhe:
+        `${String(recusadosPorLimite)} cadastro(s) recusado(s) com 429 pelo limite de ` +
+        `taxa por IP. Com os valores calibrados em T23 isso não deveria acontecer ` +
+        `com participante legítimo: ou a premissa de chegada errou e o limite ` +
+        `precisa subir, ou há automação. Ver docs/relatorio-carga.md §4 (RNF-12, RNF-15).`,
+    })
   }
 
   return alertas

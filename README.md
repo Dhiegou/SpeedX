@@ -190,9 +190,9 @@ A aplicação recusa subir se a configuração estiver incompleta, listando cada
 | `SESSION_SECRET` | sim | Assinatura do cookie de sessão do Operador; mínimo 32 caracteres |
 | `APP_URL` | sim | URL pública — é o destino codificado no QR code |
 | `NODE_ENV` | não | `development` \| `test` \| `production` |
-| `RATE_LIMIT_CADASTROS_POR_JANELA` | não | Cadastros concluídos por IP na janela curta (padrão 30) |
+| `RATE_LIMIT_CADASTROS_POR_JANELA` | não | Cadastros concluídos por IP na janela curta (padrão 800, calibrado em T23 — D-90) |
 | `RATE_LIMIT_JANELA_SEGUNDOS` | não | Duração da janela curta (padrão 600) |
-| `RATE_LIMIT_CADASTROS_POR_HORA` | não | Teto por IP em uma hora (padrão 100) |
+| `RATE_LIMIT_CADASTROS_POR_HORA` | não | Teto por IP em uma hora (padrão 2400, calibrado em T23 — D-90) |
 | `RATE_LIMIT_ATIVO` | não | `false` desliga o limite — alavanca de emergência do dia do evento |
 | `FORMULARIO_SEGUNDOS_MINIMOS` | não | Tempo mínimo entre carregar e enviar o formulário (padrão 3) |
 | `SESSAO_HORAS` | não | Validade da sessão do Operador sem uso (padrão 16) |
@@ -283,7 +283,7 @@ Aceita `application/json` e exige o cabeçalho `Idempotency-Key` com um UUID ger
 
 Toda resposta sai com `Cache-Control: no-store`. Toda validação de interface é reaplicada aqui: um envio forjado por `curl` com idade 12 é recusado do mesmo jeito (RNF-13).
 
-O limite de taxa conta **cadastro concluído**, não requisição — errar a validação cinco vezes não gasta cota. Ele depende de a borda da hospedagem sobrescrever `X-Forwarded-For`; sem endereço de origem não há limite, de propósito, porque um balde único para "origem desconhecida" travaria o evento. `RATE_LIMIT_ATIVO=false` desliga tudo, para o caso de o limite recusar gente de verdade no dia.
+O limite de taxa conta **cadastro concluído**, não requisição — errar a validação cinco vezes não gasta cota. Os padrões foram calibrados em T23 sobre a medição de carga de T18, que mostrou os valores originais recusando 170 de 200 cadastros legítimos do mesmo IP (D-90); `tests/deploy.test.ts` recusa qualquer padrão abaixo do piso decidido. Ele depende de a borda da hospedagem sobrescrever `X-Forwarded-For`; sem endereço de origem não há limite, de propósito, porque um balde único para "origem desconhecida" travaria o evento. `RATE_LIMIT_ATIVO=false` desliga tudo, para o caso de o limite recusar gente de verdade no dia.
 
 ---
 
@@ -389,7 +389,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); o procedimento de tirar o site do ar está escrito em `docs/deploy.md` §6 |
 | Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. O monitor externo foi escolhido em T19 (UptimeRobot); falta configurá-lo, o que depende do domínio |
 | Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
-| Qualidade e operação | T18 | **Parcial** — 200 req/s com p95 de 7,9 ms e zero 5xx, documento de 14 KB gzip, propagação de ~20 s. Achou o que procurava: o limite de taxa, como configurado, recusaria a fila do evento. Faltam borda, 3G real e o ensaio longo |
+| Qualidade e operação | T18 | **Parcial** — 200 req/s com p95 de 7,9 ms e zero 5xx, documento de 14 KB gzip, propagação de ~20 s. Achou o que procurava: o limite de taxa, como configurado, recusaria a fila do evento — **calibrado em T23**. Faltam borda, 3G real e o ensaio longo |
 | Qualidade e operação | T19 | **Parcial** — código, configuração e os dois documentos de operação prontos, com Vercel, Neon e UptimeRobot escolhidos. Faltam as contas criadas e um domínio: quatro dos sete critérios só se verificam contra um endereço publicado |
 | Qualidade e operação | T20 | **Concluído, menos o ensaio** — ficha de papel, termo impresso e folha de tempos gerados do mesmo termo que a tela, com teste comparando papel e esquema nos dois sentidos. Falta imprimir e ensaiar com o time |
 | Qualidade e operação | T21 | **Parcial** — auditoria de privacidade fechada com evidência (`npm run auditar` contra a base de 2000: corpo público com três campos, nove rotas em 401, 261 tentativas de menores abreviadas). Partes 2 e 3 levantadas com dono. Fecha quando houver domínio e a tarde de ensaios |

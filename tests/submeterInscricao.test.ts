@@ -9,6 +9,7 @@ import {
 import { submeterInscricao } from '@/contexts/inscricao/submeterInscricao'
 import { emitirTokenFormulario } from '@/contexts/inscricao/tokenFormulario'
 import * as schema from '@/db/schema'
+import { env } from '@/shared/env'
 import { criarBancoDeTeste, type BancoDeTeste } from './apoio/bancoDeTeste'
 
 /**
@@ -261,25 +262,35 @@ describe('RNF-12 — limite de taxa por origem', () => {
   /** Preenche a janela como se a origem já tivesse concluído `quantos` cadastros. */
   async function ocupar(quantos: number, origem = ORIGEM): Promise<void> {
     const identificador = identificarOrigem(origem)
+    if (identificador === null) throw new Error('esperava identificador de origem')
+    if (quantos === 0) return
 
-    for (let i = 0; i < quantos; i += 1) {
-      await consumirLimite(
-        banco.db,
-        ESCOPO_CADASTRO,
+    // Todas as marcas a um segundo de distância, e não escalonadas por índice:
+    // com o limite calibrado em T23 (800), um segundo por marca jogaria as mais
+    // antigas para fora da janela de 600 s, e o teste passaria a medir o
+    // deslizamento em vez do limite.
+    await banco.db.insert(schema.limiteTaxa).values(
+      Array.from({ length: quantos }, () => ({
+        escopo: ESCOPO_CADASTRO,
         identificador,
-        new Date(AGORA - (i + 1) * 1000),
-      )
-    }
+        ocorridoEm: new Date(AGORA - 1000),
+      })),
+    )
   }
 
   it('excedido o limite, responde 429 lógico e não grava', async () => {
-    // 29 marcas na janela + o cadastro real deste teste fecham as 30 do padrão.
-    await ocupar(29)
+    // A janela é preenchida a partir do valor **configurado**, e não de um
+    // número escrito à mão: o cadastro real deste teste é o que fecha a cota.
+    // T23 subiu o padrão de 30 para 800, e um teste que soubesse "30" de cor
+    // teria passado a medir outra coisa sem avisar.
+    const limite = env().RATE_LIMIT_CADASTROS_POR_JANELA
 
-    const trigesimo = await submeterInscricao(banco.db, envio())
+    await ocupar(limite - 1)
+
+    const ultimoDaCota = await submeterInscricao(banco.db, envio())
     const excedente = await submeterInscricao(banco.db, envio())
 
-    expect(trigesimo.situacao).toBe('criada')
+    expect(ultimoDaCota.situacao).toBe('criada')
     expect(excedente).toMatchObject({ situacao: 'limite_excedido' })
     if (excedente.situacao !== 'limite_excedido') throw new Error('esperava limite')
     expect(excedente.esperarSegundos).toBeGreaterThan(0)

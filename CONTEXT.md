@@ -16,7 +16,7 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 **A T20 fechou o que é código.** `npm run fichas` gera a ficha numerada, o termo integral e a folha de tempos, todos lendo o mesmo `TERMO_VIGENTE` que a tela; um teste compara papel e esquema nos dois sentidos (D-86). O que falta é imprimir e ensaiar, e as duas coisas são do dia.
 
-**A T18 mediu e achou o que procurava.** Leitura sustentada a 200 req/s com p95 de 7,9 ms e zero 5xx; documento público de 14 KB comprimidos; propagação de ~20 s com borda. E um reprovado: **o limite de taxa, como está configurado, recusaria a fila do evento** — 200 cadastros do mesmo IP viraram 30 aceitos e 170 recusados. A proposta de calibração está em `docs/relatorio-carga.md`; a decisão é de T21.
+**A T18 mediu e achou o que procurava.** Leitura sustentada a 200 req/s com p95 de 7,9 ms e zero 5xx; documento público de 14 KB comprimidos; propagação de ~20 s com borda. E um reprovado: **o limite de taxa, como está configurado, recusaria a fila do evento** — 200 cadastros do mesmo IP viraram 30 aceitos e 170 recusados. A proposta de calibração está em `docs/relatorio-carga.md`, e **T23 decidiu** em 2026-09-01: 800 por janela e 2400 por hora, acima da proposta, porque a premissa de três a cinco IPs não se confirmou (D-90).
 
 **A T19 está parcial, e a divisão é limpa.** Tudo o que o repositório decide sozinho está decidido, testado e escrito: região da função colada à do banco, pool dimensionado contra o pooler e não contra o número (D-80), HSTS com prazo (D-81), a versão publicada saindo do commit, `docs/deploy.md` e `docs/plano-do-dia.md`. O que falta são sete verificações que exigem **um endereço publicado e três contas criadas** — HTTP/3 anunciado, `HIT` de borda, sincronia de relógio, restauração de backup. Estão no checklist de `docs/deploy.md` §8, cada uma com o comando ao lado.
 
@@ -74,7 +74,7 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 **Entregue:** `perf/` versionado — preparo do banco de carga, três cenários de Artillery e um medidor —, mais `docs/relatorio-carga.md` com números medidos. Quatro dos seis critérios de T18 fechados, um **reprovado de propósito** e um adiado por depender de aparelho.
 
-**O achado que paga a tarefa: o limite de taxa recusaria a fila do evento.** Duzentos cadastros legítimos do mesmo IP produziram **30 criados e 170 recusados com 429** — trinta é exatamente `RATE_LIMIT_CADASTROS_POR_JANELA`. O limite funcionou como configurado; a configuração é que está errada para um lugar onde dezenas de celulares saem do mesmo NAT. D-27 sempre disse "calibrar em T18, decidir em T21"; agora existe número no lugar do palpite.
+**O achado que paga a tarefa: o limite de taxa recusaria a fila do evento.** Duzentos cadastros legítimos do mesmo IP produziram **30 criados e 170 recusados com 429** — trinta é exatamente `RATE_LIMIT_CADASTROS_POR_JANELA`. O limite funcionou como configurado; a configuração é que está errada para um lugar onde dezenas de celulares saem do mesmo NAT. D-27 sempre disse "calibrar em T18, decidir em T21"; T18 pôs número no lugar do palpite e **T23 fechou a decisão** (D-90).
 
 **D-56 se resolve, e a resposta é remover.** Os três índices criados por raciocínio em T02 têm **zero varreduras** em `pg_stat_user_indexes` depois da carga. `tentativa_fila_idx` é o único usado. A projeção lê 3227 de 4000 linhas — varrer é o plano certo.
 
@@ -384,7 +384,7 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 2. **A idempotência, sozinha, é um vazamento esperando acontecer.** Guardar a resposta sob a chave e devolvê-la em qualquer reenvio significa que quem apresentar a chave recebe a confirmação — inclusive o nome de outra pessoa, se duas chaves coincidirem. Ver D-28.
 
-3. **O limite por IP é a peça mais perigosa desta tarefa**, e o perigo é o oposto do que a task supunha: não é o atacante que passa, é o participante legítimo que é barrado por CGNAT. Ver D-27.
+3. **O limite por IP é a peça mais perigosa desta tarefa**, e o perigo é o oposto do que a task supunha: não é o atacante que passa, é o participante legítimo que é barrado por CGNAT. Ver D-27 para o mecanismo e D-90 para os números, que T18 mediu e T23 calibrou.
 
 **Aberto:** T06, bloqueada pela PE-01 para congelar copy. Nenhum commit.
 
@@ -1492,6 +1492,35 @@ A correção foi trocar presença por **contagem**: para cada nome, as ocorrênc
 
 1. Uma exceção larga demais transforma verificação em cerimônia.
 2. **Guarda que ninguém viu falhar é guarda que ninguém sabe se funciona.** Desliguei a abreviação de propósito, republiquei e rodei: `"Pedro R.": esperadas 2, publicadas 0`, código de saída 1. Sem esse passo, o "ok" da versão quebrada e o "ok" da versão certa são a mesma linha de texto.
+
+### D-90 — O limite de taxa foi calibrado pelo pior caso, porque a premissa de chegada não pôde ser confirmada
+
+**Decidido em 2026-09-01**, fechando T23 sobre a medição de T18.
+
+D-27 deixou os padrões do limite em 30 por janela de 10 minutos e 100 por hora, com a nota de que o número era palpite a calibrar. T18 mediu o palpite: 200 cadastros legítimos partindo do **mesmo IP** viraram **30 aceitos e 170 recusados** com 429. O mecanismo estava certo e a configuração, errada — **o 31º participante de uma fila levava um "tente mais tarde" sem ter feito nada**.
+
+| variável | antes | agora |
+|---|---|---|
+| `RATE_LIMIT_CADASTROS_POR_JANELA` | 30 | **800** |
+| `RATE_LIMIT_CADASTROS_POR_HORA` | 100 | **2400** |
+| `RATE_LIMIT_JANELA_SEGUNDOS` | 600 | 600 |
+
+**Por que 800 e não os 300 que o relatório propôs.** A conta de T18 dividia os 2000 participantes por três a cinco IPs de saída, com chegada espalhada em quatro horas, e propunha o dobro do pico resultante. Perguntado, o organizador respondeu que **não garante haver Wi-Fi no local**, e que o cadastro precisa funcionar tanto por Wi-Fi quanto por dados móveis. Isso derruba o divisor nos dois ramos:
+
+- **Com Wi-Fi**, ele é um endereço só carregando uma fatia grande dos 2000 — não um quinto deles.
+- **Sem Wi-Fi**, todo mundo entra por dados móveis, e o CGNAT da operadora é o caso que o próprio relatório nomeia: milhares de assinantes atrás de um endereço.
+
+Não há ramo em que 300 mantenha a folga de 2× que o justificava. **A concentração de chegada continua não confirmada** — ninguém sabe dizer se a fila se forma na abertura ou se dilui pelo dia — e 800 é o valor que cobre a rajada.
+
+**A assimetria é o argumento inteiro, e ela não é simétrica de propósito.** Errar para cima custa pouco: o limite existe contra automação em escala, e quem estiver decidido a automatizar não passa pelo NAT do evento, passa por fora dele — a segunda defesa contra isso é o tempo mínimo de formulário (`FORMULARIO_SEGUNDOS_MINIMOS`), que não depende de IP e não foi tocada. Errar para baixo custa participante recusado na fila, que é o custo mais caro que este sistema pode pagar (RNF-15).
+
+**O que impede o número de voltar sozinho.** O padrão foi trocado **no código** (`src/shared/env.ts`), e não só na variável de ambiente da Vercel: o padrão é o que um ambiente novo herda quando alguém esquece de definir a variável, e um padrão que recusa a fila é uma armadilha esperando homologação. `tests/deploy.test.ts` recusa qualquer padrão abaixo do piso, com mensagem que nomeia o motivo em vez do número — porque o que precisa sobreviver é a razão, não o valor.
+
+**R-2 mudou de mitigação, e não saiu do checklist.** Deixou de ser "`RATE_LIMIT_ATIVO=false` derruba o limite" e passou a ser "os valores foram calibrados sobre medição; a alavanca continua existindo para o caso de a calibração ter errado". A alavanca é pior que o número: ela não calibra, desliga — e deixa o cadastro sem contenção nenhuma pelo resto do evento.
+
+**O alerta que faltava.** T16 tinha quatro alertas e nenhum olhava para 429. Uma recusa por `limite_ip` durante o evento é a única evidência de que esta decisão errou, e ela chegava só como contagem num relatório que alguém precisaria lembrar de rodar. Agora é o alerta `cadastro_limitado`, crítico, com limiar zero: com estes valores, participante legítimo não deveria alcançar o limite nenhuma vez.
+
+**O que esta decisão não resolve.** A medição rodou numa máquina só, sem borda no meio. Vale para o número, porque o limite é contagem no banco e não depende de cache — mas se os 429 aparecerem no ambiente publicado com estes valores, foi a premissa de chegada que errou, e o número sobe de novo.
 
 ---
 

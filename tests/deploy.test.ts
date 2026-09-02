@@ -2,7 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { exigeTls } from '@/db'
+import { exigeTls, pareceComPooler, urlDeMigracao } from '@/db'
+import { validarAmbiente } from '@/shared/env'
 
 /**
  * As promessas de T19 que o repositório **consegue** guardar sozinho.
@@ -206,6 +207,53 @@ describe('TLS na conexão com o banco é decidido pelo destino (FL-09)', () => {
   })
 })
 
+describe('a migração vai pela conexão direta, não pelo pooler (D-80)', () => {
+  // Servir requisição e migrar querem coisas opostas do mesmo banco. A
+  // aplicação precisa do pooler — trinta instâncias efêmeras a cinco conexões
+  // pedem mais do que o Postgres oferece. A migração precisa do Postgres: o
+  // PgBouncer em modo transação não repassa CREATE INDEX CONCURRENTLY nem
+  // bloqueio de sessão.
+  //
+  // `docs/deploy.md` §3 dizia isso desde sempre, e mesmo assim `migrate.ts`
+  // lia `DATABASE_URL` — a do pooler. Documento não é guarda: das cinco
+  // migrações de hoje nenhuma usa CONCURRENTLY, então a coisa errada passaria
+  // calada até a primeira que usar.
+
+  const nuvem = {
+    DATABASE_URL: 'postgresql://u:s@ep-abc-123-pooler.sa-east-1.aws.neon.tech/speedx',
+    DATABASE_URL_UNPOOLED: 'postgresql://u:s@ep-abc-123.sa-east-1.aws.neon.tech/speedx',
+  }
+
+  it('prefere a direta quando ela existe', () => {
+    expect(urlDeMigracao(nuvem)).toBe(nuvem.DATABASE_URL_UNPOOLED)
+    expect(pareceComPooler(urlDeMigracao(nuvem))).toBe(false)
+  })
+
+  it('sem direta declarada, usa a única que há — que é o caso do banco local', () => {
+    // Contra localhost não existe pooler, e exigir a variável só criaria um
+    // passo a mais para quem sobe o projeto ou mede a carga (T18).
+    const local = { DATABASE_URL: 'postgresql://u:s@localhost:5432/speedx' }
+
+    expect(urlDeMigracao(local)).toBe(local.DATABASE_URL)
+  })
+
+  it('reconhece o host do pooler, para o comando poder avisar antes de aplicar', () => {
+    expect(pareceComPooler(nuvem.DATABASE_URL)).toBe(true)
+    expect(pareceComPooler('postgresql://u:s@localhost:5432/speedx')).toBe(false)
+    expect(pareceComPooler('não é uma url')).toBe(false)
+  })
+
+  it('o comando de migração não volta a ler DATABASE_URL direto', () => {
+    // O defeito não é de comportamento observável: as duas strings alcançam o
+    // mesmo banco e a suíte passaria dos dois jeitos. O que este teste guarda é
+    // por onde a conexão sai.
+    const fonte = ler('src', 'db', 'migrate.ts')
+
+    expect(fonte).toMatch(/urlDeMigracao\(/)
+    expect(fonte).not.toMatch(/connectionString: DATABASE_URL/)
+  })
+})
+
 describe('configuração de publicação (T19 §1, §2 e §6)', () => {
   it('a função roda na mesma cidade do banco', () => {
     const vercel = JSON.parse(ler('vercel.json')) as { regions?: string[] }
@@ -241,5 +289,98 @@ describe('configuração de publicação (T19 §1, §2 e §6)', () => {
 
     expect(fonte).toMatch(/VERCEL_GIT_COMMIT_SHA/)
     expect(fonte).toMatch(/slice\(0, 7\)/)
+  })
+})
+
+/**
+ * O piso da calibração de T23 (RNF-12, RNF-15).
+ *
+ * **O que este bloco protege não é o número, é a memória de por que ele é
+ * esse.** T18 rodou 200 cadastros legítimos de um mesmo IP e o limite aceitou
+ * exatamente 30, recusando 170 com 429 — o comportamento configurado, sobre uma
+ * configuração errada para o evento. Sem teste, o padrão volta a 30 na primeira
+ * vez que alguém copiar um `.env` antigo ou "arredondar" o número achando que
+ * está apertando a segurança, e o defeito só aparece com a fila parada e o 429
+ * na tela de quem não fez nada de errado.
+ *
+ * As asserções leem os padrões **do esquema**, e não da variável de ambiente da
+ * máquina que roda a suíte: o padrão é o que vale quando alguém esquece de
+ * definir a variável, e é ele que um ambiente novo herda.
+ */
+describe('limite de taxa do cadastro: os padrões não recusam a fila (T23)', () => {
+  // Piso, e não o valor exato. Subir é decisão livre — T23 §2 diz que subir
+  // custa pouco, porque o limite existe contra automação em escala e um
+  // atacante decidido não passa pelo NAT do evento. O que precisa de conta
+  // refeita é descer.
+  const PISO_POR_JANELA = 800
+  const PISO_POR_HORA = 2_400
+
+  const PORQUE =
+    'o padrão recusaria a fila do evento; ver docs/relatorio-carga.md §4 e D-90 no CONTEXT.md'
+
+  const padroes = (): ReturnType<typeof validarAmbiente> =>
+    validarAmbiente({
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://usuario:senha@localhost:5432/speedx',
+      SESSION_SECRET: 'x'.repeat(32),
+      APP_URL: 'http://localhost:3000',
+    })
+
+  it('RNF-12 — o padrão por janela não desce do piso calibrado', () => {
+    const { RATE_LIMIT_CADASTROS_POR_JANELA: janela } = padroes()
+
+    expect(
+      janela,
+      `RATE_LIMIT_CADASTROS_POR_JANELA=${String(janela)}, abaixo de ` +
+        `${String(PISO_POR_JANELA)}: ${PORQUE}. Com o padrão antigo de 30, T18 mediu ` +
+        `30 cadastros aceitos e 170 recusados com 429 em 200 do mesmo IP.`,
+    ).toBeGreaterThanOrEqual(PISO_POR_JANELA)
+  })
+
+  it('RNF-12 — o padrão por hora não desce do piso calibrado', () => {
+    const { RATE_LIMIT_CADASTROS_POR_HORA: hora } = padroes()
+
+    expect(
+      hora,
+      `RATE_LIMIT_CADASTROS_POR_HORA=${String(hora)}, abaixo de ${String(PISO_POR_HORA)}: ` +
+        `${PORQUE}. A faixa de hora é a segunda porta: afrouxar a janela sem ` +
+        `afrouxar esta apenas adia a recusa em alguns minutos.`,
+    ).toBeGreaterThanOrEqual(PISO_POR_HORA)
+  })
+
+  it('a faixa de hora acomoda mais que uma janela, senão ela é o limite de fato', () => {
+    const { RATE_LIMIT_CADASTROS_POR_JANELA: janela, RATE_LIMIT_CADASTROS_POR_HORA: hora } =
+      padroes()
+
+    // Duas faixas em que a menor manda sempre são uma faixa só com um número
+    // decorativo ao lado — e o número decorativo é justamente o que confunde
+    // quem for recalibrar às pressas no dia do evento.
+    expect(
+      hora,
+      `RATE_LIMIT_CADASTROS_POR_HORA=${String(hora)} não é maior que a janela ` +
+        `(${String(janela)}): a faixa de hora recusaria antes da janela, e calibrar ` +
+        `a janela viraria enfeite.`,
+    ).toBeGreaterThan(janela)
+  })
+
+  it('a janela continua abaixo do que a faxina de 48 h preserva', () => {
+    // `infra/higiene.ts` apaga marcas de limite com mais de 48 h. Uma janela
+    // maior que isso contaria sobre linhas que a faxina já levou — um limite
+    // que não protege e se apaga sozinho.
+    const { RATE_LIMIT_JANELA_SEGUNDOS: segundos } = padroes()
+
+    expect(segundos).toBeLessThanOrEqual(86_400)
+  })
+
+  it('.env.example não contradiz o padrão do código', () => {
+    // O arquivo é o que as pessoas copiam. Um exemplo com o número antigo
+    // reintroduz o defeito por cópia, sem passar por decisão nenhuma.
+    const exemplo = ler('.env.example')
+
+    const lido = (chave: string): number =>
+      Number(new RegExp(`^${chave}="?(\\d+)"?$`, 'm').exec(exemplo)?.[1] ?? NaN)
+
+    expect(lido('RATE_LIMIT_CADASTROS_POR_JANELA')).toBeGreaterThanOrEqual(PISO_POR_JANELA)
+    expect(lido('RATE_LIMIT_CADASTROS_POR_HORA')).toBeGreaterThanOrEqual(PISO_POR_HORA)
   })
 })

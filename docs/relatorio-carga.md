@@ -140,8 +140,55 @@ plausível é de **~150 cadastros por IP a cada 10 minutos**.
 | `RATE_LIMIT_JANELA_SEGUNDOS`      | 600  | 600      | sem mudança                                         |
 
 Um limite de 300 por IP a cada 10 minutos ainda barra automação em escala — que
-é o que RNF-12 pede — e deixa de barrar a fila. **A decisão é de T21**, como o
-plano previa; o que T18 entrega é o número medido em vez do palpite.
+é o que RNF-12 pede — e deixa de barrar a fila. O que T18 entrega é o número
+medido em vez do palpite; a decisão ficou para depois.
+
+### Decidido em T23: 800, e não 300 (2026-09-01, D-90)
+
+**A proposta acima foi revista para cima antes de virar configuração.** Ela
+dividia os 2000 participantes por três a cinco IPs de saída, e essa premissa não
+se confirmou: perguntado, o organizador respondeu que **não garante haver Wi-Fi
+no local**, e que o cadastro precisa funcionar tanto por Wi-Fi quanto por dados
+móveis. Os dois ramos derrubam o divisor — com Wi-Fi ele é um endereço só
+levando uma fatia grande dos 2000; sem ele, todo mundo entra pelo CGNAT da
+operadora, que é o caso descrito dois parágrafos acima.
+
+| variável                          | antes | **vigente** |
+| --------------------------------- | ----- | ----------- |
+| `RATE_LIMIT_CADASTROS_POR_JANELA` | 30    | **800**     |
+| `RATE_LIMIT_CADASTROS_POR_HORA`   | 100   | **2400**    |
+| `RATE_LIMIT_JANELA_SEGUNDOS`      | 600   | 600         |
+
+A concentração de chegada continua **não confirmada**, e 800 é o valor que cobre
+a rajada de abertura. Os padrões foram trocados no código
+(`src/shared/env.ts`), não só na variável de ambiente, e `tests/deploy.test.ts`
+recusa qualquer padrão abaixo do piso. Se um 429 `limite_ip` aparecer no
+ambiente publicado com estes valores, foi esta premissa que errou e o número
+sobe de novo — o alerta `cadastro_limitado` existe para que isso não dependa de
+alguém lembrar de rodar este relatório.
+
+#### Reprodução com os valores novos (2026-09-01)
+
+Mesmo cenário, mesma máquina, mesmo comando — `npm run test:carga:cadastro`
+duas vezes dentro da mesma janela de 600 s, para somar os 200 cadastros do mesmo
+IP que reprovaram acima.
+
+|                                        | T18 (padrão 30) | T23 (padrão 800) |
+| -------------------------------------- | --------------- | ---------------- |
+| Cadastros do mesmo IP                  | 200             | 200              |
+| Criados (201)                          | 30              | **200**          |
+| Recusados por limite (429 `limite_ip`) | **170**         | **0**            |
+| Falhas de aplicação                    | 0               | 0                |
+| p95 do fluxo completo                  | 27,9 ms         | 115,6 ms         |
+
+Conferido também fora do relatório do Artillery: 200 linhas em `limite_taxa` na
+janela, **todas sob um único identificador**, e nenhuma ocorrência de
+`limite_ip` no log da aplicação.
+
+O p95 maior não é regressão do cadastro: este número inclui o `GET /` que
+carrega o formulário, e a segunda execução partiu de processo recém-iniciado com
+as páginas ainda não aquecidas. O que a tabela mede aqui é a recusa, não a
+latência — essa está em §1.
 
 ---
 

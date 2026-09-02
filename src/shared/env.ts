@@ -27,6 +27,31 @@ const esquema = z
         message: 'DATABASE_URL deve ser uma URL PostgreSQL (postgres:// ou postgresql://).',
       }),
 
+    /**
+     * Conexão **direta**, sem o pooler. Opcional, e nenhuma requisição a usa.
+     *
+     * Existe para as migrações. O PgBouncer em modo transação — que é quem
+     * responde no host `-pooler` do provedor — não repassa
+     * `CREATE INDEX CONCURRENTLY` nem bloqueio de sessão, e uma migração que
+     * precise de um dos dois falha no meio, com metade do esquema aplicado.
+     *
+     * `docs/deploy.md` §3 e o `.env.example` já mandavam migrar pela direta.
+     * Até aqui isso dependia de alguém lembrar de trocar a variável na hora, e
+     * `src/db/migrate.ts` lia `DATABASE_URL` — a do pooler. Agora a escolha é
+     * do código (D-80).
+     *
+     * A aplicação continua falando com o pooler, de propósito: o que impede
+     * trinta instâncias efêmeras de pedirem trezentas conexões a um Postgres
+     * que oferece cem é ele.
+     */
+    DATABASE_URL_UNPOOLED: z
+      .string()
+      .refine((v) => v.startsWith('postgres://') || v.startsWith('postgresql://'), {
+        message:
+          'DATABASE_URL_UNPOOLED deve ser uma URL PostgreSQL (postgres:// ou postgresql://).',
+      })
+      .optional(),
+
     SESSION_SECRET: z
       .string({
         error:
@@ -41,19 +66,29 @@ const esquema = z
       error: 'APP_URL é obrigatória e deve ser absoluta — ela vira o destino do QR code (RF-01).',
     }),
 
-    // Limite de cadastros por IP (RNF-12). Os padrões são deliberadamente folgados:
-    // no local do evento dezenas de celulares saem do mesmo IP por NAT, e em rede
-    // móvel a operadora coloca milhares de assinantes atrás do mesmo endereço. Um
-    // limite apertado não impede ataque nenhum e bloqueia participante legítimo,
-    // que é o custo mais caro que este sistema pode pagar (RNF-15, PRD §7).
-    // Calibrar em T18, decidir em T21 — ver D-27 no CONTEXT.md.
-    RATE_LIMIT_CADASTROS_POR_JANELA: z.coerce.number().int().positive().default(30),
+    // Limite de cadastros por IP (RNF-12), calibrado em T23 sobre a medição de
+    // T18. Os padrões são deliberadamente folgados: no local do evento dezenas de
+    // celulares saem do mesmo IP por NAT, e em rede móvel a operadora coloca
+    // milhares de assinantes atrás do mesmo endereço. Um limite apertado não
+    // impede ataque nenhum e bloqueia participante legítimo, que é o custo mais
+    // caro que este sistema pode pagar (RNF-15, PRD §7).
+    //
+    // **O padrão antigo de 30 recusava a fila do evento.** T18 rodou 200 cadastros
+    // legítimos de um mesmo IP e o mecanismo aceitou exatamente 30: o 31º
+    // participante levava 429 sem ter feito nada (`docs/relatorio-carga.md` §4).
+    //
+    // O número vale para o pior caso plausível, e não para a média: conectividade
+    // mista (Wi-Fi do local, se houver, e dados móveis), com a concentração de
+    // chegada **não confirmada** por quem organiza. Os dois caminhos convergem no
+    // mesmo aperto — o Wi-Fi é um endereço só, e sem ele o CGNAT da operadora
+    // também é. Ver D-90 no CONTEXT.md.
+    RATE_LIMIT_CADASTROS_POR_JANELA: z.coerce.number().int().positive().default(800),
     // Teto de um dia: `infra/higiene.ts` apaga marcas de limite com mais de 48 h,
     // e uma janela configurada acima disso faria a faxina remover contagem que o
     // limite ainda usaria. Um dia já é folgado para conter cadastro; dois dias
     // seriam um limite que não protege e se apaga sozinho.
     RATE_LIMIT_JANELA_SEGUNDOS: z.coerce.number().int().positive().max(86_400).default(600),
-    RATE_LIMIT_CADASTROS_POR_HORA: z.coerce.number().int().positive().default(100),
+    RATE_LIMIT_CADASTROS_POR_HORA: z.coerce.number().int().positive().default(2_400),
 
     // Desligamento de emergência. Se no dia o limite começar a recusar gente de
     // verdade, precisa existir uma alavanca que não seja publicar código novo com

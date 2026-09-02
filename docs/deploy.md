@@ -50,14 +50,19 @@ A lista completa, com o porquê de cada uma, está em [`.env.example`](../.env.e
 a validação está em `src/shared/env.ts` e falha no boot, nomeando a variável.
 O que muda **em produção**:
 
-| variável         | valor                                                                |
-| ---------------- | -------------------------------------------------------------------- |
-| `DATABASE_URL`   | string do **pooler** do Neon (host com `-pooler`), `sslmode=require` |
-| `SESSION_SECRET` | 48 bytes de `openssl rand -base64 48`, distinto do de homologação    |
-| `APP_URL`        | a URL pública final — é ela que vira o QR (RF-01)                    |
-| `NODE_ENV`       | `production` — é o que liga `rejectUnauthorized` no TLS              |
-| `DB_POOL_MAX`    | `5`, o padrão. Só mexer com número de T18 na mão                     |
-| `APP_VERSION`    | **não definir.** O commit publicado preenche sozinho (§6)            |
+| variável                | valor                                                                    |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`          | string do **pooler** do Neon (host com `-pooler`), `sslmode=require`     |
+| `SESSION_SECRET`        | 48 bytes de `openssl rand -base64 48`, distinto do de homologação        |
+| `APP_URL`               | a URL pública final — é ela que vira o QR (RF-01)                        |
+| `DATABASE_URL_UNPOOLED` | opcional aqui: quem migra é a máquina de quem publica, não a função (§3) |
+| `DB_POOL_MAX`           | `5`, o padrão. Só mexer com número de T18 na mão                         |
+| `APP_VERSION`           | **não definir.** O commit publicado preenche sozinho (§6)                |
+
+**`NODE_ENV` não entra nesta lista.** A Vercel a define sozinha, e tentar
+declará-la à mão é erro no painel. Ela também não decide mais o TLS do banco:
+esse critério é o destino da conexão desde T18 (§3), justamente para não
+depender de uma variável que alguém possa escrever errado.
 
 Segredos não entram no repositório e não entram em `vercel.json`: vivem nas
 variáveis de ambiente do projeto na Vercel, marcadas para produção. O
@@ -79,14 +84,27 @@ do processo e a página da Classificação é `force-dynamic` (D-59). **Quem res
 de clientes sobre poucas conexões reais. Por isso a `DATABASE_URL` de produção é
 a string do pooler, e `DB_POOL_MAX=5` é só o teto por instância.
 
-**A migração é a exceção, e é uma pegadinha cara.** PgBouncer em modo transação
-não repassa comando que precisa de estado de sessão. `npm run db:migrate` deve
-receber a string **direta** do Neon (host sem `-pooler`), à mão, na hora de
-migrar:
+**A migração é a exceção, e era uma pegadinha cara.** PgBouncer em modo
+transação não repassa comando que precisa de estado de sessão — `CREATE INDEX
+CONCURRENTLY`, bloqueio de sessão. A migração que precisar de um dos dois falha
+no meio, com o que veio antes já aplicado.
+
+Até 2026-09-02 esta seção pedia que se passasse a string direta **à mão**, e
+`src/db/migrate.ts` lia `DATABASE_URL` — a do pooler. Documento não é guarda:
+nenhuma das cinco migrações de hoje usa `CONCURRENTLY`, então a coisa errada
+passaria calada até a primeira que usasse.
+
+Agora quem escolhe é o código. Declare as duas conexões e `npm run db:migrate`
+prefere a direta sozinho (`urlDeMigracao` em `src/db/index.ts`):
 
 ```bash
-DATABASE_URL="postgresql://...@ep-xxx.sa-east-1.aws.neon.tech/speedx?sslmode=require" npm run db:migrate
+DATABASE_URL="postgresql://...@ep-xxx-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL_UNPOOLED="postgresql://...@ep-xxx.sa-east-1.aws.neon.tech/neondb?sslmode=require"
 ```
+
+Sem `DATABASE_URL_UNPOOLED`, o comando usa a que houver e **avisa** antes de
+aplicar, em vez de descobrir tarde. Contra um Postgres local não há pooler e as
+duas são a mesma string — por isso a variável é opcional.
 
 ### Região
 
@@ -97,9 +115,14 @@ custa ~120 ms de ida e volta por consulta, e RNF-01 mede exatamente isso.
 
 ### TLS
 
-Obrigatório (FL-09). `src/db/index.ts` liga `rejectUnauthorized: true` quando
-`NODE_ENV=production` — certificado inválido derruba a conexão em vez de
-aceitar em silêncio.
+Obrigatório (FL-09), e quem decide é o **destino**, não o ambiente:
+`src/db/index.ts` liga `rejectUnauthorized: true` para qualquer host que não
+seja o laço local — certificado inválido derruba a conexão em vez de aceitar em
+silêncio. Não há variável de ambiente que desligue isso.
+
+O critério antigo era `NODE_ENV === 'production'` e errava dos dois lados:
+desenvolvimento apontado para um banco remoto trafegava a base em claro, e o
+artefato de produção não subia contra um Postgres local — que é o que T18 mede.
 
 ### Backup e restauração
 
@@ -214,6 +237,28 @@ curl -s https://<dominio>/api/saude | jq -r .instante ; date -u +%Y-%m-%dT%H:%M:
   gente de verdade (T05), e a reversão volta a versão anterior em minutos.
   Mudar variável de ambiente na Vercel exige _redeploy_ da última publicação —
   o que é reversão, não código novo.
+
+### Limite de taxa do cadastro — pendente nos dois ambientes (T23, D-90)
+
+Os padrões do código já são os valores calibrados (800 por janela, 2400 por
+hora), então **um ambiente sem estas variáveis herda o número certo**. Defini-las
+explicitamente é para que o valor fique visível a quem operar no dia, e para que
+ajustá-lo não dependa de publicar código:
+
+```bash
+for amb in production preview; do
+  vercel env add RATE_LIMIT_CADASTROS_POR_JANELA "$amb"   # 800
+  vercel env add RATE_LIMIT_CADASTROS_POR_HORA   "$amb"   # 2400
+  vercel env add RATE_LIMIT_JANELA_SEGUNDOS      "$amb"   # 600
+done
+```
+
+Depois, **redeploy da última publicação** em cada ambiente — variável nova não
+alcança um deploy que já saiu.
+
+**O prazo é antes do congelamento de 24/10**, e a razão é esta seção: no dia, a
+única alavanca que sobra é `RATE_LIMIT_ATIVO=false`, que não calibra — desliga o
+limite inteiro e deixa o cadastro sem contenção pelo resto do evento.
 
 ### Desligamento programado — 4 de novembro de 2026
 
