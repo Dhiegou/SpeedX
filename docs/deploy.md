@@ -291,6 +291,33 @@ minutos, no dia, é o Operador na frente da fila, não o monitor. O monitor exis
 para o resto: a madrugada anterior, a hora do almoço, o intervalo em que
 ninguém está olhando.
 
+### O monitor passou a ter uma segunda função: manter o banco acordado (D-91)
+
+O Neon no plano gratuito **suspende a computação após 5 minutos de
+ociosidade**, e desligar isso não é configuração — só existe nos planos pagos.
+Medido em 2026-09-03, contra o ambiente publicado: com o compute suspenso, a
+requisição que o acorda é a que falha. Duas de duas batidas frias devolveram
+`503`; a seguinte, quatorze segundos depois, respondeu em 193 ms.
+
+Isso muda o desenho do monitor em dois pontos:
+
+1. **O intervalo tem de ser menor que o da suspensão.** Os 5 minutos do
+   UptimeRobot gratuito **empatam** com os 5 minutos da suspensão e perdem a
+   corrida com frequência. Use um disparador de 1 a 3 minutos — `cron-job.org`
+   faz de minuto em minuto no plano gratuito — ou um segundo monitor defasado.
+2. **O alerta precisa confirmar antes de disparar.** Com o banco dormindo,
+   `/api/saude` responde `503` legitimamente: o teto da sondagem é de 1 s
+   (`src/infra/saude.ts`) e acordar demora mais que isso. Um monitor que alerta
+   na primeira falha vai gritar em toda madrugada tranquila, e um alerta que
+   grita todo dia não é lido no dia 24. Configure ao menos duas conferências
+   antes do e-mail.
+
+**O que isto não é.** Não é correção do cold start — é convivência com ele. A
+correção seria plano pago com scale-to-zero desligado. Enquanto for o gratuito,
+o primeiro visitante depois de um silêncio longo pode precisar de uma segunda
+tentativa, e é por isso que existe o aquecimento no
+[`plano-do-dia.md`](plano-do-dia.md).
+
 Detalhes das três superfícies de observação em
 [`monitoramento.md`](monitoramento.md).
 

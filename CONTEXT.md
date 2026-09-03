@@ -1522,6 +1522,25 @@ Não há ramo em que 300 mantenha a folga de 2× que o justificava. **A concentr
 
 **O que esta decisão não resolve.** A medição rodou numa máquina só, sem borda no meio. Vale para o número, porque o limite é contagem no banco e não depende de cache — mas se os 429 aparecerem no ambiente publicado com estes valores, foi a premissa de chegada que errou, e o número sobe de novo.
 
+### D-91 — O cold start do banco é do plano, não do código: conviver custa dois minutos por dia, corrigir custa assinatura
+
+**Decidido em 2026-09-03**, na primeira publicação, contra o ambiente real.
+
+O Neon no plano gratuito suspende a computação depois de **5 minutos** de ociosidade, e desligar isso não é uma configuração que exista ali: só os planos Launch e Scale a oferecem. Medido contra `fiapspeedx.vercel.app`: com o compute suspenso, **a requisição que acorda o banco é a que falha**. Duas de duas batidas frias devolveram `503`; catorze segundos depois, a mesma rota respondia em 193 ms, e em seguida em 4 ms.
+
+**Por que o `503` e não uma espera.** A sondagem de `/api/saude` tem teto de 1 s (`LIMITE_DA_SONDAGEM_MS`), escolhido em T16 para distinguir banco pendurado de banco lento. Acordar demora mais que um segundo, então a sondagem classifica o banco acordando como indisponível. O health check está certo para o que foi desenhado; ele apenas não conhece este terceiro estado.
+
+**O que se decidiu: conviver, não corrigir.** Duas medidas, e nenhuma delas é código.
+
+1. **Um disparador de 1 a 3 minutos** contra `/api/saude`. O intervalo tem de ser **menor** que o da suspensão, e é aqui que o plano original falhava: os 5 minutos do UptimeRobot gratuito empatam com os 5 minutos da suspensão e perdem a corrida com frequência. O monitor deixa de ser só observação e passa a ser parte do funcionamento.
+2. **Aquecer antes de abrir a fila**, e depois de cada intervalo longo — linha nova no `plano-do-dia.md`.
+
+**O custo do alerta, que quase passou despercebido.** Com o banco dormindo, `/api/saude` responde `503` legitimamente. Um monitor que alerta na primeira falha vai disparar em toda madrugada tranquila — e o próprio `src/infra/saude.ts` já nomeia esse risco a propósito de outra coisa: alarme falso é a maneira mais rápida de um alerta perder crédito. Por isso o item do checklist pede **confirmação antes do disparo**, não só o intervalo curto.
+
+**A correção de verdade continua existindo e é comprável:** plano pago com scale-to-zero desligado. Um mês de assinatura para um evento de um dia é uma troca defensável, e fica registrada aqui como a saída caso o aquecimento se mostre frágil no ensaio.
+
+**O que sobra de risco.** Enquanto for o plano gratuito, o primeiro visitante depois de um silêncio longo pode precisar de uma segunda tentativa. É o mesmo custo que D-90 passou uma tarefa inteira evitando — participante legítimo recusado sem ter feito nada (RNF-15) —, com a diferença de que ali a causa era configuração nossa e aqui é o plano do provedor.
+
 ---
 
 ## 4. Premissas assumidas

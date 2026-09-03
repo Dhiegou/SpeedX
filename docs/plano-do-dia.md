@@ -27,6 +27,26 @@ socorro.
 
 ---
 
+## Antes de abrir a fila (2 minutos)
+
+**Acordar o banco.** De qualquer celular, sem senha:
+
+```
+https://<dominio>/api/saude
+```
+
+Se responder `{"situacao":"ok"}`, está aquecido. Se responder `degradado` ou
+demorar, **abra de novo** — a segunda chamada vem normal.
+
+Por que isto existe: o banco suspende sozinho depois de 5 minutos parado, e a
+requisição que o acorda é a que falha (D-91). Sem este passo, quem paga é o
+primeiro participante que escanear o QR de manhã, e ele leva um erro sem ter
+feito nada.
+
+Repetir depois de qualquer intervalo longo — almoço, pausa entre baterias.
+
+---
+
 ## As quatro coisas que se faz
 
 ### 1. Ver o que está acontecendo (30 segundos)
