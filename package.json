@@ -23,6 +23,7 @@
     "auditar": "tsx scripts/auditar-privacidade.ts",
     "orcamento": "node scripts/orcamento.mjs",
     "criar-operador": "tsx scripts/criar-operador.ts",
+    "operador:sql": "tsx scripts/operador-sql.ts",
     "expurgar": "tsx scripts/expurgar.ts",
     "metricas": "tsx scripts/metricas.ts",
     "perf:preparar": "tsx perf/preparar.ts",

@@ -136,6 +136,7 @@ scripts/
   gerar-qr.ts         # QR do ponto de inscrição, nível H, vetorial (T07)
   orcamento.mjs       # orçamento de peso do primeiro carregamento (T07)
   criar-operador.ts   # único caminho que cria conta de Operador (T08, RNF-14)
+  operador-sql.ts     # o mesmo INSERT, sem banco, para rede que bloqueia a 5432
   expurgar.ts         # o único comando que apaga dados; ensaia por padrão (T15)
   metricas.ts         # lê o log e devolve métricas, metas e alertas (T16)
 docs/
@@ -178,6 +179,8 @@ npm run dev
 Os testes **não** precisam de PostgreSQL instalado: rodam contra PGlite, que é o próprio Postgres em WebAssembly. Só a aplicação precisa de um banco de verdade.
 
 **Contas de Operador são criadas só por `npm run criar-operador`** (RNF-14). Não há tela de cadastro, convite nem endpoint: a autorização para criar conta é ter acesso ao ambiente. A senha é digitada no prompt, sem eco — nunca por argumento, que fica no histórico do shell e na lista de processos. Para tirar alguém do ar, `npm run criar-operador -- --desativar marina`: as sessões abertas caem na requisição seguinte.
+
+**Quando a porta 5432 não é alcançável** — e ela é bloqueada em muitas redes institucionais, a da FIAP entre elas —, `npm run operador:sql -- --usuario marina --nome "Marina Costa"` deriva o hash localmente e imprime o `INSERT` pronto para colar no SQL Editor do provedor, que fala HTTPS. A senha continua sem sair da máquina: o que viaja é o hash. É saída de emergência, não substituto: o caminho normal confere duplicidade, desativa e destrava, e este não faz nada disso.
 
 Se um Operador ficar preso pelo limite de tentativas de login — dez erros de senha travam por quinze minutos, e isso acontece com teclado de tablet capitalizando a primeira letra —, `npm run criar-operador -- --destravar marina` zera o contador. O limite volta a valer na tentativa seguinte; o do cadastro público não é tocado.
 A aplicação recusa subir se a configuração estiver incompleta, listando cada variável e o motivo — a validação acontece em `instrumentation.ts`, antes de atender qualquer requisição.
@@ -226,6 +229,7 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run db:seed [n]` | Popula a massa de desenvolvimento (padrão: 2000 participantes) |
 | `npm run db:studio` | Abre o Drizzle Studio para inspecionar o banco |
 | `npm run criar-operador` | Cria conta de Operador; `-- --desativar <usuario>` tira do ar; `-- --destravar <usuario>` zera o limite de login |
+| `npm run operador:sql` | Só o `INSERT` de um Operador, sem tocar no banco — para rede que bloqueia a porta 5432 |
 | `npm run test:e2e` | Testes de ponta a ponta com Playwright. Precisa de Postgres de pé: cria e recria o banco `speedx_e2e` sozinho, sem tocar no de desenvolvimento |
 | `npm run test:e2e:ui` | O mesmo, com o inspetor do Playwright |
 | `npm run metricas` | Relatório de métricas e alertas a partir do log; `-- --arquivo <caminho>` ou pelo cano. Sai com código 1 se algum alerta disparar |
