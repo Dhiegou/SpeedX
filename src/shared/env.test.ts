@@ -94,6 +94,34 @@ describe('validarAmbiente', () => {
     expect(() => validarAmbiente({ ...valido, DATABASE_URL: 'mysql://x/y' })).toThrow(/PostgreSQL/)
   })
 
+  it('separa APP_URL ausente de APP_URL inválida, porque a correção é outra', () => {
+    // A primeira publicação caiu duas vezes aqui e o log dizia a mesma frase
+    // nas duas. Ausente manda republicar e conferir o ambiente da variável;
+    // inválida manda olhar o valor. Trocar uma pela outra custa um ciclo de
+    // deploy inteiro procurando no lugar errado.
+    const { APP_URL: _omitida, ...semUrl } = valido
+
+    expect(() => validarAmbiente(semUrl)).toThrow(/não chegou ao processo/)
+    expect(() => validarAmbiente({ ...valido, APP_URL: 'fiapspeedx.vercel.app' })).toThrow(
+      /inválida: recebi «fiapspeedx.vercel.app»/,
+    )
+  })
+
+  it('a mensagem de APP_URL inválida devolve o valor recebido, não só a regra', () => {
+    // Aspas coladas junto com a URL é o acidente mais comum de painel de
+    // provedor, e é invisível na tela do painel. Ver o valor entre « » no log
+    // é o que encerra a dúvida.
+    expect(() => validarAmbiente({ ...valido, APP_URL: '"https://x.com"' })).toThrow(
+      'recebi «"https://x.com"»',
+    )
+  })
+
+  it('apara espaço em volta de APP_URL — a URL global os toleraria calada', () => {
+    expect(validarAmbiente({ ...valido, APP_URL: '  https://x.com  ' }).APP_URL).toBe(
+      'https://x.com',
+    )
+  })
+
   it('rejeita APP_URL relativa — ela vira o destino do QR code', () => {
     expect(() => validarAmbiente({ ...valido, APP_URL: '/inscricao' })).toThrow(/APP_URL/)
   })

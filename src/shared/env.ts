@@ -62,9 +62,39 @@ const esquema = z
         'SESSION_SECRET precisa de ao menos 32 caracteres para assinar a sessão do Operador.',
       ),
 
-    APP_URL: z.url({
-      error: 'APP_URL é obrigatória e deve ser absoluta — ela vira o destino do QR code (RF-01).',
-    }),
+    /**
+     * URL pública. É o destino codificado no QR (RF-01).
+     *
+     * As duas falhas são distintas e a mensagem precisa distingui-las, porque
+     * a correção é oposta em cada uma. Ausente é a variável que não chegou ao
+     * processo — não foi criada, ficou marcada para outro ambiente, ou o deploy
+     * é anterior a ela. Inválida é a que chegou com o conteúdo errado.
+     *
+     * Isto não é zelo abstrato: a primeira publicação deste sistema caiu duas
+     * vezes seguidas aqui, e o log dizia a mesma frase nas duas — o que
+     * mandava conferir o valor quando o valor podia nem estar lá.
+     */
+    APP_URL: z
+      .string({
+        error:
+          'APP_URL é obrigatória e não chegou ao processo: nenhum valor foi recebido. Se você ' +
+          'acabou de criá-la no provedor, republique — variável nova não alcança um deploy que ' +
+          'já saiu; confira também se ela está marcada para este ambiente. Ver .env.example.',
+      })
+      // Espaço ou quebra de linha na cópia é acidente comum, e a URL global os
+      // tolera calada: sem isto o valor sobreviveria com o espaço dentro e o QR
+      // apontaria para uma URL com lixo nas pontas.
+      .trim()
+      .superRefine((valor, ctx) => {
+        if (!URL.canParse(valor)) {
+          ctx.addIssue({
+            code: 'custom',
+            message:
+              `APP_URL inválida: recebi «${valor}». Falta o esquema (use https://…), ou sobraram ` +
+              'aspas ou espaços na cópia. Ela vira o destino do QR code (RF-01).',
+          })
+        }
+      }),
 
     // Limite de cadastros por IP (RNF-12), calibrado em T23 sobre a medição de
     // T18. Os padrões são deliberadamente folgados: no local do evento dezenas de
