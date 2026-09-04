@@ -121,3 +121,23 @@
   color: var(--tinta-suave);
   font-size: 0.875rem;
 }
+
+/*
+ * O caminho de volta ao site público.
+ *
+ * Discreto de propósito: quem chega aqui de verdade é o Operador, e para ele
+ * este link é ruído. Ele existe para quem chegou por engano — e para esse,
+ * estar presente vale mais do que estar em destaque.
+ */
+.voltar {
+  display: inline-block;
+  margin-top: var(--espaco-5);
+  color: var(--marca);
+  font-size: var(--texto-apoio);
+  font-weight: 600;
+}
+
+.voltar:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-recuo);
+}

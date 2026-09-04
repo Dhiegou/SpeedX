@@ -42,16 +42,24 @@ Medido, contando ocorrências:
 
 | módulo                     | tokens distintos | `var(--foco)` | cores à mão |
 | -------------------------- | ---------------- | ------------- | ----------- |
-| `formulario.module.css`    | 21               | 4             | 1           |
-| `classificacao.module.css` | 18               | 1             | 0           |
-| `login.module.css`         | 14               | 2             | 0           |
-| `painel.module.css`        | 13               | **0**         | 0           |
-| `termo.module.css`         | 12               | 1             | 0           |
-| `cabecalho.module.css`     | **3**            | **0**         | **7**       |
+| `formulario.module.css`    | 21               | 4             | 3           |
+| `classificacao.module.css` | 18               | 1             | **13**      |
+| `login.module.css`         | 14               | 2             | 2           |
+| `painel.module.css`        | 13               | **0**         | **18**      |
+| `termo.module.css`         | 12               | 1             | 1           |
+| `cabecalho.module.css`     | **3**            | **0**         | **10**      |
+
+**São 47 cores literais, em todos os seis módulos.**
+
+> **Correção de 2026-09-03.** A primeira versão desta tabela dizia que só o cabeçalho tinha cores à mão, com 7. Estava errada por dois motivos, e os dois eram meus: o glob da contagem não expandia o diretório `(protegido)`, então `painel.module.css` — o pior caso, com 18 — nunca foi lido; e eu filtrava linhas que misturam token e cor literal, o que escondia o resto. Os números acima foram recontados com `find`.
+>
+> A correção **aumenta** o problema em vez de reduzi-lo: não é um módulo fora do sistema, são seis, com o pódio inteiro e os pares de sucesso e erro escritos à mão em dois lugares diferentes.
 
 O cabeçalho escreve `#fff`, `#cbd5e1` e `rgb(255 255 255 / 0.08)` diretamente, e usa `outline: 3px solid #fff` no lugar de `var(--foco)`. É a única superfície que aparece em **todas** as páginas públicas — ou seja, a peça mais visível é a que menos participa do sistema.
 
-**Isto é estilo, e é a primeira coisa a arrumar num redesenho.** Se a paleta mudar e o cabeçalho continuar com branco fixo, ele sai de tom em três telas de uma vez.
+**Isto é estilo, e é a primeira coisa a arrumar num redesenho.** Se a paleta mudar e os módulos continuarem com cor fixa, eles saem de tom todos de uma vez.
+
+> **Resolvido em 2026-09-03** (D-92). As 47 viraram token, o painel e o cabeçalho entraram no anel de foco do sistema, e `tests/sistemaVisual.test.ts` recusa a volta de qualquer uma delas. O que este documento afirmava passou a ser verificado.
 
 ### A2. O painel não usa o anel de foco comum, e é justamente a tela operada por teclado
 

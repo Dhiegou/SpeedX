@@ -42,6 +42,23 @@ export default async function Login() {
         A sessão dura {horasDeSessao()} horas e se renova enquanto o painel está em uso — ninguém é
         desconectado no meio do evento. Contas são criadas pela organização; não há cadastro.
       </p>
+
+      {/*
+        O caminho de volta.
+
+        Esta era a única tela do produto sem saída que não fosse o botão do
+        navegador — e ela é justamente onde chega quem digitou o endereço
+        errado, ou um participante que descobriu a URL do painel. Mandá-lo de
+        volta ao site é mais útil do que deixá-lo numa parede.
+
+        Âncora comum, e não `Link`: o painel não carrega o roteador de cliente,
+        e trazê-lo por causa de um link seria pagar quilobytes por conveniência
+        (a mesma conta do `Cabecalho`).
+      */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <a className={estilos.voltar} href="/">
+        ← Ir para o site da corrida
+      </a>
     </main>
   )
 }

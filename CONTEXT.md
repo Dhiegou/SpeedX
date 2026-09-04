@@ -1541,6 +1541,41 @@ O Neon no plano gratuito suspende a computação depois de **5 minutos** de ocio
 
 **O que sobra de risco.** Enquanto for o plano gratuito, o primeiro visitante depois de um silêncio longo pode precisar de uma segunda tentativa. É o mesmo custo que D-90 passou uma tarefa inteira evitando — participante legítimo recusado sem ter feito nada (RNF-15) —, com a diferença de que ali a causa era configuração nossa e aqui é o plano do provedor.
 
+### D-92 — O sistema visual passou a ser verificado, e não afirmado
+
+**Decidido em 2026-09-03**, executando o PRD-front.
+
+`globals.css` abria com duas afirmações: que nenhuma cor é escrita à mão dentro de um módulo, e que o anel de foco é um só em toda parte. **As duas eram falsas** — havia 47 cores literais em seis módulos, e o painel tinha 386 linhas com zero `var(--foco)`, justamente a tela operada por teclado durante dez horas.
+
+O defeito não aparecia em tela nenhuma. Ele aparece **no dia em que a paleta muda**: cinco telas acompanham e duas não, e quem descobre é quem abre o site depois de publicado.
+
+**A correção não foi arrumar as cores — foi tirar a afirmação do comentário e pôr num teste.** `tests/sistemaVisual.test.ts` recusa cor literal em módulo, anel de foco próprio, `@import`, `url()` e `style={{ }}` em linha. `tests/contraste.test.ts` lê os tokens de `globals.css` e calcula os 35 pares: 4.5:1 para texto, 3:1 para elemento gráfico.
+
+**Por que calcular em vez de escrever a tabela.** O critério de aceitação pedia contraste "verificado par a par e escrito". Escrito envelhece no primeiro ajuste de tom, e ninguém refaz trinta e cinco contas à mão na véspera do evento. Calculado, a paleta nova só entra se passar.
+
+**O que isso libera.** Trocar a identidade inteira virou trocar valores num arquivo — foi assim que D-93 aconteceu no mesmo dia, sem abrir seis módulos.
+
+### D-93 — Asfalto e bandeira: a paleta saiu do azul-marinho, e custou 0,7 KB
+
+**Decidido em 2026-09-03.**
+
+A paleta anterior era azul-marinho sobre a escala de cinzas padrão de biblioteca. Tinha contraste e não tinha personalidade: parecia sistema interno, que é o oposto do que duas mil pessoas deveriam encontrar ao escanear um QR num evento.
+
+| | antes | agora |
+|---|---|---|
+| escuro estrutural | azul-marinho `#12306b` | asfalto `#1f2530` |
+| fundo | cinza-gelo `#f8fafc` | papel morno `#f7f6f4` |
+| acento | âmbar `#b45309` | brasa `#c2410c` |
+
+**O argumento de cada troca.** O asfalto é a cor do chão onde a corrida acontece, e separa o produto de qualquer painel corporativo — carregando branco com 15:1, que importa mais que o tom porque a tela vai estar ao sol. O papel morno substitui o cinza azulado porque, sob luz forte, o frio lava e some contra a superfície branca; o morno mantém as duas distinguíveis. E a energia ficou concentrada num acento só: cor quente que marca, nunca decora.
+
+**Junto vieram as escalas que faltavam**: oito passos de espaço e uma escala tipográfica de razão 1,25, no lugar do `rem` avulso que cada módulo escolhia — havia `0.85rem`, `0.875rem` e `0.9rem` significando a mesma intenção em arquivos diferentes.
+
+**A hierarquia da Classificação mudou junto, e é o retorno maior.** As quatro colunas tinham o mesmo peso visual, e não valem a mesma coisa: quem abre a página faz uma pergunta só — "onde eu estou?" — e a responde varrendo a coluna de nomes. O nome passou a ser o maior, o tempo vem logo atrás, a posição virou índice apagado (menos nas três do pódio) e o Cockpit virou etiqueta.
+
+**O custo, medido:** o primeiro carregamento foi de **142,3 KB para 143,0 KB gzip**, com os mesmos 10 recursos e nenhum pedido de rede novo. Teto de 150. Ou seja, a identidade inteira custou 0,7 KB — porque saiu de cor, espaço e tipografia do sistema, que é o que carrega em zero byte, e não de fonte ou imagem, que teriam custado de 15 a 30 KB cada e estouravam a folga sozinhas.
+
+
 ---
 
 ## 4. Premissas assumidas

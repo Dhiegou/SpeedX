@@ -160,7 +160,7 @@
 }
 
 .tabela td {
-  padding: 0.65rem 0.5rem;
+  padding: var(--espaco-3) var(--espaco-2);
   border-bottom: 1px solid var(--superficie-alt);
 }
 
@@ -177,20 +177,41 @@
   white-space: nowrap;
 }
 
+/*
+ * --- Hierarquia da linha ---
+ *
+ * As quatro colunas tinham o mesmo peso, e não valem a mesma coisa. Quem abre
+ * esta página faz uma pergunta só — "onde eu estou?" — e a responde varrendo a
+ * coluna de nomes. Então:
+ *
+ *  1. **O nome é o maior**, porque é o alvo da varredura.
+ *  2. **O tempo vem logo atrás**, porque é a recompensa de ter achado o nome.
+ *  3. **A posição é um índice**, não um protagonista: forte, mas menor e mais
+ *     apagada — exceto nas três primeiras, onde o pódio a devolve ao primeiro
+ *     plano.
+ *  4. **O Cockpit é etiqueta**, e some para o fundo até alguém procurá-lo.
+ */
+
 .posicao {
+  width: 3.25rem;
+  font-size: var(--texto-apoio);
   font-weight: 700;
-  width: 3.5rem;
-  color: var(--marca-escura);
+  color: var(--tinta-suave);
 }
 
 .tempo {
+  font-size: var(--texto-medio);
   font-weight: 700;
+  letter-spacing: var(--aperto);
   color: var(--tinta);
 }
 
 .cockpit {
-  width: 4.5rem;
-  color: var(--tinta-suave);
+  width: 4rem;
+  font-size: var(--texto-miudo);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-fraca);
   white-space: nowrap;
 }
 
@@ -199,6 +220,9 @@
  * 360px estenderia a página e criaria a rolagem horizontal que RNF-18 proíbe.
  */
 .nome {
+  font-size: var(--texto-medio);
+  font-weight: 600;
+  letter-spacing: var(--aperto);
   overflow-wrap: anywhere;
 }
 
@@ -255,6 +279,7 @@
 .ouro,
 .prata,
 .bronze {
+  font-size: var(--texto-medio);
   font-weight: 800;
   border-radius: var(--raio-pequeno);
 }

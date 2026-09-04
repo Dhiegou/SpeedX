@@ -45,6 +45,8 @@
  * largura útil da coluna de campos.
  */
 .formulario {
+  /* A numeração das etapas nasce aqui e morre aqui. */
+  counter-reset: etapa;
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
@@ -73,14 +75,42 @@
   gap: 1.25rem;
 }
 
+/*
+ * As seções eram três blocos de mesmo peso, e por isso o formulário parecia
+ * uma lista longa em vez de um caminho com fim.
+ *
+ * Numerá-las resolve isso sem acrescentar palavra nenhuma: quem está na fila
+ * vê "2" e sabe que existe um "3". A contagem é do CSS, e não do componente —
+ * o bloco do Responsável aparece e some conforme a idade, e uma numeração
+ * escrita à mão ficaria errada exatamente nesse caso.
+ */
 .legenda {
-  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  font-size: var(--texto-medio);
   font-weight: 700;
-  letter-spacing: -0.01em;
-  padding: 0 0 0.5rem;
-  margin-bottom: 0.25rem;
+  letter-spacing: var(--aperto);
+  padding: 0 0 var(--espaco-2);
+  margin-bottom: var(--espaco-1);
   border-bottom: 2px solid var(--marca-clara);
   width: 100%;
+  counter-increment: etapa;
+}
+
+.legenda::before {
+  content: counter(etapa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--marca);
+  color: var(--sobre-marca);
+  font-size: var(--texto-apoio);
+  font-variant-numeric: tabular-nums;
 }
 
 .campo {
@@ -248,22 +278,34 @@
 
 /* --- Avisos --- */
 
+/*
+ * Aviso e erro não são "o formulário com uma tarja".
+ *
+ * Eles são um estado da tela, e é onde um produto revela se foi acabado: a
+ * pessoa que erra um campo na fila está com pressa e com gente atrás. O texto
+ * é o que resolve (RNF-17); a forma é o que faz o texto ser visto.
+ */
 .aviso {
   border: 1px solid var(--borda);
   border-left: 6px solid var(--acento);
   border-radius: 0 var(--raio-pequeno) var(--raio-pequeno) 0;
   background: var(--acento-claro);
-  padding: 0.875rem 1rem;
+  color: var(--acento-tinta);
+  padding: var(--espaco-3) var(--espaco-4);
 }
 
 .avisoErro {
   border-left-color: var(--erro);
   background: var(--erro-fundo);
+  color: var(--erro);
 }
 
 .resumo {
-  margin: 0;
-  padding-left: 1.25rem;
+  margin: var(--espaco-2) 0 0;
+  padding-left: var(--espaco-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-1);
 }
 
 /* --- Envio --- */
@@ -433,15 +475,22 @@
 }
 
 .tituloSucesso {
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.75rem;
+  font-size: var(--texto-grande);
+  letter-spacing: var(--aperto);
+  margin: 0 0 var(--espaco-2);
 }
 
+/*
+ * O nome cresce porque é o que a pessoa mostra para quem está do lado —
+ * "consegui" — e é a única confirmação que ela leva da tela. Entrelinha curta
+ * para que um nome composto continue lendo como um bloco só.
+ */
 .nomeConfirmado {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
+  font-size: var(--texto-maior);
+  font-weight: 800;
+  line-height: var(--entrelinha-justa);
+  letter-spacing: var(--aperto);
+  margin: 0 0 var(--espaco-2);
 }
 
 .proximoPasso {

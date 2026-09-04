@@ -24,28 +24,44 @@
  */
 
 :root {
-  /* --- Identidade ---
+  /* --- Identidade: asfalto e bandeira ---
    *
-   * Grafite e azul de pista, com âmbar de bandeira para o que precisa saltar.
-   * O azul é escuro o bastante para receber texto branco com folga; o âmbar
-   * nunca carrega texto, só marca.
+   * A paleta anterior era azul-marinho sobre a escala de cinzas padrão de
+   * biblioteca. Tinha contraste e não tinha personalidade — parecia sistema
+   * interno, que é exatamente o que este produto não é.
+   *
+   * **Asfalto no lugar do azul.** O escuro estrutural é quase neutro, com um
+   * resto de azul frio: é a cor do chão onde a corrida acontece, e é o que
+   * separa este produto de qualquer painel corporativo. Ele carrega branco com
+   * 15:1 de folga, o que importa mais que o tom — a tela vai estar ao sol.
+   *
+   * **Papel morno no lugar do cinza-gelo.** O fundo saiu de `#f8fafc`, que é
+   * azulado, para um branco de papel. Sob luz forte o cinza frio lava e some
+   * contra a superfície branca; o morno mantém as duas distinguíveis.
+   *
+   * **Uma cor quente, e uma só.** A brasa é o único sinal saturado do sistema:
+   * ela marca, nunca decora. Concentrar a energia num acento é o que deixa o
+   * pódio e a faixa da marca parecerem intencionais em vez de coloridos.
+   *
+   * Cada par de texto e fundo daqui está acima de 4.5:1, e não por conferência
+   * a olho: `tests/contraste.test.ts` lê estes valores e calcula.
    */
-  --tinta: #0f172a;
-  --tinta-suave: #475569;
-  --tinta-fraca: #64748b;
+  --tinta: #16181d;
+  --tinta-suave: #4b515c;
+  --tinta-fraca: #666d78;
 
-  --fundo: #f8fafc;
+  --fundo: #f7f6f4;
   --superficie: #ffffff;
-  --superficie-alt: #f1f5f9;
+  --superficie-alt: #eceae6;
 
-  --marca: #12306b;
-  --marca-escura: #0b1f47;
-  --marca-clara: #e8eefb;
-  --acento: #b45309;
-  --acento-claro: #fffbeb;
+  --marca: #1f2530;
+  --marca-escura: #11141a;
+  --marca-clara: #e8e6e2;
+  --acento: #c2410c;
+  --acento-claro: #fff7ed;
 
-  --borda: #cbd5e1;
-  --borda-forte: #94a3b8;
+  --borda: #d6d3ce;
+  --borda-forte: #8f8b84;
 
   /* --- Sobre a marca ---
    *
@@ -83,17 +99,62 @@
    * A cor nunca carrega a informação sozinha; o número da posição continua
    * ali, e é ele que o leitor de tela anuncia.
    */
-  --ouro-fundo: #fef3c7;
+  --ouro-fundo: #fdf0c4;
   --ouro-tinta: #78350f;
-  --ouro-marca: #d97706;
+  --ouro-marca: #b45309;
 
-  --prata-fundo: #f1f5f9;
-  --prata-tinta: #334155;
-  --prata-marca: #94a3b8;
+  /* A prata é a única que precisou ser reaquecida: a anterior era slate frio e
+     brigava com o papel morno, parecendo uma célula desbotada em vez de prata. */
+  --prata-fundo: #eceae6;
+  --prata-tinta: #3b4048;
+  --prata-marca: #8f8b84;
 
-  --bronze-fundo: #fdf0e3;
+  --bronze-fundo: #f7e6d7;
   --bronze-tinta: #7c2d12;
-  --bronze-marca: #c2703a;
+  --bronze-marca: #b45c28;
+
+  /* --- Ritmo espacial ---
+   *
+   * Oito passos, base de 4px, dobrando devagar até o topo. O valor de um espaço
+   * deixa de ser escolha de quem escreve a regra e passa a ser escolha de qual
+   * passo — que é a diferença entre um layout com ritmo e seis módulos com
+   * `0.85rem`, `0.875rem` e `0.9rem` significando a mesma intenção.
+   */
+  --espaco-1: 0.25rem;
+  --espaco-2: 0.5rem;
+  --espaco-3: 0.75rem;
+  --espaco-4: 1rem;
+  --espaco-5: 1.5rem;
+  --espaco-6: 2rem;
+  --espaco-7: 3rem;
+  --espaco-8: 4rem;
+
+  /* --- Escala tipográfica ---
+   *
+   * Razão de 1,25 a partir de 1rem, para cima e para baixo. Sem fonte externa
+   * (RNF-04), a hierarquia inteira sai de tamanho, peso e espaçamento — então
+   * a escala precisa ser de verdade, e não valores escolhidos um a um.
+   *
+   * `--texto-heroi` usa `clamp` porque o mesmo número aparece no celular na
+   * fila e projetado numa parede: cresce com a viewport e para de crescer antes
+   * de estourar a linha.
+   */
+  --texto-miudo: 0.8rem;
+  --texto-apoio: 0.9rem;
+  --texto-base: 1rem;
+  --texto-medio: 1.25rem;
+  --texto-grande: 1.5rem;
+  --texto-maior: 1.95rem;
+  --texto-gigante: 2.45rem;
+  --texto-heroi: clamp(2.5rem, 7vw, 3.8rem);
+
+  /* Medida de linha. Texto corrido além disto cansa; o termo é o caso extremo. */
+  --medida: 68ch;
+
+  /* Números grandes pedem entrelinha curta e negativo no espaçamento: é o que
+     faz um tempo ou uma contagem lerem como um bloco, e não como letras. */
+  --entrelinha-justa: 1.1;
+  --aperto: -0.02em;
 
   /* --- Forma --- */
   --raio: 0.625rem;
