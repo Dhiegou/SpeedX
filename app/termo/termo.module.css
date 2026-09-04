@@ -190,7 +190,7 @@
   border: 2px solid var(--marca);
   border-radius: var(--raio-pequeno);
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
   font-weight: 700;
   text-decoration: none;
 }

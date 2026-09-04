@@ -83,7 +83,7 @@
   border: 0;
   border-radius: var(--raio-pequeno);
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
   cursor: pointer;
   transition: background-color 120ms ease;
 }
@@ -113,7 +113,7 @@
   border-left-width: 4px;
   border-radius: var(--raio-pequeno);
   background: var(--erro-fundo);
-  color: #7a1c20;
+  color: var(--erro);
 }
 
 .rodape {

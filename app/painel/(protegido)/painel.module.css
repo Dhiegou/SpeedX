@@ -33,7 +33,7 @@
   align-items: baseline;
   justify-content: space-between;
   background: var(--marca-escura);
-  color: #fff;
+  color: var(--sobre-marca);
   border-radius: var(--raio);
   padding: 0.875rem 1rem;
   margin-bottom: 1rem;
@@ -47,7 +47,7 @@
 
 .identidade {
   /* Sobre a barra escura: cinza claro, ainda acima de 4.5:1. */
-  color: #cbd5e1;
+  color: var(--sobre-marca-suave);
   font-size: 0.95rem;
 }
 
@@ -78,13 +78,13 @@
 }
 
 .online {
-  background: #e6f4ea;
-  color: #14532d;
+  background: var(--sucesso-fundo);
+  color: var(--sucesso);
 }
 
 .offline {
-  background: #fdf3f4;
-  color: #7a1c20;
+  background: var(--erro-fundo);
+  color: var(--erro);
 }
 
 /*
@@ -119,14 +119,14 @@
   min-height: 3rem;
   border: 2px solid var(--marca);
   border-radius: 0.25rem;
-  background: #fff;
+  background: var(--superficie);
   color: var(--marca);
   cursor: pointer;
 }
 
 .abaAtiva {
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
 }
 
 /* A contagem de pendentes, "em fonte grande o suficiente para leitura rápida". */
@@ -173,7 +173,7 @@
   min-height: 3rem;
   border: 2px solid var(--borda-forte);
   border-radius: 0.25rem;
-  background: #fff;
+  background: var(--superficie);
   color: inherit;
 }
 
@@ -188,8 +188,8 @@
 .aba:focus-visible,
 .item:focus-visible,
 .botao:focus-visible {
-  outline: 4px solid var(--marca);
-  outline-offset: 2px;
+  outline: var(--foco);
+  outline-offset: var(--foco-recuo);
 }
 
 /*
@@ -261,13 +261,26 @@
   border: 2px solid var(--marca);
   border-radius: 0.25rem;
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
   cursor: pointer;
 }
 
 .botaoSecundario {
-  background: #fff;
+  background: var(--superficie);
   color: var(--marca);
+}
+
+/*
+ * O rodapé do Sair.
+ *
+ * Era um `style={{ }}` em linha na página — o último do projeto. Repete a
+ * medida de `.pagina` de propósito: o botão precisa alinhar com a coluna que a
+ * Fila ocupa, e alinhar por acaso é o que quebra quando a medida muda.
+ */
+.rodapeSair {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
 }
 
 .botao:disabled {
@@ -284,7 +297,7 @@
 .fundo {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 55%);
+  background: var(--veu);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,7 +305,7 @@
 }
 
 .dialogo {
-  background: #fff;
+  background: var(--superficie);
   border-radius: 0.5rem;
   padding: 1.5rem;
   max-width: 32rem;
@@ -341,24 +354,45 @@
   font-size: 0.9rem;
 }
 
+/*
+ * A recusa do Enter, no lugar da dica.
+ *
+ * Ocupa o mesmo espaço para não empurrar a Fila para baixo: o Operador está
+ * olhando para o campo, e uma linha que aparece deslocando a lista rouba a
+ * referência de onde ele estava.
+ *
+ * Barra à esquerda e não só cor — o pátio é iluminado por sol e cor sozinha é
+ * a primeira coisa que se perde numa tela lavada.
+ */
+.recusa {
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 4px solid var(--erro);
+  border-radius: 0 var(--raio-pequeno) var(--raio-pequeno) 0;
+  background: var(--erro-fundo);
+  color: var(--erro);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .aviso {
   padding: 0.85rem;
-  border: 2px solid #a4262c;
+  border: 2px solid var(--erro);
   border-left-width: 6px;
   border-radius: 0.25rem;
-  background: #fdf3f4;
-  color: #7a1c20;
+  background: var(--erro-fundo);
+  color: var(--erro);
   margin-bottom: 1rem;
   font-size: 1.05rem;
 }
 
 .sucesso {
   padding: 0.85rem;
-  border: 2px solid #14532d;
+  border: 2px solid var(--sucesso);
   border-left-width: 6px;
   border-radius: 0.25rem;
-  background: #e6f4ea;
-  color: #14532d;
+  background: var(--sucesso-fundo);
+  color: var(--sucesso);
   margin-bottom: 1rem;
   font-weight: 600;
 }

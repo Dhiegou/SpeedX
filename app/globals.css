@@ -47,9 +47,53 @@
   --borda: #cbd5e1;
   --borda-forte: #94a3b8;
 
+  /* --- Sobre a marca ---
+   *
+   * O que se escreve **em cima** do azul: cabeçalho público, barra do painel,
+   * cabeçalho da tabela, botões cheios. Estes existiam como `#fff` e `#cbd5e1`
+   * soltos em cinco módulos, o que fazia com que trocar a cor de fundo da marca
+   * exigisse caçar branco à mão — e branco escrito à mão nunca aparece numa
+   * busca por `--marca`.
+   */
+  --sobre-marca: #ffffff;
+  --sobre-marca-suave: #cbd5e1;
+  /* Véus para estado sobre a barra escura: passar o dedo e a página atual. */
+  --sobre-marca-veu: rgb(255 255 255 / 0.08);
+  --sobre-marca-veu-forte: rgb(255 255 255 / 0.14);
+
+  /* Faixa alternada de tabela: separa a linha sem virar uma segunda cor. */
+  --superficie-tenue: #fbfcfe;
+
+  /* Véu do diálogo de confirmação: escurece a página, não a tinge. */
+  --veu: rgb(0 0 0 / 55%);
+
   --erro: #b00020;
   --erro-fundo: #fdf0f2;
   --sucesso: #166534;
+  --sucesso-fundo: #e6f4ea;
+  /* Texto sobre `--acento-claro`. O âmbar não carrega texto; este carrega. */
+  --acento-tinta: #713f12;
+
+  /* --- Pódio ---
+   *
+   * Três trios: fundo, texto e a barra de 3px que marca a célula da posição.
+   * São identidade, não decoração — e por isso token, e não valor no módulo:
+   * é o único lugar do produto onde ouro, prata e bronze significam algo.
+   *
+   * A cor nunca carrega a informação sozinha; o número da posição continua
+   * ali, e é ele que o leitor de tela anuncia.
+   */
+  --ouro-fundo: #fef3c7;
+  --ouro-tinta: #78350f;
+  --ouro-marca: #d97706;
+
+  --prata-fundo: #f1f5f9;
+  --prata-tinta: #334155;
+  --prata-marca: #94a3b8;
+
+  --bronze-fundo: #fdf0e3;
+  --bronze-tinta: #7c2d12;
+  --bronze-marca: #c2703a;
 
   /* --- Forma --- */
   --raio: 0.625rem;
@@ -69,6 +113,16 @@
    */
   --foco: 3px solid var(--marca);
   --foco-recuo: 2px;
+
+  /*
+   * O mesmo anel, sobre fundo escuro.
+   *
+   * O anel padrão é azul da marca e some quando o fundo **é** a marca — o
+   * cabeçalho público e a barra do painel. Uma variante única resolve isso sem
+   * abrir exceção por módulo, que é como o cabeçalho tinha acabado com um
+   * `outline: 3px solid #fff` próprio, fora do sistema.
+   */
+  --foco-sobre-marca: 3px solid var(--sobre-marca);
 }
 
 *,

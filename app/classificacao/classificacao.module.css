@@ -70,7 +70,7 @@
 
 .abaAtiva {
   background: var(--marca);
-  color: #fff;
+  color: var(--sobre-marca);
   box-shadow: var(--sombra);
 }
 
@@ -153,7 +153,7 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #fff;
+  color: var(--sobre-marca);
   background: var(--marca);
   padding: 0.625rem 0.5rem;
   border-bottom: 2px solid var(--marca-escura);
@@ -166,7 +166,7 @@
 
 /* Faixa alternada: o olho não perde a linha ao atravessar quatro colunas. */
 .tabela tbody tr:nth-child(even) td {
-  background: #fbfcfe;
+  background: var(--superficie-tenue);
 }
 
 /* Posição e tempo alinham por dígito; sem isto as colunas dançam. */
@@ -233,7 +233,7 @@
   border-left-width: 5px;
   border-radius: var(--raio-pequeno);
   background: var(--acento-claro);
-  color: #713f12;
+  color: var(--acento-tinta);
   margin: 0.5rem 0;
   font-size: 0.9rem;
 }
@@ -260,21 +260,21 @@
 }
 
 .ouro {
-  background: #fef3c7;
-  color: #78350f;
-  box-shadow: inset 3px 0 0 #d97706;
+  background: var(--ouro-fundo);
+  color: var(--ouro-tinta);
+  box-shadow: inset 3px 0 0 var(--ouro-marca);
 }
 
 .prata {
-  background: #f1f5f9;
-  color: #334155;
-  box-shadow: inset 3px 0 0 #94a3b8;
+  background: var(--prata-fundo);
+  color: var(--prata-tinta);
+  box-shadow: inset 3px 0 0 var(--prata-marca);
 }
 
 .bronze {
-  background: #fdf0e3;
-  color: #7c2d12;
-  box-shadow: inset 3px 0 0 #c2703a;
+  background: var(--bronze-fundo);
+  color: var(--bronze-tinta);
+  box-shadow: inset 3px 0 0 var(--bronze-marca);
 }
 
 /* --- Faixa de números do topo ---

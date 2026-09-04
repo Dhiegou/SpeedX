@@ -8,7 +8,7 @@
 
 .cabecalho {
   background: var(--marca-escura);
-  color: #fff;
+  color: var(--sobre-marca);
   /* O quadriculado da bandeira, em duas linhas de gradiente: zero requisição. */
   border-bottom: 3px solid var(--acento);
 }
@@ -27,7 +27,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #fff;
+  color: var(--sobre-marca);
   text-decoration: none;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -46,8 +46,13 @@
   flex: 0 0 auto;
   border-radius: 3px;
   background:
-    conic-gradient(#fff 90deg, transparent 90deg 180deg, #fff 180deg 270deg, transparent 270deg) 0
-      0 / 50% 50%,
+    conic-gradient(
+        var(--sobre-marca) 90deg,
+        transparent 90deg 180deg,
+        var(--sobre-marca) 180deg 270deg,
+        transparent 270deg
+      )
+      0 0 / 50% 50%,
     var(--acento);
 }
 
@@ -63,7 +68,7 @@
   min-height: 44px;
   padding: 0 0.75rem;
   border-radius: var(--raio-pequeno);
-  color: #cbd5e1;
+  color: var(--sobre-marca-suave);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9375rem;
@@ -71,12 +76,12 @@
 }
 
 .link:hover {
-  background: rgb(255 255 255 / 0.08);
-  color: #fff;
+  background: var(--sobre-marca-veu);
+  color: var(--sobre-marca);
 }
 
 .link:focus-visible {
-  outline: 3px solid #fff;
+  outline: var(--foco-sobre-marca);
   outline-offset: -3px;
 }
 
@@ -87,8 +92,8 @@
  * não vê a tela.
  */
 .linkAtual {
-  background: rgb(255 255 255 / 0.14);
-  color: #fff;
+  background: var(--sobre-marca-veu-forte);
+  color: var(--sobre-marca);
 }
 
 @media (max-width: 24rem) {

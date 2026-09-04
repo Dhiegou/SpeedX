@@ -306,3 +306,118 @@ describe('robustez (escopo 4)', () => {
     expect(within(alerta).queryByRole('button', { name: /repetir/i })).toBeNull()
   })
 })
+
+describe('o Enter que recusa diz por quê (RNF-16, RNF-17)', () => {
+  /**
+   * As três recusas de `confirmarTempo` eram `return` nus. O Operador apertava
+   * Enter e a tela não mudava em nada — nem diálogo, nem mensagem, nem campo em
+   * vermelho —, e a leitura razoável disso, com fila na frente, é que o sistema
+   * travou.
+   *
+   * O que estes testes guardam não é o texto das mensagens: é que **existe**
+   * mensagem, que ela nomeia o problema, e que nada foi gravado. Se alguém
+   * voltar a recusar em silêncio, eles falham.
+   */
+
+  async function abrirCampoDeTempo(teclado: UserEvent): Promise<void> {
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+    await teclado.keyboard('{Enter}')
+    await screen.findByLabelText(/^Tempo de/)
+  }
+
+  it('tempo incompleto: diz que faltam números, e não abre a confirmação', async () => {
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    await teclado.keyboard('12{Enter}')
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toMatch(/incompleto/i)
+
+    expect(screen.queryByRole('dialog', { name: /confirmar lançamento/i })).toBeNull()
+    expect(enviados.filter((e) => e.url === '/api/painel/tempo')).toHaveLength(0)
+  })
+
+  it('campo vazio: diz o que digitar, com exemplo', async () => {
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    await teclado.keyboard('{Enter}')
+
+    const alerta = await screen.findByRole('alert')
+    // O exemplo importa: a máscara preenche da direita para a esquerda, e quem
+    // nunca viu isso não adivinha que 12345 vira 01:23.45.
+    expect(alerta.textContent).toContain('01:23.45')
+    expect(screen.queryByRole('dialog', { name: /confirmar lançamento/i })).toBeNull()
+  })
+
+  it('mais de 59 segundos: a recusa aparece com o valor que a máscara mostrou', async () => {
+    // A recusa mais importante das três. `mascaraDeTempo.ts` exibe 00:99.99 de
+    // propósito, para o Operador ver que errou a digitação — e o Enter recusava
+    // exatamente esse valor sem dizer nada. A tela mostrava o erro e escondia o
+    // motivo da recusa: as duas metades da mesma informação, separadas.
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    await teclado.keyboard('9999{Enter}')
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toContain('00:99.99')
+    expect(alerta.textContent).toMatch(/59 segundos/)
+
+    expect(screen.queryByRole('dialog', { name: /confirmar lançamento/i })).toBeNull()
+    expect(enviados.filter((e) => e.url === '/api/painel/tempo')).toHaveLength(0)
+  })
+
+  it('a recusa marca o campo como inválido, para quem usa leitor de tela', async () => {
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    const campo = screen.getByLabelText(/^Tempo de/)
+    expect(campo.getAttribute('aria-invalid')).toBe('false')
+
+    await teclado.keyboard('12{Enter}')
+
+    await waitFor(() => {
+      expect(campo.getAttribute('aria-invalid')).toBe('true')
+    })
+  })
+
+  it('a recusa some na primeira tecla, e o que já estava digitado continua lá', async () => {
+    // Some porque ela falava do valor anterior. E o digitado fica porque apagar
+    // o campo a cada recusa obrigaria a redigitar o tempo inteiro — que é o
+    // oposto do que RNF-16 pede.
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    await teclado.keyboard('12{Enter}')
+    await screen.findByRole('alert')
+
+    await teclado.keyboard('3')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+    expect(screen.getByLabelText(/^Tempo de/)).toHaveProperty('value', '00:01.23')
+  })
+
+  it('depois de corrigir, o mesmo campo grava normalmente', async () => {
+    // A recusa não pode deixar resíduo que impeça o lançamento seguinte.
+    const teclado = montar()
+    await abrirCampoDeTempo(teclado)
+
+    await teclado.keyboard('9999{Enter}')
+    await screen.findByRole('alert')
+
+    await teclado.keyboard('{Backspace}{Backspace}{Backspace}{Backspace}12345{Enter}')
+
+    const dialogo = await screen.findByRole('dialog', { name: /confirmar lançamento/i })
+    await within(dialogo).findByRole('button', { name: /confirmar/i })
+    await teclado.keyboard('{Enter}')
+
+    await waitFor(() => {
+      expect(enviados.filter((e) => e.url === '/api/painel/tempo')).toHaveLength(1)
+    })
+    expect(enviados.find((e) => e.url === '/api/painel/tempo')?.corpo.tempo).toBe('01:23.45')
+  })
+})

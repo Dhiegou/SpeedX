@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import estilos from './painel.module.css'
 
 /**
  * Logout explícito (T08, item 7 do escopo).
@@ -30,7 +31,14 @@ export default function BotaoSair() {
   }
 
   return (
-    <button type="button" onClick={sair} disabled={saindo}>
+    // Secundário de propósito: sair é a ação que menos se quer acertar por
+    // engano num tablet, com a fila andando. O botão cheio é o do lançamento.
+    <button
+      type="button"
+      className={`${estilos.botao} ${estilos.botaoSecundario}`}
+      onClick={sair}
+      disabled={saindo}
+    >
       {saindo ? 'Saindo…' : 'Sair'}
     </button>
   )

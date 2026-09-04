@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import BotaoSair from './BotaoSair'
+import estilos from './painel.module.css'
 import Painel from './Painel'
 import { exigirOperador } from '@/contexts/identidade/servico'
 
@@ -27,7 +28,7 @@ export default async function PainelDoOperador() {
   return (
     <>
       <Painel operador={operador.nome} cockpitInicial={1} />
-      <div style={{ maxWidth: '60rem', margin: '0 auto', padding: '0 1rem 2rem' }}>
+      <div className={estilos.rodapeSair}>
         <BotaoSair />
       </div>
     </>

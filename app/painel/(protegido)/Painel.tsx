@@ -45,6 +45,15 @@ export default function Painel({ operador, cockpitInicial }: Props) {
   const [achados, setAchados] = useState<api.ParticipanteEncontrado[]>([])
   const [indice, setIndice] = useState(0)
   const [digitos, setDigitos] = useState('')
+  /**
+   * Por que o Enter recusou o tempo.
+   *
+   * Existe porque as três recusas de `confirmarTempo` eram `return` nus: o
+   * Operador apertava Enter, nada acontecia, e a conclusão razoável era que o
+   * sistema tinha travado. RNF-16 dá quinze segundos para o lançamento inteiro
+   * — uma recusa muda gasta os quinze e não entrega nada.
+   */
+  const [recusa, setRecusa] = useState<string | null>(null)
   const [sucesso, setSucesso] = useState<string | null>(null)
   const [online, setOnline] = useState(true)
   const [historico, setHistorico] = useState<api.Lancamento[] | null>(null)
@@ -154,6 +163,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
 
   const voltarAoInicio = useCallback(() => {
     setDigitos('')
+    setRecusa(null)
     setIndice(0)
     despachar({ tipo: 'cancelar' })
   }, [])
@@ -181,6 +191,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
         setOnline(true)
         setBusca('')
         setDigitos('')
+        setRecusa(null)
         setIndice(0)
         despachar({ tipo: 'sucesso' })
         recarregar()
@@ -201,11 +212,13 @@ export default function Painel({ operador, cockpitInicial }: Props) {
       ultimos4Telefone: item.ultimos4Telefone,
     }
     setDigitos('')
+    setRecusa(null)
     despachar({ tipo: 'selecionar', alvo })
   }, [])
 
   const corrigir = useCallback((p: api.ParticipanteEncontrado, t: api.TentativaEncontrada) => {
     setDigitos('')
+    setRecusa(null)
     despachar({
       tipo: 'selecionarParaCorrigir',
       alvo: {
@@ -324,11 +337,31 @@ export default function Painel({ operador, cockpitInicial }: Props) {
     }
   }
 
+  /**
+   * Enter no campo de tempo: abre a confirmação, ou **diz por que não abriu**.
+   *
+   * As três recusas aqui eram silenciosas, e a do meio era a pior: a máscara
+   * mostra `00:99.99` de propósito, para o Operador ver que errou a digitação
+   * (`mascaraDeTempo.ts`), e o Enter recusava esse valor sem dizer nada. A tela
+   * exibia o erro e escondia o motivo da recusa — as duas metades da mesma
+   * informação, separadas.
+   *
+   * Cada recusa nomeia o que fazer, e não só o que está errado (RNF-17). A
+   * validação de verdade continua sendo do servidor; isto evita gastar uma ida
+   * à rede com um valor que já se sabe recusado.
+   */
   function confirmarTempo(evento: React.KeyboardEvent<HTMLInputElement>): void {
     if (evento.key !== 'Enter') return
     evento.preventDefault()
 
-    if (!pareceCompleto(digitos)) return
+    if (!pareceCompleto(digitos)) {
+      setRecusa(
+        digitos === ''
+          ? 'Digite o tempo antes de confirmar. Só números: 12345 vira 01:23.45.'
+          : 'Tempo incompleto. Faltam números — o campo preenche da direita para a esquerda.',
+      )
+      return
+    }
 
     let tempoMs: number
     try {
@@ -336,12 +369,21 @@ export default function Painel({ operador, cockpitInicial }: Props) {
       // confirmação com um valor que já se sabe recusado.
       const [m, resto] = tempoTexto.split(':')
       const [s, c] = (resto ?? '').split('.')
-      if (Number(s) > 59) return
+
+      if (Number(s) > 59) {
+        setRecusa(
+          `${tempoTexto} tem mais de 59 segundos, o que nenhum relógio marca. Confira: os dois últimos números são centésimos.`,
+        )
+        return
+      }
+
       tempoMs = Number(m) * 60_000 + Number(s) * 1_000 + Number(c) * 10
     } catch {
+      setRecusa('Não consegui ler este tempo. Apague com Esc e digite de novo, só números.')
       return
     }
 
+    setRecusa(null)
     despachar({ tipo: 'informarTempo', tempoMs, tempoTexto, chave: crypto.randomUUID() })
   }
 
@@ -458,10 +500,31 @@ export default function Painel({ operador, cockpitInicial }: Props) {
             value={tempoTexto}
             onChange={(e) => {
               setDigitos(digitosDoCampo(e.target.value))
+              // A recusa morre na primeira tecla: ela falava do valor anterior.
+              setRecusa(null)
             }}
             onKeyDown={confirmarTempo}
+            aria-invalid={recusa !== null}
+            aria-describedby={recusa === null ? 'tempo-dica' : 'tempo-recusa'}
           />
-          <p className={estilos.dica}>Digite só os números. Enter confirma, Esc cancela.</p>
+          {/*
+            A recusa ocupa o lugar da dica, e não some sozinha.
+
+            Ocupa o lugar porque as duas competiriam pela mesma olhada, e a
+            recusa é a que importa quando existe — os atalhos que a dica repete
+            estão no rodapé. Não some sozinha porque um aviso temporizado é
+            aviso que o Operador perde justamente quando desviou o olho para o
+            cronômetro.
+          */}
+          {recusa === null ? (
+            <p className={estilos.dica} id="tempo-dica">
+              Digite só os números. Enter confirma, Esc cancela.
+            </p>
+          ) : (
+            <p className={estilos.recusa} id="tempo-recusa" role="alert">
+              {recusa}
+            </p>
+          )}
         </div>
       )}
 
