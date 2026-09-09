@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 import { env } from '@/shared/env'
+import { temaDaRequisicao } from '@/shared/tema'
 
 /**
  * O cartão de compartilhamento (PRD-front §5.7).
@@ -35,9 +36,23 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * O tema é aplicado **aqui**, no servidor, e é isso que elimina a piscada.
+ *
+ * O cookie chega junto com a requisição, então o `data-tema` já sai no HTML: a
+ * primeira pintura acontece no tema certo. A alternativa — guardar em
+ * `localStorage` — obrigaria a um script bloqueante no `<head>` só para não
+ * piscar, e ainda abriria divergência de hidratação, porque o servidor não tem
+ * como saber o que o navegador guardou (PRD-front §5.1).
+ *
+ * O padrão é o claro, e não `prefers-color-scheme`: o porquê está em
+ * `src/shared/tema.ts`.
+ */
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const tema = await temaDaRequisicao()
+
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-tema={tema}>
       {/*
         `suppressHydrationWarning` cobre extensões de navegador que injetam
         atributos no <body> antes do React hidratar — ColorZilla escreve

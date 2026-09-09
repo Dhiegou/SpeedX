@@ -85,6 +85,27 @@ test.describe('RNF-18 — operável em tela de celular', () => {
     await expect(page.getByRole('table')).toBeVisible()
   })
 
+  test('RNF-18 — o termo não rola de lado em 360 px', async ({ page }) => {
+    // A quinta página. Ela entrou nesta lista quando o cabeçalho passou a
+    // carregar o logotipo de verdade: o bloqueio da marca tem 200 px de largura
+    // mínima — 56% de uma tela de 360 — e é o elemento mais largo do site.
+    await conferir(page, '/termo')
+  })
+
+  test('RNF-18 — o bloqueio da marca cabe, e o selo continua legível', async ({ page }) => {
+    await page.goto('/')
+
+    // Os dois lados da mesma decisão. Abaixo de 200 px o "POWERED BY" do selo
+    // deixa de ser legível e o selo não vale estar ali; acima da largura da
+    // tela, a página anda de lado. O intervalo é estreito de propósito, e é o
+    // motivo de os links de navegação irem **abaixo** do logotipo no celular.
+    const bloco = page.locator('header a[aria-label*="SpeedX"]').first()
+    const caixa = await bloco.boundingBox()
+
+    expect(caixa?.width ?? 0).toBeGreaterThanOrEqual(200)
+    expect(await excedente(page)).toBe(0)
+  })
+
   test('RNF-18 — o painel do Operador cabe em 360 px', async ({ page }) => {
     // Sem sessão a rota manda para o login, e é ele que aparece em 360 px. Vale
     // como caso: o login é a primeira tela que um Operador com tablet estreito

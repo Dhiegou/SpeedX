@@ -56,6 +56,11 @@ describe('RNF-10 — o conjunto de rotas públicas é fechado (T21 Parte 1)', ()
     'app/api/classificacao/route.ts', // RF-26: a tabela é pública por requisito
     'app/api/inscricao/route.ts', // RF-01: quem se inscreve ainda não tem conta
     'app/api/saude/route.ts', // T16: um monitor externo não sabe autenticar-se
+    // PRD-front §5.1: troca o tema da interface. Não lê nem escreve dado de
+    // ninguém — grava um cookie com a palavra "claro" ou "escuro" e devolve a
+    // pessoa para a página de onde veio. Exigir sessão aqui seria exigir login
+    // para escolher a cor da tela, numa página que é pública por definição.
+    'app/api/tema/route.ts',
   ]
 
   const LOGIN = 'app/api/painel/sessao/route.ts'

@@ -32,8 +32,12 @@
   gap: 0.75rem 1.5rem;
   align-items: baseline;
   justify-content: space-between;
-  background: var(--marca-escura);
-  color: var(--sobre-marca);
+  background: var(--area-marca);
+  color: var(--sobre-area);
+  /* A barra é preta nos dois temas, e no escuro a página também é: sem a
+     aresta, ela deixaria de ser um objeto e viraria texto solto no topo —
+     perdendo justamente a função de dizer, de relance, em qual tela se está. */
+  border: 1px solid var(--sobre-area-veu-forte);
   border-radius: var(--raio);
   padding: 0.875rem 1rem;
   margin-bottom: 1rem;
@@ -47,7 +51,7 @@
 
 .identidade {
   /* Sobre a barra escura: cinza claro, ainda acima de 4.5:1. */
-  color: var(--sobre-marca-suave);
+  color: var(--sobre-area-suave);
   font-size: 0.95rem;
 }
 
@@ -145,7 +149,7 @@
   line-height: 1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  color: var(--marca-escura);
+  color: var(--marca-pura);
   white-space: nowrap;
 }
 
@@ -284,8 +288,9 @@
 }
 
 .botao:disabled {
-  background: var(--tinta-fraca);
-  border-color: var(--tinta-fraca);
+  background: var(--desabilitado);
+  border-color: var(--desabilitado);
+  color: var(--sobre-desabilitado);
   cursor: progress;
 }
 
@@ -304,8 +309,17 @@
   padding: 1rem;
 }
 
+/*
+ * A borda não é acabamento: é o que dá corpo ao diálogo no tema escuro.
+ *
+ * Ali a superfície do cartão é quase preta — precisa ser, senão o rosa em cima
+ * dela deixa de passar no contraste — e o véu que escurece a página também é
+ * preto. Sem uma aresta, a caixa que impede um Enter distraído de gravar o
+ * tempo na pessoa errada vira texto flutuando no escuro.
+ */
 .dialogo {
   background: var(--superficie);
+  border: 1px solid var(--borda);
   border-radius: 0.5rem;
   padding: 1.5rem;
   max-width: 32rem;

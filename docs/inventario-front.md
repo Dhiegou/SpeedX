@@ -88,6 +88,8 @@ Não listo como defeito porque o `globals.css` tem um argumento explícito na di
 
 **Mas o PRD-front precisa dizer isso de propósito**, porque a Classificação também vai para um telão, e telão em ambiente fechado é o caso em que escuro ganha. As duas superfícies têm ambientes opostos e hoje compartilham a paleta.
 
+> **Resolvido em 2026-09-08, e por um motivo que este inventário não podia prever.** O tema escuro entrou — mas não pelo telão, que §5.3 do PRD já tinha descartado como caso próprio. Entrou porque a marca chegou, e **as quatro cores dela reprovam em contraste sobre branco e passam sobre preto** (D-94). O escuro deixou de ser conforto e virou o ambiente em que a identidade é fiel. O argumento do sol continua de pé e decide outra coisa: **o padrão é o claro**, e não `prefers-color-scheme` (D-95). A escolha vive num cookie, e há teste que recusa a consulta de preferência de cor voltar a decidir o tema.
+
 ---
 
 ## Onde a interface fica muda

@@ -111,6 +111,7 @@ src/
     requisicao.ts     # leitura de Content-Type e do endereço de origem
     vocabulario.ts    # "Cockpit" numa constante só, com gênero (D-75, D-31, T22)
     qr.ts             # tamanho mínimo de impressão do QR por distância de leitura
+    tema.ts           # claro ou escuro: o cookie, o padrão e por que não é o do sistema
   db/
     schema.ts         # tabelas, constraints e índices
     migrations/       # SQL versionado pelo drizzle-kit (0000 inicial, 0001 repasse
@@ -119,7 +120,11 @@ src/
     index.ts          # pool e cliente Drizzle (só servidor)
 app/                  # rotas
   page.tsx            #   formulário de inscrição — a raiz é o destino do QR
+  globals.css         #   o sistema visual inteiro: tokens, os dois temas, escalas
+  icon.svg            #   ícone da aba; e `opengraph-image.tsx`, o cartão do WhatsApp
   _componentes/       #   componentes de cliente; `_` mantém fora do roteamento
+    Cabecalho.tsx     #     a barra preta das páginas públicas, com a troca de tema
+    marca/            #     os dois logotipos em SVG embutido — nada aqui é servido
   painel/
     login/            #   tela de login — fora do grupo protegido, senão dá laço
     (protegido)/      #   grupo invisível na URL cujo layout exige sessão (RF-11)
@@ -128,6 +133,7 @@ app/                  # rotas
       api.ts          #     chamadas a T10; rede caída ≠ recusa do servidor
       Painel.tsx      #     a tela que o Operador usa por dez horas
   api/painel/sessao/  #   POST entra, DELETE sai, GET diz quem está logado
+  api/tema/           #   troca o tema e devolve um 303: um formulário, zero script
 tests/                # testes que atravessam módulos (ex.: fronteiras de contexto)
   rastreabilidade.test.ts # lê o PRD e exige um teste, ou uma justificativa, por requisito
 e2e/                  # ponta a ponta com Playwright: teclado, confirmação, 360 px (T17)
@@ -148,6 +154,7 @@ docs/
   testes.md           # o mapa da suíte e o que só se verifica com gente (T17)
   deploy.md           # onde roda, o que verificar e como desligar no fim (T19)
   plano-do-dia.md     # uma página, para imprimir: quem acionar e o que fazer (T19)
+  marca/              # os vetores originais e a paleta medida — arquivo, não servido
   relatorio-carga.md  # números medidos: leitura, escrita, cadastro, índices (T18)
   contingencia.md     # o que fazer quando a internet cai; para imprimir (T20)
   contingencia/       # ficha, termo e folha de tempos, prontos para impressão (T20)

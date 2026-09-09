@@ -89,7 +89,7 @@
 }
 
 .botao:hover:not(:disabled) {
-  background: var(--marca-escura);
+  background: var(--marca-forte);
 }
 
 .botao:focus-visible {
@@ -98,7 +98,8 @@
 }
 
 .botao:disabled {
-  background: var(--tinta-fraca);
+  background: var(--desabilitado);
+  color: var(--sobre-desabilitado);
   cursor: progress;
 }
 

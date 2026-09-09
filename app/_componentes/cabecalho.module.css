@@ -1,64 +1,47 @@
 /*
  * Cabeçalho das páginas públicas.
  *
- * Barra escura, cheia de largura, com o conteúdo alinhado ao mesmo eixo das
- * páginas. Ela substitui a faixa decorativa que ficava no `body`: onde há
- * cabeçalho, ele mesmo carrega a marca.
+ * **Preto nos dois temas, e isso é decisão de marca, não de estilo.** O
+ * "POWERED BY" do selo da PrinterX é branco no vetor e sumiria em fundo claro; o
+ * logotipo foi desenhado sobre preto e é ali que ele aparece como foi feito. O
+ * resultado é que a marca ganha um lugar fiel mesmo para quem está no tema
+ * claro. Por isso a barra lê `--area-marca` e não `--fundo`.
+ *
+ * **Os links vão abaixo do logotipo no celular.** Não é preferência: o selo
+ * precisa de 150px para o "POWERED BY" ser legível, o que põe o bloqueio da
+ * marca em 200px — 56% de uma tela de 360px. Não sobra largura para navegação ao
+ * lado, e espremer o logotipo até caber tornaria o selo ilegível, que é o mesmo
+ * que não tê-lo.
  */
 
 .cabecalho {
-  background: var(--marca-escura);
-  color: var(--sobre-marca);
-  /* O quadriculado da bandeira, em duas linhas de gradiente: zero requisição. */
-  border-bottom: 3px solid var(--acento);
+  background: var(--area-marca);
+  color: var(--sobre-area);
+  border-bottom: 3px solid var(--acento-pura);
 }
 
 .interior {
   max-width: 44rem;
   margin: 0 auto;
-  padding: 0.625rem 1rem;
+  padding: var(--espaco-3) var(--espaco-4);
   display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+
+/* A faixa de navegação: os links à esquerda, a troca de tema à direita. */
+.faixa {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-}
-
-.marca {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--sobre-marca);
-  text-decoration: none;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  font-size: 1.125rem;
-}
-
-/*
- * A bandeira quadriculada, desenhada com gradiente cônico repetido.
- *
- * Oito bytes de CSS no lugar de um arquivo de imagem, e escala sem serrilhar.
- * É decoração: `aria-hidden` no elemento mantém o leitor de tela fora dela.
- */
-.bandeira {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex: 0 0 auto;
-  border-radius: 3px;
-  background:
-    conic-gradient(
-        var(--sobre-marca) 90deg,
-        transparent 90deg 180deg,
-        var(--sobre-marca) 180deg 270deg,
-        transparent 270deg
-      )
-      0 0 / 50% 50%,
-    var(--acento);
+  gap: var(--espaco-2);
+  width: 100%;
 }
 
 .navegacao {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--espaco-1);
 }
 
 .link {
@@ -66,9 +49,9 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 0.75rem;
+  padding: 0 var(--espaco-3);
   border-radius: var(--raio-pequeno);
-  color: var(--sobre-marca-suave);
+  color: var(--sobre-area-suave);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9375rem;
@@ -76,32 +59,101 @@
 }
 
 .link:hover {
-  background: var(--sobre-marca-veu);
-  color: var(--sobre-marca);
+  background: var(--sobre-area-veu);
+  color: var(--sobre-area);
 }
 
-.link:focus-visible {
-  outline: var(--foco-sobre-marca);
+.link:focus-visible,
+.botaoTema:focus-visible {
+  outline: var(--foco-sobre-area);
   outline-offset: -3px;
 }
 
 /*
  * A página atual: fundo, peso e branco pleno.
  *
- * Três sinais e não só cor — o `aria-current` no elemento diz o mesmo a quem
- * não vê a tela.
+ * Três sinais e não só cor — o `aria-current` no elemento diz o mesmo a quem não
+ * vê a tela.
  */
 .linkAtual {
-  background: var(--sobre-marca-veu-forte);
-  color: var(--sobre-marca);
+  background: var(--sobre-area-veu-forte);
+  color: var(--sobre-area);
+  font-weight: 700;
+}
+
+.tema {
+  margin: 0;
+  display: flex;
+}
+
+/*
+ * A troca de tema.
+ *
+ * Botão de submissão de um formulário comum: sem script, o alvo de toque e o
+ * anel de foco são os mesmos do resto da barra, e o rótulo diz o destino em vez
+ * do estado — "Escuro" é para onde se vai, não onde se está.
+ */
+.botaoTema {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  min-height: 44px;
+  padding: 0 var(--espaco-3);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--sobre-area-suave);
+  background: none;
+  border: 1px solid var(--sobre-area-veu-forte);
+  border-radius: var(--raio-pequeno);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.botaoTema:hover {
+  background: var(--sobre-area-veu);
+  color: var(--sobre-area);
+}
+
+/*
+ * O disco meio cheio: o mesmo glifo nos dois temas, porque o que ele representa
+ * é a troca, e não o estado. Desenhado em CSS a partir de `currentColor` — uma
+ * biblioteca de ícones custaria 10 KB para resolver isto (PRD-front §2).
+ */
+.glifo {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+}
+
+/*
+ * Acima de 34rem o logotipo e a navegação convivem na mesma linha: ali a largura
+ * já comporta os 200px do bloqueio sem espremer nada.
+ */
+@media (min-width: 34rem) {
+  .interior {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-4);
+  }
+
+  .faixa {
+    width: auto;
+    justify-content: flex-end;
+  }
 }
 
 @media (max-width: 24rem) {
   .interior {
-    padding: 0.5rem 0.75rem;
+    padding: var(--espaco-2) var(--espaco-3);
   }
 
-  .link {
-    padding: 0 0.5rem;
+  .link,
+  .botaoTema {
+    padding: 0 var(--espaco-2);
   }
 }

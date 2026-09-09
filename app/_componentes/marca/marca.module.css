@@ -1,0 +1,53 @@
+/*
+ * O bloqueio da marca: SpeedX sobre o selo da PrinterX.
+ *
+ * **A largura mínima de 200px não é gosto, é legibilidade medida.** O texto
+ * "POWERED BY" ocupa cerca de um quinto da altura do selo; abaixo de uns 150px
+ * de selo ele desce dos 8px em que ainda se lê, e um selo ilegível não deveria
+ * estar na tela. Com o selo em 75% do bloqueio, 150px de selo pedem 200px de
+ * bloqueio — que é 56% de um aparelho de 360px, e é exatamente por isso que os
+ * links de navegação do cabeçalho vão **abaixo** do logotipo no celular.
+ *
+ * O teto de 260px existe porque acima disso a marca começa a competir com o
+ * título da página em tela grande, que é onde o olho deve cair primeiro.
+ */
+
+.bloco {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: clamp(200px, 56vw, 260px);
+  /* RNF-18: em nenhuma largura o bloqueio empurra a página para o lado. */
+  max-width: 100%;
+}
+
+.link {
+  display: block;
+  width: 100%;
+  border-radius: var(--raio-pequeno);
+}
+
+.link:focus-visible {
+  outline: var(--foco-sobre-area);
+  outline-offset: 3px;
+}
+
+.speedx {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * O selo em 75% da marca.
+ *
+ * Proporção, e não largura fixa: assim o par mantém a mesma relação em qualquer
+ * lugar onde o bloqueio for usado, sem ninguém precisar recalcular os dois
+ * números.
+ */
+.selo {
+  display: block;
+  width: 75%;
+  height: auto;
+}

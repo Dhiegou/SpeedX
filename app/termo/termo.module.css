@@ -196,8 +196,8 @@
 }
 
 .voltar:hover {
-  background: var(--marca-escura);
-  border-color: var(--marca-escura);
+  background: var(--marca-forte);
+  border-color: var(--marca-forte);
 }
 
 .voltar:focus-visible {

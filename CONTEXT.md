@@ -8,6 +8,8 @@ Mantido segundo a skill [`.claude/skills/documentar-contexto.md`](.claude/skills
 
 ## 1. Estado atual
 
+**2026-09-08 — o front ganhou marca, e ela mudou a paleta e o número do orçamento.** Apareceram o logotipo da SpeedX e o selo da patrocinadora PrinterX, e com eles seis cores definidas. A medição decidiu a arquitetura de cor antes de qualquer escolha estética: **nenhuma das quatro cores saturadas passa em contraste sobre branco, e todas passam sobre preto** (D-94). O produto ganhou **dois temas**, com o claro por padrão e a escolha guardada em cookie, sem uma linha de JavaScript e sem piscada (D-95). Os dois vetores entraram embutidos no HTML, e o primeiro carregamento foi de **143,0 para 148,4 KB gzip** — teto de 150, folga de 1,6 KB, a mais apertada até aqui (D-96). **696 testes** de unidade e integração, `npm run check` limpo, os mesmos 10 recursos de rede.
+
 **2026-08-28.** Vinte tarefas tocadas (T01–T17 e T22 concluídas; T18 e T19 parciais) e **632 testes passando** — 613 de unidade e integração, mais 19 de ponta a ponta. `npm run check` limpo. Publicado em https://github.com/Dhiegou/SpeedX.
 
 **As cinco trilhas de produto estão fechadas, o dia do evento é observável e a suíte cobre os 53 requisitos do PRD.** T15 fechou o ciclo de vida do dado pessoal (`docs/retencao.md`); T16 pôs de pé `/api/saude`, o painel do dia e o relatório de métricas (`docs/monitoramento.md`); T17 traduziu cada linha *Verificação* do PRD em teste executável e — o que importa mais — pôs um teste a **vigiar** essa tradução (`docs/testes.md`).
@@ -1573,8 +1575,84 @@ A paleta anterior era azul-marinho sobre a escala de cinzas padrão de bibliotec
 
 **A hierarquia da Classificação mudou junto, e é o retorno maior.** As quatro colunas tinham o mesmo peso visual, e não valem a mesma coisa: quem abre a página faz uma pergunta só — "onde eu estou?" — e a responde varrendo a coluna de nomes. O nome passou a ser o maior, o tempo vem logo atrás, a posição virou índice apagado (menos nas três do pódio) e o Cockpit virou etiqueta.
 
+**Revisada em 2026-09-08 por D-94.** A pergunta que liberava esta decisão — "existe identidade externa a respeitar?" — era "não" quando ela foi tomada, e passou a ser "sim". O asfalto e a brasa saíram para a paleta da marca, e o "sem modo escuro" que esta decisão fechava caiu junto (D-95). O que sobreviveu inteiro foi tudo o que não era cor: as escalas, a hierarquia da Classificação e o método de verificar em vez de afirmar.
+
 **O custo, medido:** o primeiro carregamento foi de **142,3 KB para 143,0 KB gzip**, com os mesmos 10 recursos e nenhum pedido de rede novo. Teto de 150. Ou seja, a identidade inteira custou 0,7 KB — porque saiu de cor, espaço e tipografia do sistema, que é o que carrega em zero byte, e não de fonte ou imagem, que teriam custado de 15 a 30 KB cada e estouravam a folga sozinhas.
 
+
+### D-94 — A marca existe, e ela é desenhada para o preto: a paleta deixou de ser escolha nossa
+
+**Decidido em 2026-09-08**, executando a revisão do PRD-front.
+
+D-93 escolheu asfalto e brasa porque, na época, a resposta para "existe identidade externa a respeitar?" era **não**. Ela mudou: apareceram o logotipo da SpeedX e o selo da patrocinadora PrinterX, com seis cores definidas — rosa `#ED145B`, vermelho `#E93B40`, laranja `#E46124`, amarelo `#FFE206`, preto e branco.
+
+**O primeiro trabalho não foi aplicar a paleta, foi medi-la.** O resultado decide tudo o que veio depois:
+
+| cor       | sobre branco   | sobre preto |
+| --------- | -------------- | ----------- |
+| `#ED145B` | **4,33** falha | 4,85 passa  |
+| `#E93B40` | **4,07** falha | 5,16 passa  |
+| `#E46124` | **3,48** falha | 6,03 passa  |
+| `#FFE206` | **1,30** falha | 16,13 passa |
+
+**Nenhuma das quatro passa em fundo claro. Todas passam em preto.** Esta é uma marca desenhada para o escuro — e o logotipo confirma, porque veio sobre preto. Três regras saem daí, e não são estilo, são condição de leitura:
+
+1. **A cor pura só carrega texto grande.** Acima de 24px, ou 19px em negrito, a norma pede 3:1. É a faixa que devolve `#ED145B` ao produto: o total da Classificação e a contagem de pendentes do painel. Daí `--marca-pura` existir ao lado de `--marca`.
+2. **Texto de corpo usa a variante escurecida** — `#E81258` e `#C85019`, as mínimas que atingem 4,5:1 sobre branco preservando a matiz.
+3. **O amarelo nunca é texto sobre claro.** Em 1,30 é ilegível, e escurecido vira ocre, que já não é a cor da marca. Ele é fundo com preto por cima, em 16:1 — e é por isso que o **primeiro lugar do pódio é amarelo**, o único lugar do produto onde essa cor manda.
+
+**Uma correção sobre o vermelho, achada ao medir.** O PRD calculou `#E6242A` como a mínima sobre branco, e está certo para esse par. Só que no produto o vermelho é o **erro**, e o erro aparece sobre a própria tarja rosada, não sobre branco: ali `#E6242A` cai para 4,08 e reprova. `--erro` é `#D11F25`, um degrau abaixo.
+
+**A área de marca é preta nos dois temas, e isso resolve três coisas de uma vez.** O "POWERED BY" do selo é branco no vetor e sumiria em fundo claro; o logotipo aparece como foi desenhado; e a marca ganha um lugar fiel mesmo para quem está no tema claro. Por isso o cabeçalho e a barra do painel leem `--area-marca`, que não aparece no bloco do tema escuro — e há teste que falha se alguém a redeclarar lá.
+
+**O que isto custou de retrabalho: nada além de valores.** D-92 tinha posto todas as cores em tokens e criado o teste que as confere. Trocar de asfalto para a marca da corrida foi editar um arquivo — nenhum módulo mudou de cor, porque nenhum módulo tem cor.
+
+### D-95 — Dois temas, o claro por padrão, e a escolha guardada em cookie
+
+**Decidido em 2026-09-08.**
+
+D-93 tinha fechado a questão em "sem modo escuro", com um argumento correto para a paleta daquele dia: o evento é ao ar livre e paleta escura sob sol lê pior. **A marca reabriu a questão sozinha** — as quatro cores reprovam em branco e passam em preto, então o tema escuro deixou de ser conforto e virou o ambiente em que a identidade é fiel.
+
+**O padrão continua sendo o claro, e de propósito não é `prefers-color-scheme`.** A maioria deixa o aparelho no escuro, mas essa preferência foi formada em ambiente fechado, e o evento é num pátio. Seguir o sistema operacional entregaria o tema pior por padrão para mais da metade das pessoas, exatamente onde ele é pior. O sistema não sabe onde a pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão, e é lembrada.
+
+**A escolha vive num cookie, nunca em `localStorage`**, e isso é decisão técnica:
+
+- O cookie chega junto com a requisição, então o servidor **já pinta no tema certo na primeira pintura**. Isso elimina o script bloqueante no `<head>` e o risco de divergência de hidratação — os dois custos que `localStorage` obriga a pagar, por só ser legível depois que o JavaScript roda.
+- Sem persistência o botão não funcionaria na prática: as páginas públicas navegam por âncora comum, e não pelo `Link` do Next (4,7 KB medidos), então toda navegação é recarga completa e estado em memória morreria entre a inscrição e a classificação.
+- Tema é preferência de interface, não dado pessoal: não esbarra em RNF-08 nem no que o termo promete.
+
+**A troca não custa uma linha de JavaScript.** É um `<form method="post">` para `/api/tema`, que grava o cookie e devolve um 303 para a página de onde veio. As outras duas saídas custariam pacote: um botão de cliente traria React para páginas que hoje não têm nenhum, e uma Server Action traria o runtime de ações — cobrados no primeiro carregamento de duas mil pessoas, por uma preferência que se mexe uma vez no dia.
+
+**O campo de retorno é validado, e isso não é zelo.** Um `de` que vira `Location` é a receita do redirecionamento aberto; `//outro-site.com` é caminho válido e leva para fora daqui. A conferência é dupla — começa com barra, não começa com duas —, e qualquer outra coisa cai na raiz.
+
+**Duas guardas do projeto dispararam neste trabalho, e as duas estavam certas.** `painelGuarda.test.ts` exige que só `identidade/servico.ts` leia cookie de requisição; `auditoria.test.ts` mantém a lista fechada de rotas sem sessão. Nenhuma foi afrouxada: `shared/tema.ts` e `/api/tema` entraram como **exceções nomeadas, com o motivo escrito ao lado**, e o teste que garante que o nome `speedx_sessao` vive num arquivo só continua intacto.
+
+### D-96 — Os dois logotipos entraram embutidos no HTML, e comeram 4,8 dos 7 KB de folga
+
+**Decidido em 2026-09-08.**
+
+Os vetores **não** são imagens servidas. `public/` continua vazio de propósito: tudo que entra ali vira URL e requisição separada, e o primeiro carregamento precisa continuar em dez recursos. Eles viram SVG dentro de componentes React, comprimidos junto com o HTML que já está descendo.
+
+**O que custou, medido em três pontos:**
+
+| medida                     | gzip do primeiro carregamento |
+| -------------------------- | ----------------------------- |
+| antes (D-93)               | 143,0 KB                      |
+| com os dois temas, sem logotipo | 143,7 KB                 |
+| com tudo                   | **148,4 KB**                  |
+
+Ou seja: **os dois temas custaram 0,7 KB e os dois logotipos, 4,8 KB.** Teto de 150, folga de 1,6 KB. Passa, e passa mais apertado do que qualquer etapa anterior deste projeto — a folga era 7,0 KB.
+
+**Uma correção sobre o número do PRD.** Ele previa 3,75 KB para o par, medido comprimindo os dois arquivos SVG isoladamente. Dentro do HTML deu 4,8. A lição é sobre o método, não sobre o desenho: gzip de um arquivo sozinho não estima o custo dele embutido em outro documento, porque o dicionário é outro. **A medida que vale é sempre a do primeiro carregamento inteiro.**
+
+**Dois cuidados que o par exigiu e que não são óbvios:**
+
+- **O manifesto C2PA saiu.** Os dois arquivos vieram com 7,7 KB de base64 em `<metadata>` que não desenha nada e viajaria dentro do HTML de toda página, para todo participante. Sem tirá-lo, o par custaria mais que o dobro.
+- **O `id` do gradiente vem de fora.** Dois SVG embutidos no mesmo documento dividem o espaço de nomes de `id`: com o identificador fixo no arquivo, o segundo rouba o preenchimento do primeiro, e o sintoma é um logotipo preto sem erro nenhum no console.
+
+**O selo mandou no layout do cabeçalho.** O "POWERED BY" precisa de uns 8px de altura para ser lido, o que põe o selo em 150px e o bloqueio inteiro em 200px — 56% de uma tela de 360. Não sobra largura para navegação ao lado, então **os links vão abaixo do logotipo no celular**, e há teste de navegador que confere as duas pontas: o bloqueio não desce de 200px e a página não anda de lado.
+
+**O que fazer se a folga apertar de novo.** A marca da SpeedX aqui é traço automático de um JPEG, e traço automático gasta mais nós que um vetor desenhado. O caminho mais barato de volta é pedir o **arquivo original** a quem desenhou a marca — que também é o que o material impresso vai precisar de qualquer forma.
 
 ---
 

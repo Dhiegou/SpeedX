@@ -209,7 +209,7 @@
   border-color: var(--marca);
   border-width: 2px;
   background: var(--marca-clara);
-  color: var(--marca-escura);
+  color: var(--marca-forte);
 }
 
 .caixa {
@@ -330,8 +330,8 @@
 }
 
 .botao:hover:not(:disabled) {
-  background: var(--marca-escura);
-  border-color: var(--marca-escura);
+  background: var(--marca-forte);
+  border-color: var(--marca-forte);
 }
 
 /* Retorno do toque, e o único movimento da tela além do foco. */
@@ -340,8 +340,9 @@
 }
 
 .botao:disabled {
-  background: var(--tinta-fraca);
-  border-color: var(--tinta-fraca);
+  background: var(--desabilitado);
+  border-color: var(--desabilitado);
+  color: var(--sobre-desabilitado);
   box-shadow: none;
   cursor: progress;
 }
@@ -355,7 +356,7 @@
 .botaoSecundario:hover:not(:disabled) {
   background: var(--marca-clara);
   border-color: var(--marca);
-  color: var(--marca-escura);
+  color: var(--marca-forte);
 }
 
 .botao:focus-visible {
@@ -391,7 +392,7 @@
 .cockpitsConfirmados {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--marca-escura);
+  color: var(--marca-forte);
 }
 
 /* --- Resumo de erros com link para o campo --- */
@@ -525,8 +526,8 @@
 }
 
 .botaoLink:hover {
-  background: var(--marca-escura);
-  border-color: var(--marca-escura);
+  background: var(--marca-forte);
+  border-color: var(--marca-forte);
 }
 
 .botaoLink:focus-visible {

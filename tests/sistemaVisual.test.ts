@@ -43,6 +43,20 @@ const modulos = varrer(join(RAIZ, 'app'), ['.css']).filter((c) => c.endsWith('.m
 const ler = (caminho: string): string => readFileSync(caminho, 'utf8')
 const curto = (caminho: string): string => relative(RAIZ, caminho).replace(/\\/g, '/')
 
+/**
+ * O arquivo sem os comentários.
+ *
+ * Vários testes daqui procuram por uma construção proibida: `localStorage`, uma
+ * imagem baixada, cor literal. A explicação de **por que** ela é proibida mora
+ * no comentário logo acima do código que a evita — e é onde ela deve morar. Sem
+ * esta limpeza, o teste acusaria justamente os arquivos que documentam a
+ * decisão, e o conserto seria apagar a explicação: o pior desfecho possível.
+ */
+const codigo = (caminho: string): string =>
+  ler(caminho)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+
 describe('a cor vem do sistema, e não do módulo', () => {
   it('há módulos para conferir — o teste não passa por falta de arquivos', () => {
     expect(modulos.length).toBeGreaterThanOrEqual(6)
@@ -63,7 +77,7 @@ describe('a cor vem do sistema, e não do módulo', () => {
   })
 
   it('toda superfície com foco usa o anel do sistema, e nenhuma inventa o seu', () => {
-    // O anel padrão é `--foco`; sobre fundo escuro, `--foco-sobre-marca`. Um
+    // O anel padrão é `--foco`; sobre fundo escuro, `--foco-sobre-area`. Um
     // `outline` com valor próprio é o começo de foco que muda de aparência
     // entre telas — e foco que muda de aparência é foco que se perde de vista.
     const proprios: string[] = []
@@ -94,9 +108,7 @@ describe('a cor vem do sistema, e não do módulo', () => {
     // a justificativa manual de `rastreabilidade.test.ts` segue valendo. Citar
     // o código aqui faria a auditoria de T21 ler "coberto por teste" sobre algo
     // que nenhum teste mede.
-    const infratores = modulos
-      .filter((caminho) => /@import|url\(/.test(ler(caminho)))
-      .map(curto)
+    const infratores = modulos.filter((caminho) => /@import|url\(/.test(ler(caminho))).map(curto)
 
     expect(infratores).toEqual([])
   })
@@ -156,5 +168,120 @@ describe('o link compartilhado tem cartão, e a aba tem ícone (PRD-front §5.7)
     expect(fonte).toMatch(/metadataBase/)
     expect(fonte).toMatch(/APP_URL/)
     expect(fonte).toMatch(/openGraph/)
+  })
+})
+
+describe('os dois temas, e onde a escolha mora (PRD-front §5.1)', () => {
+  const globais = ler(join(RAIZ, 'app', 'globals.css'))
+
+  it('nenhum arquivo do projeto usa armazenamento de navegador', () => {
+    // Critério de aceitação explícito, e não implicância com a API. O tema é a
+    // única preferência que o produto guarda, e ela mora em cookie por um
+    // motivo técnico: cookie chega junto com a requisição, então o servidor
+    // pinta no tema certo de primeira. `localStorage` só é legível depois que o
+    // JavaScript roda, o que obrigaria a um script bloqueante no `<head>` para
+    // não piscar — exatamente o custo que RNF-04 não paga.
+    const fontes = [
+      ...varrer(join(RAIZ, 'app'), ['.ts', '.tsx']),
+      ...varrer(join(RAIZ, 'src'), ['.ts', '.tsx']),
+    ]
+
+    const infratores = fontes
+      .filter((caminho) => /\b(?:local|session)Storage\b/.test(codigo(caminho)))
+      .map(curto)
+
+    expect(infratores).toEqual([])
+  })
+
+  it('o tema não segue o sistema operacional', () => {
+    // `prefers-color-scheme` decidiria pela pessoa com base em onde ela estava
+    // quando configurou o aparelho, e não em onde ela está agora — que é um
+    // pátio ao sol. A única consulta de preferência que este arquivo respeita é
+    // a de movimento, que não tem esse problema.
+    const consultas = globais.match(/@media \(([^)]+)\)/g) ?? []
+
+    expect(consultas.join(' ')).not.toContain('prefers-color-scheme')
+    expect(consultas.join(' ')).toContain('prefers-reduced-motion')
+  })
+
+  it('o tema escuro existe e herda do claro em vez de repeti-lo', () => {
+    // Repetir a paleta inteira num segundo bloco é como o segundo tema morre:
+    // alguém ajusta um tom no claro, o escuro fica para trás, e ninguém percebe
+    // porque as duas telas nunca são abertas lado a lado.
+    const escuro = globais.slice(globais.indexOf("[data-tema='escuro']"))
+
+    expect(escuro).toContain('--fundo: #000000')
+    expect(escuro).toContain('color-scheme: dark')
+    // O amarelo do pódio e o preto da área de marca não são redeclarados: são
+    // os mesmos nos dois temas, e é isso que o teste fixa.
+    expect(escuro).not.toContain('--amarelo:')
+  })
+
+  it('a troca de tema não custa JavaScript', () => {
+    // Um botão de cliente traria React para páginas que hoje não têm nenhum, e
+    // uma Server Action traria o runtime de ações. O formulário comum é HTML
+    // puro, e é a única das três que custa zero no primeiro carregamento.
+    const cabecalho = ler(join(RAIZ, 'app', '_componentes', 'Cabecalho.tsx'))
+
+    expect(cabecalho).not.toContain("'use client'")
+    expect(cabecalho).toMatch(/method="post"/)
+    expect(cabecalho).toMatch(/action="\/api\/tema"/)
+  })
+})
+
+describe('a marca vive dentro do HTML (PRD-front §5.2)', () => {
+  const marca = join(RAIZ, 'app', '_componentes', 'marca')
+
+  it('os dois vetores são componentes, e nenhum é imagem servida', () => {
+    // Um `<img src>` seria requisição a mais no primeiro carregamento, e o
+    // orçamento se mede em recursos tanto quanto em bytes: são dez, e continuam
+    // dez. `public/` fica vazio de propósito — tudo que entra ali vira URL.
+    for (const peca of ['SpeedX', 'PrinterX']) {
+      const fonte = codigo(join(marca, `${peca}.tsx`))
+
+      expect(fonte).toContain('<svg')
+      expect(fonte).not.toMatch(/<img\b/)
+    }
+
+    expect(existsSync(join(RAIZ, 'public'))).toBe(false)
+  })
+
+  it('nenhum vetor carrega o metadata de origem', () => {
+    // Os arquivos vieram com um manifesto C2PA embutido: 7,7 KB de base64 que
+    // não desenha nada e viajaria dentro do HTML de toda página, para todo
+    // participante. Tirá-lo é o que faz o par caber em 3,8 KB gzip.
+    for (const peca of ['SpeedX', 'PrinterX']) {
+      const fonte = ler(join(marca, `${peca}.tsx`))
+
+      expect(fonte).not.toContain('c2pa')
+      expect(fonte).not.toContain('<metadata>')
+    }
+  })
+
+  it('o gradiente de cada vetor recebe identificador de fora', () => {
+    // Dois SVG embutidos no mesmo documento dividem o espaço de nomes de `id`.
+    // Com o identificador fixo no arquivo, o segundo rouba o preenchimento do
+    // primeiro — e o sintoma é um logotipo preto, sem erro nenhum no console.
+    for (const peca of ['SpeedX', 'PrinterX']) {
+      expect(ler(join(marca, `${peca}.tsx`))).toContain('id={id}')
+    }
+  })
+
+  it('o bloqueio não desce de 200px, senão o selo fica ilegível', () => {
+    // O "POWERED BY" precisa de uns 8px de altura para ser lido, o que põe o
+    // selo em 150px e o bloqueio em 200px — 56% de um aparelho de 360px. É daí
+    // que vem a decisão de layout do cabeçalho: links **abaixo** do logotipo.
+    const estilos = ler(join(marca, 'marca.module.css'))
+
+    expect(estilos).toMatch(/clamp\(200px/)
+  })
+
+  it('o cabeçalho é a área de marca, e não o fundo do tema', () => {
+    // O "POWERED BY" é branco no vetor: em fundo claro ele sumiria. A barra lê
+    // `--area-marca`, que é preta nos dois temas de propósito.
+    const estilos = ler(join(RAIZ, 'app', '_componentes', 'cabecalho.module.css'))
+
+    expect(estilos).toContain('background: var(--area-marca)')
+    expect(estilos).not.toMatch(/\.cabecalho \{[^}]*var\(--fundo\)/s)
   })
 })

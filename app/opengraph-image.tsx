@@ -22,13 +22,18 @@ export const alt = 'SpeedX — inscrição e classificação da corrida'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-/* As cores são as mesmas de `globals.css`. Aqui elas são literais porque esta
-   imagem é montada fora do navegador, onde não existe variável de CSS. */
-const MARCA = '#12306b'
-const MARCA_ESCURA = '#0b1f47'
-const SOBRE_MARCA = '#ffffff'
-const SOBRE_MARCA_SUAVE = '#cbd5e1'
-const ACENTO = '#b45309'
+/* As cores são as da marca, e são literais porque esta imagem é montada fora do
+   navegador, onde não existe variável de CSS.
+
+   O cartão é preto pelo mesmo motivo que o cabeçalho é: as quatro cores da marca
+   reprovam em contraste sobre branco e passam sobre preto, e a prévia de um link
+   é o primeiro lugar onde alguém vê esta identidade. */
+const PRETO = '#000000'
+const ROSA = '#ED145B'
+const LARANJA = '#E46124'
+const AMARELO = '#FFE206'
+const SOBRE_AREA = '#ffffff'
+const SOBRE_AREA_SUAVE = '#c9c9ce'
 
 export default function CartaoDeCompartilhamento(): ImageResponse {
   return new ImageResponse(
@@ -39,16 +44,21 @@ export default function CartaoDeCompartilhamento(): ImageResponse {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        background: MARCA_ESCURA,
+        background: PRETO,
         padding: '72px 80px',
         fontFamily: 'sans-serif',
       }}
     >
-      {/* A mesma faixa que abre toda página do site. */}
-      <div style={{ display: 'flex', width: '100%', height: 14 }}>
-        <div style={{ display: 'flex', width: '55%', background: MARCA }} />
-        <div style={{ display: 'flex', width: '45%', background: ACENTO }} />
-      </div>
+      {/* A mesma faixa que abre toda página do site: as três cores do logotipo,
+          na mesma ordem em que aparecem nele. */}
+      <div
+        style={{
+          display: 'flex',
+          width: '100%',
+          height: 14,
+          background: `linear-gradient(90deg, ${ROSA} 0%, ${LARANJA} 55%, ${AMARELO} 100%)`,
+        }}
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div
@@ -56,7 +66,7 @@ export default function CartaoDeCompartilhamento(): ImageResponse {
             display: 'flex',
             fontSize: 148,
             fontWeight: 800,
-            color: SOBRE_MARCA,
+            color: SOBRE_AREA,
             letterSpacing: '-0.04em',
             lineHeight: 1,
           }}
@@ -68,7 +78,7 @@ export default function CartaoDeCompartilhamento(): ImageResponse {
             display: 'flex',
             marginTop: 28,
             fontSize: 46,
-            color: SOBRE_MARCA_SUAVE,
+            color: SOBRE_AREA_SUAVE,
             letterSpacing: '-0.01em',
           }}
         >
@@ -80,7 +90,7 @@ export default function CartaoDeCompartilhamento(): ImageResponse {
         style={{
           display: 'flex',
           fontSize: 30,
-          color: SOBRE_MARCA_SUAVE,
+          color: SOBRE_AREA_SUAVE,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
         }}

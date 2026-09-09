@@ -151,8 +151,18 @@ describe('o cookie de sessão é lido em um lugar só (T08, item 5)', () => {
     // `cookies()` de `next/headers` é a única porta para o cookie no servidor.
     // Concentrá-la é o que faz `getOperadorAtual` ser de fato a interface de
     // autenticação, e não apenas a interface recomendada.
+    //
+    // **`shared/tema.ts` é exceção nomeada, e não esquecimento** (PRD-front
+    // §5.1). Ele lê um cookie de preferência de interface — a palavra "claro" ou
+    // "escuro" —, nunca o de sessão, e quem garante essa fronteira é o teste
+    // acima: o nome `speedx_sessao` continua existindo em um arquivo só. A
+    // exceção fica listada aqui em vez de o guarda ser afrouxado, porque o dia
+    // em que um segundo arquivo passar a ler cookie sem justificativa escrita é
+    // exatamente o dia em que este teste precisa falhar.
+    const PREFERENCIA = 'src/shared/tema.ts'
+
     const infratores = codigoDoProjeto
-      .filter((c) => relativo(c) !== MODULO_DE_SESSAO)
+      .filter((c) => relativo(c) !== MODULO_DE_SESSAO && relativo(c) !== PREFERENCIA)
       .filter((c) => /from 'next\/headers'/.test(ler(c)))
       .map(relativo)
 

@@ -156,7 +156,7 @@
   color: var(--sobre-marca);
   background: var(--marca);
   padding: 0.625rem 0.5rem;
-  border-bottom: 2px solid var(--marca-escura);
+  border-bottom: 2px solid var(--marca-forte);
 }
 
 .tabela td {
@@ -332,7 +332,7 @@
   line-height: 1.1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  color: var(--marca-escura);
+  color: var(--marca-pura);
 }
 
 .numeroRotulo {
