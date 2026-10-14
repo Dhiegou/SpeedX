@@ -311,7 +311,24 @@ export default function Classificacao({ inicial }: Props) {
                     <td className={`${estilos.posicao} ${podio(linha.posicao)}`}>
                       {linha.posicao}
                     </td>
-                    <td className={estilos.nome}>{linha.nomePublico}</td>
+                    <td className={estilos.nome}>
+                      {linha.nomePublico}
+                      {/*
+                        O mesmo Cockpit, dito duas vezes no markup e uma só na
+                        tela. Em telefone, a coluna própria sai e esta linha
+                        entra; acima disso, o contrário. É media query, não
+                        JavaScript — a escolha não pode depender de medir a
+                        janela depois de hidratar, senão a primeira pintura sai
+                        com a coluna errada.
+
+                        **Quem está escondido por `display: none` também some
+                        para o leitor de tela**, então em nenhuma largura o
+                        Cockpit é anunciado duas vezes.
+                      */}
+                      <span className={estilos.cockpitEmbutido}>
+                        {nomeDoCockpit(linha.cockpit)}
+                      </span>
+                    </td>
                     <td className={estilos.cockpit}>{nomeDoCockpit(linha.cockpit)}</td>
                     <td className={estilos.tempo}>{formatTempo(linha.tempoMs)}</td>
                   </tr>

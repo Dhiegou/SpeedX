@@ -300,3 +300,94 @@ describe('RNF-17 — o erro diz qual campo e o que houve', () => {
     expect(codigos(semIdade)).toContain('campo_obrigatorio')
   })
 })
+
+/**
+ * As falhas de forma — campo ausente e campo de tipo errado — são as únicas que
+ * o Zod detecta **antes** de qualquer regra nossa rodar. Por isso nenhuma delas
+ * passa por `regra()`, e por isso elas eram as únicas que chegavam à pessoa na
+ * língua da biblioteca: _"Invalid input: expected number, received undefined"_.
+ *
+ * **Quem via isso não era um caso exótico.** Era quem deixou a idade em branco
+ * e tocou em "Concluir inscrição" — o erro mais comum de todos, numa fila, num
+ * celular. A frase aparecia duas vezes: no resumo do topo e embaixo do campo.
+ *
+ * O teste é uma varredura e não uma lista: qualquer campo novo que entre no
+ * esquema sem frase em `FALTAS` reprova aqui antes de chegar ao evento.
+ */
+describe('RNF-17 — nenhuma mensagem chega em inglês', () => {
+  /** Erros por campo, para conferir a frase e não só o código. */
+  function mensagemDe(dados: unknown, campo: string): string {
+    try {
+      validarInscricao(dados)
+    } catch (erro) {
+      if (erro instanceof InscricaoInvalidaError) {
+        const achado = erro.erros.find((e) => e.campo === campo)
+        if (achado === undefined) {
+          throw new Error(
+            `Nenhum erro no campo "${campo}". Houve em: ${erro.erros.map((e) => e.campo).join(', ')}`,
+          )
+        }
+        return achado.mensagem
+      }
+      throw erro
+    }
+
+    throw new Error('Esperava recusa da validação, mas a entrada foi aceita.')
+  }
+
+  function todasAsMensagens(dados: unknown): readonly string[] {
+    try {
+      validarInscricao(dados)
+    } catch (erro) {
+      if (erro instanceof InscricaoInvalidaError) return erro.erros.map((e) => e.mensagem)
+      throw erro
+    }
+
+    throw new Error('Esperava recusa da validação, mas a entrada foi aceita.')
+  }
+
+  /** O que a biblioteca escreve, e nós não. */
+  const DA_BIBLIOTECA = [/invalid input/i, /expected/i, /received/i, /must contain/i]
+
+  it('um envio vazio recusa todos os campos, e nenhuma recusa vem da biblioteca', () => {
+    const mensagens = todasAsMensagens({})
+
+    expect(mensagens.length).toBeGreaterThan(5)
+
+    for (const mensagem of mensagens) {
+      for (const marca of DA_BIBLIOTECA) expect(mensagem).not.toMatch(marca)
+      // Frase de verdade: começa com maiúscula e termina em ponto.
+      expect(mensagem).toMatch(/^[A-ZÁÂÃÀÉÊÍÓÔÕÚÇ].*[.]$/u)
+    }
+  })
+
+  it('o campo em branco diz o que fazer, e diz qual campo é', () => {
+    const semIdade = entrada()
+    delete (semIdade as Record<string, unknown>)['idade']
+
+    expect(mensagemDe(semIdade, 'idade')).toBe('Preencha a idade.')
+  })
+
+  it('o campo preenchido errado não manda preencher o que já está preenchido', () => {
+    // A distinção que `paraErrosDeValidacao` já fazia no código e perdia na
+    // frase: "preencha" para quem não preencheu, "confira" para quem errou.
+    expect(mensagemDe(entrada({ idade: 'trinta' }), 'idade')).toMatch(/^Confira a idade/)
+  })
+
+  it('o aceite que falta fala do aceite, não de preencher um campo', () => {
+    const semConsentimento = entrada()
+    delete (semConsentimento as Record<string, unknown>)['consentimento']
+
+    expect(mensagemDe(semConsentimento, 'consentimento')).toMatch(/termo de consentimento/)
+  })
+
+  it('até o campo que ninguém previu responde em português', () => {
+    // `cockpits.0` não está na tabela, e não deve estar: é caminho de item de
+    // lista, que só aparece em corpo montado à mão contra a API. A saída
+    // genérica existe para que nem esse caso caia na frase em inglês.
+    const mensagem = mensagemDe(entrada({ cockpits: ['um'] }), 'cockpits.0')
+
+    for (const marca of DA_BIBLIOTECA) expect(mensagem).not.toMatch(marca)
+    expect(mensagem).toContain('cockpits.0')
+  })
+})

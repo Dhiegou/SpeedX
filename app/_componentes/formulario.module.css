@@ -188,13 +188,23 @@
   gap: 0.75rem;
 }
 
+/*
+ * As duas caixas de Cockpit, lado a lado.
+ *
+ * **O recuo lateral é menor que o vertical de propósito.** Com `1rem` dos dois
+ * lados, em 360px sobravam uns noventa pixels de texto por caixa — e "Cockpit
+ * 2" quebrava em duas linhas enquanto "Cockpit 1" cabia, porque o dígito 2 é
+ * alguns pixels mais largo que o 1. Duas caixas irmãs com alturas diferentes
+ * por causa de um dígito. O alvo de toque não muda: quem manda nele é o
+ * `min-height`, e ele continua acima dos 44px que RNF-18 pede.
+ */
 .opcao {
   flex: 1 1 8rem;
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   min-height: 56px;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem;
   font-weight: 600;
   border: 1px solid var(--borda-forte);
   border-radius: var(--raio-pequeno);
@@ -249,8 +259,21 @@
   border-style: dashed;
 }
 
+/*
+ * A etiqueta do aceite é **bloco**, e isso não é preferência de layout.
+ *
+ * Como `inline-block`, ela e o texto do aceite — dois `<span>` irmãos — ficavam
+ * na mesma linha, e o que aparecia na tela era "OBRIGATÓRIOLi e entendi este
+ * termo.", sem espaço nenhum entre as duas coisas. A caixa opcional escapava
+ * por acidente: o rótulo dela é longo o bastante para encher a linha sozinho e
+ * empurrar o texto para a seguinte, o que fazia o defeito parecer caso isolado
+ * da caixa obrigatória em vez da regra que ele era.
+ *
+ * Etiqueta e texto dizem coisas diferentes — uma é a condição, o outro é o
+ * compromisso — e D-23 depende de a pessoa distinguir as duas num relance.
+ */
 .etiqueta {
-  display: inline-block;
+  display: block;
   font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.02em;

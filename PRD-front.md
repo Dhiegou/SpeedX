@@ -286,12 +286,19 @@ Três números deste PRD não sobreviveram à medição, e ficam registrados por
 | Existe identidade externa?             | **Sim**, e é a paleta do projeto (§5.1). A PrinterX é patrocinador e vive dentro do logo |
 | Claro ou escuro?                       | **Os dois**, com o claro por padrão (§5.1)                                               |
 | Onde guardar a escolha de tema?        | **Cookie**, nunca `localStorage` (§5.1)                                                  |
+| Quem diz qual linha é a da pessoa?     | **Ninguém, e de propósito.** A busca já responde, e sem guardar nada (fechada em 14/10)  |
 
-### Ainda aberta
+### Fechada em 2026-10-14
 
-**Como a Classificação identifica o próprio resultado do participante?** Continua aberta depois da execução, e continua não bloqueando nada: o pódio e a hierarquia estão entregues, e a linha destacada já tem forma pronta (`--acento-claro` com barra à esquerda) — falta só quem diga qual linha é. A resposta tem implicação de RNF-08.
+**Como a Classificação identifica o próprio resultado do participante? Ela não identifica, e isso é a decisão.**
 
-Vale notar que a decisão do cookie **não** abre a porta para resolver isto por cookie. Tema é preferência de interface; identificar participante é outra categoria, e passa pelo que o termo promete.
+A pergunta ficou aberta durante toda a execução, sem bloquear nada: o pódio e a hierarquia foram entregues, e a linha destacada tem forma pronta (`--acento-claro` com barra à esquerda) — faltava só quem dissesse qual linha é. As três saídas foram postas lado a lado com o custo de cada uma, e a escolhida foi **nenhuma delas**.
+
+**O argumento é que a pergunta já tem resposta, e ela não cobra nada.** Quem quer se achar digita o nome na busca, e a linha acende com as vizinhas em volta — que é exatamente o que a pessoa em 437º precisa ver. Nada sai do dispositivo, nada é guardado, nada entra na URL.
+
+As duas alternativas cobravam, e cobravam no lugar errado. Levar o nome público na URL da tela de confirmação o põe no histórico do navegador e em qualquer link colado sem perceber — um dado que é público **naquela página** passando a viajar fora dela. E um botão "sou eu" exigiria cookie: a decisão do cookie de tema **não** abre essa porta, porque tema é preferência de interface e identificar participante é outra categoria, que passa pelo que o termo promete — e termo novo nasce rascunho, e sob rascunho o sistema recusa cadastrar qualquer pessoa (D-18).
+
+**O que isto fecha:** o PRD-front não tem mais pergunta aberta. Os dois critérios de aceitação que continuam marcados são ensaio com gente e aparelho (§9), e não decisão de produto.
 
 ## 12. Ativos e onde eles vivem
 

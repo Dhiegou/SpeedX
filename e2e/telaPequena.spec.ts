@@ -113,3 +113,108 @@ test.describe('RNF-18 — operável em tela de celular', () => {
     await conferir(page, '/painel')
   })
 })
+
+/**
+ * O que 360 px faz com a **linha** da tabela, e não só com a largura da página.
+ *
+ * A suíte acima prova que nada rola de lado. Isso é necessário e não é
+ * suficiente: a página pode caber na largura e ainda assim repartir mal o que
+ * cabe. Foi o que estava acontecendo — medido no navegador, a tabela tinha 336
+ * px divididos em posição 52, nome 109, Cockpit 81 e tempo 93, e **as 56 linhas
+ * quebravam em duas, todas**, porque o nome recebia um terço da largura.
+ *
+ * O nome é o alvo da varredura desta página inteira. Parti-lo ao meio dobra a
+ * rolagem de quem procura e desfaz a hierarquia que a tabela declara.
+ */
+test.describe('RNF-18 — a linha cabe na linha', () => {
+  test('o nome não parte em duas, e o Cockpit continua dito', async ({ page }) => {
+    await page.goto('/classificacao')
+    await page.waitForLoadState('networkidle')
+
+    const medidas = await page.evaluate(() => {
+      const linhas = [...document.querySelectorAll('tbody tr')].slice(0, 20)
+
+      return linhas.map((linha) => {
+        const nome = linha.querySelectorAll('td')[1]
+        // O nó de texto do nome, sem a etiqueta do Cockpit que vem depois dele.
+        const texto = [...(nome?.childNodes ?? [])].find((n) => n.nodeType === Node.TEXT_NODE)
+        const faixa = document.createRange()
+        if (texto !== undefined) faixa.selectNode(texto)
+
+        return {
+          altura: Math.round(linha.getBoundingClientRect().height),
+          // Mais de um retângulo quer dizer mais de uma linha de texto.
+          linhasDoNome: texto === undefined ? 0 : faixa.getClientRects().length,
+        }
+      })
+    })
+
+    expect(medidas.length).toBeGreaterThan(5)
+
+    for (const medida of medidas) {
+      expect(medida.linhasDoNome, 'o nome ocupou mais de uma linha').toBe(1)
+      expect(medida.altura, 'a linha cresceu além do previsto').toBeLessThan(70)
+    }
+
+    // A coluna sai da tela pequena; o dado, não. Ele passa a ser a etiqueta
+    // miúda embaixo do nome — e continua existindo para quem lê e para quem ouve.
+    await expect(page.locator('tbody tr').first()).toContainText(/Cockpit [12]/)
+  })
+
+  test('nenhum dos dois Cockpits quebra em duas linhas', async ({ page }) => {
+    await page.goto('/')
+
+    // Com recuo lateral de 1rem sobravam uns noventa pixels de texto por caixa,
+    // e "Cockpit 2" quebrava em duas linhas enquanto "Cockpit 1" cabia — porque
+    // o dígito 2 é alguns pixels mais largo que o 1. Duas caixas irmãs com
+    // alturas diferentes por causa de um dígito.
+    // Medido no nó de texto, e não na altura da caixa: `min-height` esconde a
+    // quebra enquanto ela couber nos 56 px, e um teste de altura passaria sem
+    // provar nada. Mais de um retângulo é mais de uma linha, e é o defeito.
+    const linhas = await page.evaluate(() =>
+      [...document.querySelectorAll('label')]
+        .filter(
+          (l) =>
+            l.querySelector('input') !== null && (l.textContent ?? '').trim().startsWith('Cockpit'),
+        )
+        .map((l) => {
+          const texto = [...l.childNodes].find((n) => n.nodeType === Node.TEXT_NODE)
+          const faixa = document.createRange()
+          if (texto !== undefined) faixa.selectNode(texto)
+          return texto === undefined ? 0 : faixa.getClientRects().length
+        }),
+    )
+
+    expect(linhas.length).toBe(2)
+    expect(linhas, 'um dos Cockpits quebrou em duas linhas').toEqual([1, 1])
+  })
+
+  test('a etiqueta do aceite fica acima do texto, e não colada nele', async ({ page }) => {
+    await page.goto('/')
+
+    // Como `inline-block`, etiqueta e texto são dois `<span>` irmãos na mesma
+    // linha, e a tela mostrava "OBRIGATÓRIOLi e entendi este termo.". A caixa
+    // opcional escapava por acidente, com um rótulo longo o bastante para
+    // encher a linha sozinho — o que fazia o defeito parecer caso isolado.
+    const caixas = await page.evaluate(() => {
+      const aceites = [...document.querySelectorAll('label')].filter(
+        (l) =>
+          l.querySelector('input[type="checkbox"]') !== null && l.textContent?.includes('termo'),
+      )
+
+      return aceites.map((aceite) => {
+        const spans = [...aceite.querySelectorAll('span > span')]
+        const etiqueta = spans[0]?.getBoundingClientRect()
+        const texto = spans[1]?.getBoundingClientRect()
+
+        return { fundoDaEtiqueta: etiqueta?.bottom ?? 0, topoDoTexto: texto?.top ?? 0 }
+      })
+    })
+
+    expect(caixas.length).toBeGreaterThan(0)
+
+    for (const caixa of caixas) {
+      expect(caixa.topoDoTexto).toBeGreaterThanOrEqual(caixa.fundoDaEtiqueta)
+    }
+  })
+})

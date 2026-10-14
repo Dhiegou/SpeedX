@@ -101,17 +101,6 @@
   outline-offset: var(--foco-recuo);
 }
 
-.estado {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  align-items: baseline;
-  justify-content: space-between;
-  color: var(--tinta-suave);
-  font-size: 0.9rem;
-  margin: 0.5rem 0;
-}
-
 .botao {
   font: inherit;
   font-weight: 600;
@@ -342,6 +331,70 @@
   letter-spacing: 0.06em;
   color: var(--tinta-suave);
   margin-top: 0.125rem;
+}
+
+/* =====================================================================
+ * O telefone, medido
+ *
+ * **A coluna do nome recebia um terço da largura, e é ela que a pessoa
+ * varre.** Em 360px a tabela tem 336px e eles estavam repartidos assim:
+ * posição 52, nome 109, Cockpit 81, tempo 93. O resultado foi medido no
+ * navegador e não sobrou dúvida: **as 56 linhas quebraram em duas, todas**,
+ * cada uma com 85px de altura em vez de 46.
+ *
+ * Duas consequências, e a segunda é a que importa. A lista fica com o dobro
+ * do comprimento — com dois mil inscritos, o dobro de rolagem no dedo de quem
+ * procura. E o alvo da varredura passa a estar partido ao meio, o que é
+ * exatamente o contrário do que a hierarquia desta tabela decidiu quando pôs
+ * o nome como o maior elemento da linha.
+ *
+ * **A largura some com a palavra "Cockpit", não com o dado.** Os 81px eram a
+ * palavra repetida em toda linha, e ela é a etiqueta que a hierarquia desta
+ * página já manda recuar. Abaixo de 28rem a coluna sai, e o Cockpit passa a
+ * ser uma linha miúda embaixo do nome — que é onde uma etiqueta pertence.
+ * O nome fica com 191px e cabe inteiro.
+ *
+ * O ponto de corte é largura de telefone: 28rem são 448px, acima dos 360, 390,
+ * 412 e 430 que vão aparecer no evento, e abaixo de qualquer tablet.
+ * ================================================================== */
+.cockpitEmbutido {
+  display: none;
+  font-size: var(--texto-miudo);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  /* Entrelinha 1: a etiqueta é uma linha de 13px, e qualquer folga aqui é
+     altura cobrada em duas mil linhas de rolagem. */
+  line-height: 1;
+}
+
+@media (max-width: 28rem) {
+  .cockpit {
+    display: none;
+  }
+
+  .cockpitEmbutido {
+    display: block;
+    margin-top: var(--espaco-1);
+  }
+
+  /* Sem a palavra ao lado, o nome manda na linha e pode respirar. */
+  .nome {
+    line-height: 1.25;
+  }
+
+  /*
+   * O recuo vertical desce um passo junto.
+   *
+   * A linha passou a ter duas alturas — o nome e a etiqueta — e manter o recuo
+   * de antes devolveria em espaço o que a quebra de linha deixou de custar. Com
+   * os dois ajustes a linha sai de **85px para perto de 54**, medidos, e o nome
+   * cabe inteiro em vez de partido.
+   */
+  .tabela td {
+    padding: var(--espaco-2);
+  }
 }
 
 /* O bloco de estado, agora só com a atualização e o botão. */

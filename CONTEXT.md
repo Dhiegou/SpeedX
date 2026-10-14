@@ -1654,6 +1654,57 @@ Ou seja: **os dois temas custaram 0,7 KB e os dois logotipos, 4,8 KB.** Teto de 
 
 **O que fazer se a folga apertar de novo.** A marca da SpeedX aqui é traço automático de um JPEG, e traço automático gasta mais nós que um vetor desenhado. O caminho mais barato de volta é pedir o **arquivo original** a quem desenhou a marca — que também é o que o material impresso vai precisar de qualquer forma.
 
+### D-97 — O que só aparece abrindo as telas: quatro defeitos que nenhuma suíte via
+
+**Decidido em 2026-10-14**, depois de abrir as cinco páginas num navegador de verdade, nos dois temas, em 360px e em 1280px, e **medir** em vez de olhar.
+
+O ponto de partida era um projeto verde: 696 testes, 25 de ponta a ponta, orçamento dentro do teto, contraste calculado par a par. O PRD-front estava executado, com 17 dos 19 critérios fechados. **E as telas tinham quatro defeitos, três deles visíveis para o participante.** Nenhum apareceu em teste, e o motivo é o mesmo nos quatro: a suíte confere papéis, rótulos e tokens — ela não confere **o que a tela mostra**.
+
+**1. O Zod respondia em inglês, no erro mais comum do formulário.**
+
+Quem deixava a idade em branco e tocava em "Concluir inscrição" recebia _"Invalid input: expected number, received undefined"_ — duas vezes, no resumo do topo e embaixo do campo. Não é caso exótico: é o erro mais provável de um formulário preenchido em pé, numa fila, no celular.
+
+A causa é estrutural e vale mais que o sintoma. Toda regra nossa declara a própria mensagem por `regra()`, mas **as falhas de forma — campo ausente e campo de tipo errado — o Zod detecta antes de qualquer regra nossa rodar**, então nenhuma delas passava por ali e nenhuma tinha frase escrita por nós. O código já estava certo: `paraErrosDeValidacao` sempre soube distinguir "não preencheu" de "preencheu errado", e o formulário já mandava a idade **ausente** em vez de `0` justamente para tornar essa distinção possível. A distinção existia e morria na última linha, porque a mensagem vinha de fora.
+
+A correção é uma tabela de frases por campo, com duas por campo — "Preencha a idade." para quem não preencheu, "Confira a idade…" para quem errou. **Duas frases escritas, e não um molde com rótulo**, porque molde obriga concordância em tempo de execução e é assim que nasce "a idade é obrigatório". O teste é varredura, não lista: campo novo no esquema sem frase na tabela reprova antes de chegar ao evento.
+
+**2. "OBRIGATÓRIOLi e entendi este termo."**
+
+A etiqueta do aceite era `inline-block`, e ela e o texto são dois `<span>` irmãos: ficavam na mesma linha, sem espaço nenhum entre as duas coisas. **A caixa opcional escapava por acidente** — o rótulo dela é longo o bastante para encher a linha sozinho e empurrar o texto para a seguinte —, o que fazia o defeito parecer caso isolado da caixa obrigatória em vez da regra que era. D-23 depende de a pessoa distinguir a condição do compromisso num relance.
+
+**3. "Cockpit 2" quebrava em duas linhas e "Cockpit 1" não** — porque o dígito 2 é alguns pixels mais largo que o 1, e o recuo lateral de 1rem deixava a caixa a esses pixels da borda. Duas caixas irmãs com alturas diferentes por causa de um dígito.
+
+**4. A coluna do nome recebia um terço da largura, e é ela que a pessoa varre.**
+
+Este é o que mais custava, e é o que só a medição mostra. Em 360px a tabela tem 336px, e eles estavam repartidos assim: posição 52, nome 109, Cockpit 81, tempo 93. Medido no navegador: **as 56 linhas quebravam em duas, todas**, cada uma com 85px de altura.
+
+Duas consequências, e a segunda é a que importa. A lista fica com o dobro do comprimento — com dois mil inscritos, o dobro de rolagem no dedo de quem procura. E o alvo da varredura passa a estar partido ao meio, que é o contrário do que a hierarquia desta tabela decidiu em D-93 ao pôr o nome como o maior elemento da linha.
+
+**A largura some com a palavra "Cockpit", não com o dado.** Os 81px eram a palavra repetida em toda linha, e ela é justamente a etiqueta que a hierarquia desta página manda recuar. Abaixo de 28rem a coluna sai e o Cockpit vira uma linha miúda embaixo do nome. O resultado, medido depois: **a linha caiu de 85px para 59, o nome subiu de 109px para 184, e a página encolheu 25%** — de 5335px para 4018px de rolagem. Nenhuma rolagem horizontal nova.
+
+É media query, e não JavaScript: a escolha não pode depender de medir a janela depois de hidratar, senão a primeira pintura sai com a coluna errada. E o que está escondido por `display: none` também some para o leitor de tela, então em nenhuma largura o Cockpit é anunciado duas vezes.
+
+**O método, que é o que fica.** Os quatro foram achados abrindo as telas e medindo elementos no navegador — `getClientRects()` por nó de texto, `getBoundingClientRect()` por célula. Os três testes novos de 360px medem a mesma coisa que a captura mostrou, e **foram verificados ao contrário**: com o CSS de antes, os três reprovam. É a diferença entre uma captura de tela, que exige alguém olhando na terça-feira, e um número, que reprova sozinho.
+
+**O que isto custou:** o primeiro carregamento foi de **148,4 para 148,9 KB gzip**, mesmos 10 recursos, teto de 150. A folga caiu de 1,6 para **1,1 KB** — quase tudo são as frases em português, que viajam no pacote porque o formulário valida no dispositivo antes de ir à rede. É a margem mais estreita do projeto, e ela agora é o primeiro assunto de qualquer trabalho de front que venha a seguir: **tokenizar os 46 valores de `rem` avulsos que ainda existem nos seis módulos ficou de fora por isto** — `var(--espaco-3)` ocupa mais bytes que `0.75rem`, e a folga não paga a arrumação.
+
+**Uma regra morta saiu junto**: `.estado`, 14 linhas na Classificação que nenhum componente referencia desde que a faixa de números entrou. E `.agents/` e `.claude/` passaram a ser ignorados por ESLint e Prettier — são skills vendorizadas de fora, e sem isso `npm run check` reprovava por arquivo que não escrevemos, que é o portão do projeto apontando para fora dele.
+
+### D-98 — A Classificação não identifica o próprio participante, e é isso que ela faz de certo
+
+**Decidido em 2026-10-14**, fechando a única pergunta que o PRD-front deixou aberta.
+
+A pergunta era "como a Classificação destaca o resultado da própria pessoa?", e ela vinha desde o inventário sem bloquear nada: o pódio e a hierarquia foram entregues, e a linha destacada tem forma pronta — faltava quem dissesse qual linha é.
+
+**A resposta é que a pergunta já estava respondida.** Quem quer se achar digita o nome na busca, e a linha acende com as vizinhas em volta, que é exatamente o que a pessoa em 437º precisa ver. Isso roda dentro do navegador, não gasta rede, não guarda nada e não põe nada na URL.
+
+As duas alternativas cobravam, e no lugar errado:
+
+- **Levar o nome público na URL** da tela de confirmação o põe no histórico do navegador e em qualquer link colado sem perceber. É um dado que é público **naquela página** passando a viajar fora dela — e a página existe justamente porque o termo delimita o que fica visível e onde.
+- **Um botão "sou eu"** exigiria cookie, e a decisão do cookie de tema (D-95) não abre essa porta: tema é preferência de interface, identificar participante é outra categoria e passa pelo que o termo promete. Termo novo nasce rascunho, e sob rascunho o sistema recusa cadastrar qualquer pessoa (D-18) — ou seja, o custo real desta alternativa não é o código, é a janela em que ninguém se inscreve.
+
+**O que isto fecha:** o PRD-front não tem mais pergunta aberta. Os dois critérios ainda em aberto são ensaio com gente e aparelho, não decisão de produto.
+
 ---
 
 ## 4. Premissas assumidas
