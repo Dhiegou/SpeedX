@@ -94,3 +94,12 @@ desktop.ini
 /blob-report/
 /playwright/.cache/
 .neon
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# `.agents/skills/` é cópia byte a byte de `.claude/skills/` — o instalador
+# escreve nos dois lugares, um por convenção de ferramenta. Versionar os dois
+# poria os mesmos 2,2 MB de skill de terceiro no repositório duas vezes.
+# Versionada fica a de `.claude/`, que é a que `.gitignore` acima já declara
+# como proposital, e `skills-lock.json` é o que prende a versão de cada uma.
+.agents/

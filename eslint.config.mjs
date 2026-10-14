@@ -82,7 +82,18 @@ const MSG_CLASSIFICACAO =
 
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts', 'coverage/**'],
+    // `.agents/` e `.claude/` guardam skills de ferramenta, vendorizadas de
+    // fora: é código de terceiro que mora no diretório e não é do produto.
+    // Sem esta linha, `npm run check` passa a reprovar por arquivo que não
+    // escrevemos e não mantemos — o portão do projeto apontando para fora dele.
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'next-env.d.ts',
+      'coverage/**',
+      '.agents/**',
+      '.claude/**',
+    ],
   },
 
   ...next,
