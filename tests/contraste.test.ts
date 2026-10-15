@@ -234,11 +234,11 @@ describe.each([
 
 describe('a área de marca é preta nos dois temas', () => {
   it('o preto da marca não é declarado dentro do tema escuro', () => {
-    // O cabeçalho público e a barra do painel não trocam com o tema: o
-    // "POWERED BY" do selo é branco no vetor e sumiria em fundo claro. Se um dia
-    // alguém redeclarar `--area-marca` no bloco do escuro, o selo continua
-    // funcionando por acidente enquanto o valor for escuro — e some no dia em
-    // que não for. Melhor que o teste diga isso agora.
+    // O cabeçalho público e a barra do painel não trocam com o tema: as cores
+    // da marca reprovam em contraste sobre branco e passam sobre preto (D-94).
+    // Se um dia alguém redeclarar `--area-marca` no bloco do escuro, a marca
+    // continua funcionando por acidente enquanto o valor for escuro — e perde o
+    // fundo no dia em que não for. Melhor que o teste diga isso agora.
     expect(bloco("[data-tema='escuro']")).not.toMatch(/--area-marca:/)
     expect(bloco("[data-tema='escuro']")).not.toMatch(/--sobre-area:/)
   })

@@ -120,6 +120,8 @@ O padrão é o claro **sempre**, e não o `prefers-color-scheme`. O motivo é o 
 
 ### 5.2 Identidade da marca
 
+> **Revisada em 2026-10-14 por D-99.** O selo da PrinterX saiu do cabeçalho a pedido de quem decide a identidade. O que esta seção mede continua correto e passou a descrever o que foi, não o que é: o par custou 4,8 KB, e tirar o selo devolveu 2,6 deles. O piso de 200px do bloqueio ficou, mas deixou de ser consequência do "POWERED BY" e virou escolha. O vetor continua em `docs/marca/`, que é arquivo e não é servido.
+
 Os dois logotipos estão prontos, vetorizados e medidos.
 
 | peça                                | origem                                | gzip        |

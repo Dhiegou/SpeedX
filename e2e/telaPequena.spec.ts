@@ -92,18 +92,24 @@ test.describe('RNF-18 — operável em tela de celular', () => {
     await conferir(page, '/termo')
   })
 
-  test('RNF-18 — o bloqueio da marca cabe, e o selo continua legível', async ({ page }) => {
+  test('RNF-18 — o bloqueio da marca cabe, e o selo não voltou', async ({ page }) => {
     await page.goto('/')
 
-    // Os dois lados da mesma decisão. Abaixo de 200 px o "POWERED BY" do selo
-    // deixa de ser legível e o selo não vale estar ali; acima da largura da
-    // tela, a página anda de lado. O intervalo é estreito de propósito, e é o
-    // motivo de os links de navegação irem **abaixo** do logotipo no celular.
+    // Duas pontas da mesma decisão. O bloqueio tem piso de 200 px, que é o que
+    // o cabeçalho foi desenhado em cima — 56% de uma tela de 360 e o motivo de
+    // os links irem **abaixo** do logotipo no celular. Acima da largura da
+    // tela, a página anda de lado. O intervalo é estreito de propósito.
+    //
+    // E o selo da PrinterX saiu (D-99): a segunda asserção existe para que ele
+    // não volte por um merge distraído, já que ele era o que justificava os
+    // 200 px e some sem deixar nenhum teste vermelho se ninguém o pedir.
     const bloco = page.locator('header a[aria-label*="SpeedX"]').first()
     const caixa = await bloco.boundingBox()
 
     expect(caixa?.width ?? 0).toBeGreaterThanOrEqual(200)
     expect(await excedente(page)).toBe(0)
+
+    await expect(page.locator('[aria-label="Powered by PrinterX"]')).toHaveCount(0)
   })
 
   test('RNF-18 — o painel do Operador cabe em 360 px', async ({ page }) => {

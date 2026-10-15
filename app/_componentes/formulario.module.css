@@ -45,8 +45,6 @@
  * largura útil da coluna de campos.
  */
 .formulario {
-  /* A numeração das etapas nasce aqui e morre aqui. */
-  counter-reset: etapa;
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
@@ -76,13 +74,16 @@
 }
 
 /*
- * As seções eram três blocos de mesmo peso, e por isso o formulário parecia
- * uma lista longa em vez de um caminho com fim.
+ * O título da seção, sem número.
  *
- * Numerá-las resolve isso sem acrescentar palavra nenhuma: quem está na fila
- * vê "2" e sabe que existe um "3". A contagem é do CSS, e não do componente —
- * o bloco do Responsável aparece e some conforme a idade, e uma numeração
- * escrita à mão ficaria errada exatamente nesse caso.
+ * **A numeração saiu em 2026-10-14**, a pedido. Ela existia para dar a sensação
+ * de caminho com fim — quem via "2" sabia que havia um "3" —, e o que a
+ * separava do resto continua de pé sem ela: peso, tamanho e a linha rosa
+ * embaixo já dizem onde uma seção começa.
+ *
+ * O contador era do CSS e não do componente, de propósito, porque o bloco do
+ * Responsável aparece e some conforme a idade. Saindo o número, sai também o
+ * contador: não há o que manter sincronizado.
  */
 .legenda {
   display: flex;
@@ -95,22 +96,6 @@
   margin-bottom: var(--espaco-1);
   border-bottom: 2px solid var(--marca-clara);
   width: 100%;
-  counter-increment: etapa;
-}
-
-.legenda::before {
-  content: counter(etapa);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: var(--marca);
-  color: var(--sobre-marca);
-  font-size: var(--texto-apoio);
-  font-variant-numeric: tabular-nums;
 }
 
 .campo {

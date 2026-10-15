@@ -177,11 +177,13 @@
   /* =====================================================================
    * A área de marca — preta nos dois temas
    *
-   * O cabeçalho público e a barra do painel não trocam com o tema, e isso
-   * resolve três coisas de uma vez: o "POWERED BY" do selo da PrinterX é branco
-   * no vetor e sumiria em fundo claro; o logotipo aparece exatamente como foi
-   * desenhado, sobre o preto para o qual foi feito; e a marca ganha um lugar
-   * fiel mesmo para quem está no tema claro.
+   * O cabeçalho público e a barra do painel não trocam com o tema: o logotipo
+   * aparece exatamente como foi desenhado, sobre o preto para o qual foi feito,
+   * e a marca ganha um lugar fiel mesmo para quem está no tema claro. Havia uma
+   * terceira razão — o "POWERED BY" do selo da PrinterX era branco no vetor e
+   * sumiria em fundo claro —, e ela caiu com a saída do selo em 2026-10-14. As
+   * outras duas bastam, porque são a medição de D-94: as cores da marca
+   * reprovam sobre branco e passam sobre preto.
    *
    * Por serem fixas, estas quatro não aparecem no bloco do tema escuro.
    * ================================================================== */

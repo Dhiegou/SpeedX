@@ -589,10 +589,16 @@ export default function FormularioInscricao({
             Se você concluir a inscrição, seu resultado aparece na página pública de classificação.
             Com 18 anos ou mais, aparece nome e sobrenome completos; com menos de 18, aparece o nome
             e a inicial do sobrenome. E-mail, telefone e idade nunca aparecem.{' '}
+            {/*
+              O link continua abrindo em outra aba — `linkTermo` traz
+              `target` e `rel`, e há teste que confere os dois. O que saiu foi
+              só a frase que explicava isso: numa fila, a pessoa lê o aviso de
+              exposição pública e não a instrução de navegação.
+            */}
             <a className={estilos.link} {...linkTermo}>
               Ler o termo completo
-            </a>{' '}
-            (abre em outra aba, não apaga o que você já preencheu).
+            </a>
+            .
           </p>
 
           <div className={estilos.aceites}>

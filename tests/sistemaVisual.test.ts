@@ -232,11 +232,19 @@ describe('os dois temas, e onde a escolha mora (PRD-front §5.1)', () => {
 describe('a marca vive dentro do HTML (PRD-front §5.2)', () => {
   const marca = join(RAIZ, 'app', '_componentes', 'marca')
 
-  it('os dois vetores são componentes, e nenhum é imagem servida', () => {
+  /**
+   * Era um par, e virou um. O selo da PrinterX saiu em 2026-10-14 (D-99), e a
+   * lista aqui é a prova de que ele saiu: um vetor novo no diretório sem entrar
+   * nesta lista escapa das três regras abaixo, e por isso a lista é lida do
+   * próprio diretório logo adiante, e não escrita à mão duas vezes.
+   */
+  const pecas = ['SpeedX']
+
+  it('cada vetor é componente, e nenhum é imagem servida', () => {
     // Um `<img src>` seria requisição a mais no primeiro carregamento, e o
     // orçamento se mede em recursos tanto quanto em bytes: são dez, e continuam
     // dez. `public/` fica vazio de propósito — tudo que entra ali vira URL.
-    for (const peca of ['SpeedX', 'PrinterX']) {
+    for (const peca of pecas) {
       const fonte = codigo(join(marca, `${peca}.tsx`))
 
       expect(fonte).toContain('<svg')
@@ -250,7 +258,7 @@ describe('a marca vive dentro do HTML (PRD-front §5.2)', () => {
     // Os arquivos vieram com um manifesto C2PA embutido: 7,7 KB de base64 que
     // não desenha nada e viajaria dentro do HTML de toda página, para todo
     // participante. Tirá-lo é o que faz o par caber em 3,8 KB gzip.
-    for (const peca of ['SpeedX', 'PrinterX']) {
+    for (const peca of pecas) {
       const fonte = ler(join(marca, `${peca}.tsx`))
 
       expect(fonte).not.toContain('c2pa')
@@ -262,23 +270,37 @@ describe('a marca vive dentro do HTML (PRD-front §5.2)', () => {
     // Dois SVG embutidos no mesmo documento dividem o espaço de nomes de `id`.
     // Com o identificador fixo no arquivo, o segundo rouba o preenchimento do
     // primeiro — e o sintoma é um logotipo preto, sem erro nenhum no console.
-    for (const peca of ['SpeedX', 'PrinterX']) {
+    for (const peca of pecas) {
       expect(ler(join(marca, `${peca}.tsx`))).toContain('id={id}')
     }
   })
 
-  it('o bloqueio não desce de 200px, senão o selo fica ilegível', () => {
-    // O "POWERED BY" precisa de uns 8px de altura para ser lido, o que põe o
-    // selo em 150px e o bloqueio em 200px — 56% de um aparelho de 360px. É daí
-    // que vem a decisão de layout do cabeçalho: links **abaixo** do logotipo.
+  it('a lista de peças é a do diretório — nenhum vetor escapa das regras acima', () => {
+    // Sem isto, acrescentar um vetor novo e esquecer de pô-lo na lista faz as
+    // três regras passarem sem tê-lo conferido. É o mesmo defeito que D-92
+    // corrigiu na cor: afirmação que ninguém verifica.
+    const noDiretorio = readdirSync(marca)
+      .filter((nome) => nome.endsWith('.tsx') && nome !== 'Logo.tsx')
+      .map((nome) => nome.replace('.tsx', ''))
+
+    expect(noDiretorio.sort()).toEqual([...pecas].sort())
+  })
+
+  it('o bloqueio tem piso de largura, e o cabeçalho é desenhado em cima dele', () => {
+    // O piso de 200px nasceu medido, do "POWERED BY" do selo. Com o selo fora
+    // (D-99) ele deixou de ser consequência e virou escolha — e continua
+    // decidindo o layout do cabeçalho: 200px são 56% de uma tela de 360px, e é
+    // por isso que os links vão **abaixo** do logotipo no celular. Mudar este
+    // número é mudar aquele layout, e o teste existe para que a mudança seja
+    // deliberada em vez de silenciosa.
     const estilos = ler(join(marca, 'marca.module.css'))
 
     expect(estilos).toMatch(/clamp\(200px/)
   })
 
   it('o cabeçalho é a área de marca, e não o fundo do tema', () => {
-    // O "POWERED BY" é branco no vetor: em fundo claro ele sumiria. A barra lê
-    // `--area-marca`, que é preta nos dois temas de propósito.
+    // As cores da marca reprovam sobre branco e passam sobre preto (D-94). A
+    // barra lê `--area-marca`, que é preta nos dois temas de propósito.
     const estilos = ler(join(RAIZ, 'app', '_componentes', 'cabecalho.module.css'))
 
     expect(estilos).toContain('background: var(--area-marca)')

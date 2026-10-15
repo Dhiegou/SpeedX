@@ -1705,6 +1705,27 @@ As duas alternativas cobravam, e no lugar errado:
 
 **O que isto fecha:** o PRD-front não tem mais pergunta aberta. Os dois critérios ainda em aberto são ensaio com gente e aparelho, não decisão de produto.
 
+### D-99 — O selo da PrinterX saiu do cabeçalho, e com ele saiu 2,6 KB
+
+**Decidido em 2026-10-14**, a pedido de quem decide a identidade.
+
+O bloqueio da marca era a SpeedX com o selo "POWERED BY PrinterX" embaixo, e D-96 mediu o par em 4,8 KB gzip. Ficou só a SpeedX.
+
+**O que muda além da tela, e é o que vale registrar:**
+
+- **O primeiro carregamento caiu de 148,9 para 146,3 KB gzip**, mesmos 10 recursos. O selo custava 2,6 KB, e a folga contra o teto de 150 foi de 1,1 para **3,7 KB** — a maior desde que a marca chegou. É ela que volta a pagar trabalho de front: os 46 valores de `rem` avulsos dos seis módulos, que D-97 deixou de fora justamente por falta de folga, agora cabem.
+- **Três argumentos escritos no código perderam a premissa.** O piso de 200px do bloqueio era medido a partir do "POWERED BY", que precisa de uns 8px de altura para ser lido; a área de marca ser preta tinha o selo como primeira das três razões; e os links irem abaixo do logotipo no celular era consequência dos 200px. Os comentários foram reescritos em vez de deixados para trás: **o piso ficou, e passou de consequência medida a escolha de identidade**; a área de marca continua preta pelas duas razões que sobraram, que são a medição de D-94 — as cores da marca reprovam sobre branco e passam sobre preto.
+- **Um risco que diminuiu.** `docs/o-que-falta-para-voce.md` registra, em D4, que o plano gratuito da Vercel é para uso não comercial e que a ausência de marca de patrocinador na página é parte do que sustenta esse enquadramento (D-76). Com o selo fora, a pergunta deixa de existir.
+
+**O vetor não se perdeu.** `docs/marca/printerx-powered-by.svg` continua no arquivo, que não é servido. Voltar é uma linha em `Logo.tsx` e o componente de volta — e há teste de navegador que falha se ele voltar sem alguém pedir, porque o selo era justamente o que justificava os 200px e sumiria de novo sem deixar nada vermelho.
+
+**Duas outras limpezas no formulário, no mesmo pedido:**
+
+- Saiu o "(abre em outra aba, não apaga o que você já preencheu)" do link do termo. O comportamento não mudou — `target` e `rel` continuam lá, com teste —, mudou o que se gasta de atenção: quem está na fila precisa ler o aviso de exposição pública, não a instrução de navegação.
+- **Saiu a numeração das seções.** Os círculos 1, 2 e 3 existiam para dar sensação de caminho com fim, e o que separa uma seção da outra continua de pé sem eles: peso, tamanho e a linha rosa embaixo. O contador era do CSS e não do componente, porque o bloco do Responsável aparece e some conforme a idade — saindo o número, sai o contador, e não há o que manter sincronizado.
+
+**O que foi pedido e não foi feito, e o motivo é de termo e não de código.** O pedido incluía resumir os textos das duas caixas de consentimento. Eles não são texto de interface: são `aceite.texto` da versão `v1.0-2026-08-19`, aprovada por escrito (`docs/aprovacao-termo.md`), e **entram no hash de conteúdo** que `integridade.ts` declara — reescrevê-los sem trocar o identificador quebra a suíte de propósito, que é o defeito que aquele arquivo existe para impedir. O caminho correto é uma versão nova, e versão nova nasce `rascunho`; sob rascunho `assegurarTermoAprovado` recusa registrar qualquer consentimento (D-18), ou seja, **ninguém se inscreve até a aprovação por escrito sair**. Fica como pedido pendente, com o custo nomeado — é a mesma mecânica que `o-que-falta-para-voce.md` já descreve em D1 para a troca de "pista" por "Cockpit".
+
 ---
 
 ## 4. Premissas assumidas

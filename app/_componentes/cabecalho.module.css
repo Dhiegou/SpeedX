@@ -2,16 +2,16 @@
  * Cabeçalho das páginas públicas.
  *
  * **Preto nos dois temas, e isso é decisão de marca, não de estilo.** O
- * "POWERED BY" do selo da PrinterX é branco no vetor e sumiria em fundo claro; o
- * logotipo foi desenhado sobre preto e é ali que ele aparece como foi feito. O
- * resultado é que a marca ganha um lugar fiel mesmo para quem está no tema
- * claro. Por isso a barra lê `--area-marca` e não `--fundo`.
+ * logotipo foi desenhado sobre preto e é ali que ele aparece como foi feito, e
+ * as quatro cores da marca reprovam em contraste sobre branco e passam sobre
+ * preto (D-94). O resultado é que a marca ganha um lugar fiel mesmo para quem
+ * está no tema claro. Por isso a barra lê `--area-marca` e não `--fundo`.
  *
- * **Os links vão abaixo do logotipo no celular.** Não é preferência: o selo
- * precisa de 150px para o "POWERED BY" ser legível, o que põe o bloqueio da
- * marca em 200px — 56% de uma tela de 360px. Não sobra largura para navegação ao
- * lado, e espremer o logotipo até caber tornaria o selo ilegível, que é o mesmo
- * que não tê-lo.
+ * **Os links vão abaixo do logotipo no celular.** O argumento original era o
+ * selo da PrinterX, que precisava de 150px para o "POWERED BY" ser legível e
+ * punha o bloqueio em 200px. O selo saiu em 2026-10-14; o bloqueio continua em
+ * 200px por escolha de identidade, e enquanto continuar — 56% de uma tela de
+ * 360px — não sobra largura para navegação ao lado.
  */
 
 .cabecalho {
