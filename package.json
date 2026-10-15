@@ -28,6 +28,7 @@
     "metricas": "tsx scripts/metricas.ts",
     "perf:preparar": "tsx perf/preparar.ts",
     "perf:medir": "tsx perf/medir.ts",
+    "perf:rede": "tsx perf/rede.ts",
     "test:carga": "artillery run perf/classificacao.yml",
     "test:carga:cadastro": "artillery run perf/cadastro.yml",
     "test:e2e": "playwright test",

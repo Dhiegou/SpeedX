@@ -1757,6 +1757,76 @@ Junto, o vocabulário foi alinhado no código e nos documentos de operação —
 
 **O que esta decisão deixa barato.** A cerimônia de versão já foi paga. `o-que-falta-para-voce.md` registra, em D1, que o termo ainda diz "pista" onde o sistema inteiro diz **Cockpit** (D-75), e que corrigir isso exigiria versão nova. Exigiria — e agora o caminho está percorrido e documentado. Enquanto ninguém tiver se cadastrado em produção, trocar a palavra custa uma v1.2 e uma frase de aprovação.
 
+### D-101 — O termo continua dizendo "pista", e isso é escolha e não esquecimento
+
+**Decidido em 2026-10-14.**
+
+O sistema inteiro fala **Cockpit** desde D-75, e o termo de consentimento fala "pista" num ponto: a seção `dados-coletados`, onde ele diz o que é registrado durante o evento. A divergência estava aberta desde agosto, registrada em `o-que-falta-para-voce.md` como D1, e o que a segurava era o custo: trocar a palavra é trocar o texto, e trocar o texto exige versão nova.
+
+**A versão nova deixou de ser cara, e a decisão ainda assim foi manter.** A v1.1 (D-100) acabou de percorrer esse caminho inteiro no mesmo dia, o que tornaria a correção quase gratuita — uma v1.2 pelo mesmo procedimento. Com o custo fora do caminho, a pergunta ficou sendo só a que importa: a palavra atrapalha quem lê?
+
+Não atrapalha. "Pista" no termo descreve **onde a pessoa corre**, para alguém que está decidindo se entrega os próprios dados; "Cockpit" é o nome do posto no vocabulário operacional, que vive na Fila, na Classificação e na exportação. Quem lê o termo não precisa do segundo para entender o primeiro, e trocar a palavra num documento jurídico por consistência de glossário interno é mexer no que foi aprovado para ganhar nada do lado de quem lê.
+
+A divergência fica registrada, que é o que ela sempre precisou ser.
+
+### D-102 — O front-end é mais pesado do que este produto precisa, e mesmo assim fica — com RNF-04 medido pela primeira vez
+
+**Decidido em 2026-10-14**, respondendo a "estamos usando o melhor front-end para este projeto?".
+
+A pergunta é legítima e a resposta honesta tem duas partes que não se contradizem.
+
+**Primeira parte: medido, o framework é 78% do que desce.**
+
+| rota             | primeiro carregamento | o que a rota faz        |
+| ---------------- | --------------------- | ----------------------- |
+| `/`              | 146,3 KB gzip         | formulário, com estado  |
+| `/termo`         | 145,8 KB gzip         | **texto parado**        |
+| `/classificacao` | 143,6 KB gzip         | tabela com busca        |
+| `/painel/login`  | 136,5 KB gzip         | dois campos             |
+
+O número que decide a conversa é o do termo: **uma página sem uma linha de interatividade pesa 145,8 KB**, praticamente o mesmo que o formulário. Dois pedaços explicam quase tudo — 69,8 KB de `react-dom` e 44,0 KB do runtime do roteador do Next, que descem em toda rota. O código do produto inteiro, somando formulário, classificação, CSS e o logotipo, é cerca de **10 KB**. A piso de 136,5 KB do login é o chão do framework.
+
+Ou seja: para cinco páginas das quais três são documentos, React e Next cobram caro, e um HTML servido pelo servidor com uma ilha de JavaScript resolveria o mesmo com uma fração disso. **Pela métrica de peso, não é o melhor front-end possível para este produto.**
+
+**Segunda parte: fica, e não é inércia.**
+
+- **Faltam dez dias para o evento**, com congelamento de deploy no próprio dia.
+- **O framework não é só o front.** Os Server Components carregam a guarda de sessão (`exigirOperador`), a leitura do cookie de tema, o token assinado do formulário, as rotas de API e o cache de borda de 15 s. Trocar a camada de cima significaria reescrever a de baixo junto.
+- **703 testes e 28 de ponta a ponta** codificam o comportamento contra esta árvore.
+- **O orçamento passa**, com folga medida em todas as quatro rotas.
+
+Trocar agora seria trocar um passa medido por um risco não medido, dez dias antes.
+
+**O que a verificação encontrou de concreto, e isso vale mais que o veredito:**
+
+**1. RNF-04 nunca tinha sido medido, e ele não fala em bytes.** O requisito é "a página de cadastro carrega em até três segundos em rede móvel lenta" — tempo, não peso. O orçamento media peso porque peso é o que se controla daqui, e vinha sendo tratado como se fosse a promessa. `npm run perf:rede` passou a medir o tempo, com os perfis do DevTools e a CPU afundada em 4x:
+
+| perfil     | primeira pintura | tudo carregado |
+| ---------- | ---------------- | -------------- |
+| 3G lento   | **4,6 s**        | 7,4 s          |
+| 3G rápido  | 1,5 s            | 2,3 s          |
+| 4G lento   | 0,7 s            | 1,4 s          |
+
+**Em 3G lento o projeto não cumpre RNF-04** — 4,6 s contra os 3 prometidos. Em 3G rápido cumpre com folga. O TTFB aqui é de mentira, porque o servidor é local; contra a Vercel em `gru1` os números sobem um pouco. Fica medido, e fica em ferramenta que roda de novo.
+
+**2. O orçamento media uma rota só, e isso escondia meia verdade.** `npm run orcamento` olhava a raiz, por ser o destino do QR. O teto vale para toda página que um participante abre, e elas não pesam o mesmo. Agora ele mede as quatro e reprova se **qualquer uma** passar. Hoje todas passam.
+
+**3. Existe um ajuste de uma linha que corta a primeira pintura pela metade, e ele não entrou.** `experimental.inlineCss` do Next 16 troca os `<link>` de CSS por `<style>` no HTML. Medido, com mediana de cinco por célula, contra a mesma máquina:
+
+| rota             | perfil    | primeira pintura hoje | com `inlineCss` |
+| ---------------- | --------- | --------------------- | --------------- |
+| `/`              | 3G lento  | 4,72 s                | **2,20 s**      |
+| `/`              | 3G rápido | 1,50 s                | 0,84 s          |
+| `/classificacao` | 3G lento  | 4,58 s                | **2,21 s**      |
+
+É a diferença entre reprovar e passar em RNF-04 no pior perfil, e o motivo é latência, não bytes: três requisições de CSS a menos, num enlace com 2000 ms de ida e volta.
+
+**E ele não entrou por um número que só apareceu porque o orçamento passou a medir todas as rotas:** com `inlineCss`, o CSS viaja duas vezes — uma no `<style>` e outra na carga do RSC — e **`/termo` vai a 150,1 KB, 0,1 KB acima do teto**. Medindo só a raiz, isso passaria despercebido.
+
+Então sobra uma decisão de verdade, e ela é de quem responde pelo evento: **o teto de 150 KB é um substituto para o tempo, e quando o substituto e a medida direta discordam, qual vale?** O ajuste melhora a promessa de RNF-04 e estoura em 0,07% uma régua que existe para servir a essa mesma promessa. Fica aberta, com os dois números na mesa.
+
+**O que não é levante de otimização.** O selo da PrinterX saindo (D-99) devolveu 2,6 KB e foi o maior ganho de peso do mês; o resto da gordura é framework, e framework só sai com troca de stack. Enquanto a stack ficar, o teto só se move com o que o produto escreve — e o produto escreve 10 KB.
+
 ---
 
 ## 4. Premissas assumidas

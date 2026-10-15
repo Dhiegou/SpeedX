@@ -129,31 +129,38 @@ formada.
 Nada aqui precisa de código. Tudo aqui precisa de gente, e **procedimento nunca
 ensaiado falha na hora**.
 
-| #   | ensaio                                                  | quem        | o que provar                                                                  |
-| --- | ------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------- |
-| 1   | **Contingência**: preencher 5 fichas, digitar, conferir | 2 pessoas   | O procedimento funciona e o time sabe onde as fichas estão                    |
-| 2   | **Lançamento cronometrado** no painel                   | supervisor  | Cabe em 15 s: buscar, selecionar, digitar, confirmar                          |
-| 3   | **Cadastro cronometrado** com 5 pessoas de cada perfil  | 10 pessoas  | Cabe em 2 minutos, inclusive com responsável                                  |
-| 4   | **QR com três leitores diferentes**                     | 3 celulares | Abre de primeira, sem terceira tentativa                                      |
-| 5   | **Classificação em celular de 360 px**, sob sol         | 1 pessoa    | Nada rola de lado; dá para ler na arquibancada                                |
-| 6   | **Exportações no Excel em português**                   | 1 pessoa    | Acento certo, colunas separadas, e um nome começando com `=` não vira fórmula |
-| 7   | **Cadastro em 3G de verdade**, com o cache vazio        | 1 celular   | Abre em até 3 segundos                                                        |
-| 8   | **Disparo do alerta**: derrube o site de propósito      | técnico     | O aviso chega no celular de quem pode agir                                    |
-| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `Alt+1`/`Alt+2` trocam de Cockpit, `F2` ausência, `F3` busca, `Esc` cancela   |
+| #   | ensaio                                                  | quem        | o que provar                                                                                                                                                                                      |
+| --- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Contingência**: preencher 5 fichas, digitar, conferir | 2 pessoas   | O procedimento funciona e o time sabe onde as fichas estão                                                                                                                                        |
+| 2   | **Lançamento cronometrado** no painel                   | supervisor  | Cabe em 15 s: buscar, selecionar, digitar, confirmar                                                                                                                                              |
+| 3   | **Cadastro cronometrado** com 5 pessoas de cada perfil  | 10 pessoas  | Cabe em 2 minutos, inclusive com responsável                                                                                                                                                      |
+| 4   | **QR com três leitores diferentes**                     | 3 celulares | Abre de primeira, sem terceira tentativa                                                                                                                                                          |
+| 5   | **Classificação em celular de 360 px**, sob sol         | 1 pessoa    | Nada rola de lado; dá para ler na arquibancada                                                                                                                                                    |
+| 6   | **Exportações no Excel em português**                   | 1 pessoa    | Acento certo, colunas separadas, e um nome começando com `=` não vira fórmula                                                                                                                     |
+| 7   | **Cadastro em 3G de verdade**, com o cache vazio        | 1 celular   | Abre em até 3 segundos. **Medido em emulador antes do ensaio** (`npm run perf:rede`): 1,5 s em 3G rápido e **4,6 s em 3G lento, que reprova**. Leve o número e confira contra a rede real (D-102) |
+| 8   | **Disparo do alerta**: derrube o site de propósito      | técnico     | O aviso chega no celular de quem pode agir                                                                                                                                                        |
+| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `Alt+1`/`Alt+2` trocam de Cockpit, `F2` ausência, `F3` busca, `Esc` cancela                                                                                                                       |
 
 ---
 
 ## Quatro decisões que só você pode tomar
 
-### D1 · O termo ainda diz "pista"
+### D1 · ~~O termo ainda diz "pista"~~ — decidido em 2026-10-14: fica
 
-O texto aprovado (`v1.0-2026-08-19`) fala em "pista"; o sistema inteiro fala
-**Cockpit**. Trocar a palavra significa **versão nova do termo**, e versão nova
-nasce rascunho — e **sob rascunho o sistema recusa cadastrar qualquer pessoa**,
-de propósito.
+O texto fala em "pista" num ponto; o sistema inteiro fala **Cockpit**. A
+divergência fica, e agora é escolha registrada e não pendência (D-101).
 
-Ou seja: só mude se puder aprovar a versão nova por escrito antes do evento.
-Manter como está é uma escolha defensável — a divergência está registrada.
+**O que mudou para a decisão poder ser tomada.** O que segurava era o custo:
+trocar a palavra exige versão nova do termo, e versão nova nasce rascunho — sob
+rascunho o sistema recusa cadastrar qualquer pessoa, de propósito. A **v1.1**
+(D-100) percorreu esse caminho inteiro no mesmo dia, para encurtar as caixas de
+consentimento, o que tornaria a correção quase gratuita.
+
+Com o custo fora do caminho, sobrou a pergunta que importa: a palavra atrapalha
+quem lê? Não atrapalha. "Pista" descreve onde a pessoa corre, para alguém
+decidindo se entrega os próprios dados; "Cockpit" é o nome do posto no
+vocabulário de operação. Mexer em texto aprovado por consistência de glossário
+interno não ganha nada do lado de quem lê.
 
 ### D2 · A métrica de uso da busca não é mensurável
 

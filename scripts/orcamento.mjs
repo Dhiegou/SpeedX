@@ -24,7 +24,23 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 
 const TETO_GZIP_KB = 150
 
-const alvo = process.argv[2] ?? process.env['ORCAMENTO_URL'] ?? 'http://localhost:3000'
+/**
+ * As rotas públicas, todas elas.
+ *
+ * **Medir só a raiz escondia meia verdade.** A raiz é o destino do QR e por
+ * isso era a página escolhida, mas o teto de RNF-04 vale para toda página que
+ * um participante abre — e elas não pesam o mesmo: o termo carrega o texto
+ * inteiro do consentimento, e já chegou a 4 KB a mais que a raiz. Uma mudança
+ * que estoure o teto no termo e não na raiz passaria por aqui sem ser vista.
+ *
+ * O login entra porque o Operador também chega por rede, às vezes a do evento.
+ */
+const ROTAS = ['/', '/classificacao', '/termo', '/painel/login']
+
+const base = process.argv[2] ?? process.env['ORCAMENTO_URL'] ?? 'http://localhost:3000'
+
+/** Com URL de rota na linha de comando, mede só ela; sem, mede todas. */
+const alvos = new URL(base).pathname === '/' ? ROTAS.map((r) => new URL(r, base).href) : [base]
 
 function comprimir(buffer) {
   return {
@@ -53,7 +69,8 @@ function folhasDeEstilo(html) {
 
 const kb = (n) => (n / 1024).toFixed(1).padStart(7)
 
-async function principal() {
+/** Mede uma rota e devolve o total comprimido, já tendo impresso o detalhe. */
+async function medirRota(alvo) {
   const resposta = await fetch(alvo)
 
   if (!resposta.ok) {
@@ -81,7 +98,7 @@ async function principal() {
     { bruto: 0, gzip: 0, brotli: 0 },
   )
 
-  console.log(`Primeiro carregamento de ${alvo}, cache vazio:\n`)
+  console.log(`\nPrimeiro carregamento de ${alvo}, cache vazio:\n`)
 
   for (const [nome, m] of [...linhas].sort((a, b) => b[1].gzip - a[1].gzip)) {
     console.log(`${kb(m.bruto)} KB  ${kb(m.gzip)} KB gzip  ${kb(m.brotli)} KB br   ${nome}`)
@@ -93,20 +110,46 @@ async function principal() {
       `TOTAL (${String(linhas.length)} recursos)`,
   )
 
+  return total.gzip
+}
+
+async function principal() {
   const tetoBytes = TETO_GZIP_KB * 1024
-  const folga = ((tetoBytes - total.gzip) / 1024).toFixed(1)
+  const medidas = []
+
+  for (const alvo of alvos) {
+    medidas.push([alvo, await medirRota(alvo)])
+  }
+
+  // O veredito é da rota mais pesada: o teto vale para cada página, não para a
+  // média delas. Uma página fora do teto é uma página que alguém vai abrir.
+  console.log('\n' + '='.repeat(72))
+  console.log(`Teto de ${String(TETO_GZIP_KB)} KB gzip, por rota:\n`)
+
+  let estourou = false
+
+  for (const [alvo, gzip] of medidas.sort((a, b) => b[1] - a[1])) {
+    const folga = (tetoBytes - gzip) / 1024
+    const rota = new URL(alvo).pathname
+
+    if (folga < 0) estourou = true
+
+    console.log(
+      `${rota.padEnd(18)}${(gzip / 1024).toFixed(1).padStart(7)} KB gzip   ` +
+        (folga < 0
+          ? `ACIMA DO TETO por ${(-folga).toFixed(1)} KB`
+          : `folga de ${folga.toFixed(1)} KB`),
+    )
+  }
 
   console.log('')
 
-  if (total.gzip > tetoBytes) {
-    console.error(
-      `ACIMA DO ORÇAMENTO: ${(total.gzip / 1024).toFixed(1)} KB gzip contra o teto de ` +
-        `${String(TETO_GZIP_KB)} KB. Faltam ${String(-folga)} KB para caber.`,
-    )
+  if (estourou) {
+    console.error('Alguma rota passou do teto. RNF-04 não admite média.')
     process.exit(1)
   }
 
-  console.log(`Dentro do orçamento: teto de ${String(TETO_GZIP_KB)} KB gzip, folga de ${folga} KB.`)
+  console.log('Todas as rotas dentro do orçamento.')
 }
 
 principal().catch((erro) => {

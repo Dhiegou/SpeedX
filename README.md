@@ -138,6 +138,7 @@ tests/                # testes que atravessam módulos (ex.: fronteiras de conte
   rastreabilidade.test.ts # lê o PRD e exige um teste, ou uma justificativa, por requisito
 e2e/                  # ponta a ponta com Playwright: teclado, confirmação, 360 px (T17)
 perf/                 # preparo, cenários de carga e medidor (T18)
+  rede.ts             #   RNF-04 em tempo: primeira pintura sob rede lenta (D-102)
 scripts/
   gerar-qr.ts         # QR do ponto de inscrição, nível H, vetorial (T07)
   orcamento.mjs       # orçamento de peso do primeiro carregamento (T07)
@@ -230,7 +231,8 @@ Definição e validação em `src/shared/env.ts`. Nenhum outro módulo lê `proc
 | `npm run test` | Testes de unidade e integração |
 | `npm run test:watch` | Mesmo, em modo contínuo |
 | `npm run qr` | Gera o QR code do ponto de inscrição a partir da `APP_URL` |
-| `npm run orcamento` | Mede o peso do primeiro carregamento e falha se passar do teto |
+| `npm run orcamento` | Mede o peso do primeiro carregamento das quatro rotas públicas e falha se alguma passar do teto |
+| `npm run perf:rede` | Mede RNF-04 em **tempo**: primeira pintura sob 3G e 4G, com a CPU afundada |
 | `npm run db:generate` | Gera migração a partir do esquema em `src/db/schema.ts` |
 | `npm run db:migrate` | Aplica as migrações pendentes |
 | `npm run db:seed [n]` | Popula a massa de desenvolvimento (padrão: 2000 participantes) |
@@ -323,8 +325,14 @@ A sessão dura `SESSAO_HORAS` sem uso e se renova enquanto o painel conversa com
 ## Peso do primeiro carregamento
 
 **Orçamento: 150 KB comprimidos** para HTML, CSS e o JavaScript que um navegador
-moderno baixa na raiz. `npm run orcamento` mede contra a aplicação de pé e
-**falha** se o teto for ultrapassado — orçamento sem verificação vira frase.
+moderno baixa, **em cada uma das quatro rotas públicas**. `npm run orcamento` mede
+contra a aplicação de pé e **falha** se alguma passar do teto — orçamento sem
+verificação vira frase, e teto medido numa rota só esconde as outras três.
+
+**E o peso não é a promessa.** RNF-04 fala em três segundos de carregamento em
+rede móvel lenta, e isso é tempo, não byte: latência e número de requisições
+entram na conta e não aparecem numa soma de quilobytes. `npm run perf:rede` mede
+o tempo, e o que ele mede está em D-102.
 
 Medição de 2026-08-20:
 
