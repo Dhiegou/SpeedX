@@ -129,7 +129,7 @@ export type LinhaDeRepasse = {
 }
 
 /**
- * Quem **autorizou** o repasse do telefone à FIAP e à escolinha (D-23).
+ * Quem **autorizou** o repasse do telefone à FIAP e ao curso (D-23).
  *
  * O filtro está na consulta, e é a única forma correta de fazer isto. Exportar
  * todo mundo com uma coluna `autorizou` e pedir que filtrem do outro lado

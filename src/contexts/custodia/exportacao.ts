@@ -16,7 +16,7 @@ import {
  * | documento | para quê | quem pode ver |
  * |---|---|---|
  * | `completa` | prestação de contas do organizador | Operador autenticado |
- * | `repasse` | a lista que vai para a FIAP e a escolinha | Operador autenticado |
+ * | `repasse` | a lista que vai para a FIAP e o curso | Operador autenticado |
  * | `pendencias` | a métrica primária do PRD §7, durante o evento | Operador autenticado |
  *
  * **São três saídas separadas, e isso é a regra e não a organização.** A lista

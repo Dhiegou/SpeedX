@@ -2,13 +2,31 @@
 
 Registro da revisão e da aprovação por escrito do texto de consentimento (T03, RF-09, PE-04).
 
-**Este arquivo é a prova documental da base legal do evento.** A versão `v1.0-2026-08-19` está
-aprovada desde 2026-08-19, e `assegurarTermoAprovado()` deixa o cadastro passar por causa disso.
-Se algum dia a versão vigente voltar a ser rascunho, o guard volta a recusar.
+**Este arquivo é a prova documental da base legal do evento.** A versão vigente é a
+`v1.1-2026-10-14`, aprovada em 2026-10-14, e `assegurarTermoAprovado()` deixa o cadastro passar
+por causa disso. Se algum dia a versão vigente voltar a ser rascunho, o guard volta a recusar.
+
+**Duas versões, e as duas valem.** A `v1.0-2026-08-19` continua publicada e inalterada: quem se
+cadastrou sob ela tem `consentimento.versao_termo` apontando para o texto que leu de verdade, e
+isso não pode ser reescrito depois. O que muda com a versão nova é só qual delas o formulário
+apresenta de agora em diante.
 
 ---
 
-## Versão aprovada
+## Versão vigente
+
+| Campo                      | Valor                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| Identificador              | `v1.1-2026-10-14`                                                                                 |
+| Situação                   | **aprovada** em 2026-10-14                                                                        |
+| Publicada em               | 2026-10-14                                                                                        |
+| Texto                      | [`src/contexts/inscricao/consentimento/v1-1.ts`](../src/contexts/inscricao/consentimento/v1-1.ts) |
+| Rota pública               | `/termo`                                                                                          |
+| Hash do conteúdo (SHA-256) | `eb93b14a7e24c5566262cbb083e7ad926251e3f535b4b845cd1b42617695b753`                                |
+
+---
+
+## Versão `v1.0-2026-08-19` — superada, e ainda publicada
 
 | Campo                      | Valor                                                                                             |
 | -------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -16,7 +34,7 @@ Se algum dia a versão vigente voltar a ser rascunho, o guard volta a recusar.
 | Situação                   | **aprovada** em 2026-08-19                                                                        |
 | Publicada em               | 2026-08-19                                                                                        |
 | Texto                      | [`src/contexts/inscricao/consentimento/v1-0.ts`](../src/contexts/inscricao/consentimento/v1-0.ts) |
-| Rota pública               | `/termo`                                                                                          |
+| Rota pública               | nenhuma: `/termo` publica a versão vigente                                                        |
 | Hash do conteúdo (SHA-256) | `9614118b061d5922172c67b63eb1e2408cf745c3a13045edbee241f64e3541c4`                                |
 
 O hash está declarado em
@@ -122,3 +140,59 @@ justamente para que confirmar uma assinatura não custe reescrever o termo.
 3. aponte `TERMO_VIGENTE` para a versão nova e mantenha a `v1.0` em `TERMOS_PUBLICADOS`, porque ela
    é a prova do que foi consentido por quem já se cadastrou;
 4. repita a revisão desta tabela e do checklist acima para a versão nova.
+
+---
+
+## Aprovação da `v1.1-2026-10-14`
+
+| Campo                              | Valor                                                                  |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| Versão aprovada                    | `v1.1-2026-10-14`                                                      |
+| Hash conferido                     | `eb93b14a7e24c5566262cbb083e7ad926251e3f535b4b845cd1b42617695b753`     |
+| Nome do responsável pela aprovação | Dhiego (`dhiegodev@hotmail.com`)                                       |
+| Papel                              | Responsável pelo sistema de inscrição e classificação do evento        |
+| Data                               | 2026-10-14                                                             |
+| Meio da aprovação por escrito      | Instrução registrada na sessão de trabalho, materializada neste commit |
+
+### O que foi aprovado, nas palavras de quem aprovou
+
+As duas redações foram propostas com variantes numeradas, e a escolha veio assim, literalmente:
+
+> caixa 1, opção A; caixa 2, opção C mas ao invés de "escolinha", coloque "futuro curso"
+
+Daí saíram os dois textos que estão em `v1-1.ts`:
+
+| caixa                         | texto aprovado                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `participante` (obrigatória)  | Li e entendi este termo. Autorizo o uso dos meus dados e a publicação do meu nome na página pública de classificação, como está descrito acima.        |
+| `compartilhamento` (opcional) | Opcional: autorizo o repasse do meu telefone para a FIAP e para o futuro curso do Lélio Assumpção. Posso deixar desmarcada e me inscrever assim mesmo. |
+
+### Uma decisão que não estava na instrução, e precisa ser conferida
+
+A instrução pedia "futuro curso" **no texto da caixa**. A palavra "escolinha" aparecia mais duas vezes no corpo do termo, e as duas foram trocadas junto:
+
+| seção              | antes                                                                     | agora                                                                |
+| ------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `compartilhamento` | uma escolinha de corrida que o Lélio Assumpção pretende abrir futuramente | um curso de corrida que o Lélio Assumpção pretende abrir futuramente |
+| `exclusao`         | enviado para a FIAP ou para a escolinha                                   | enviado para a FIAP ou para o curso                                  |
+
+**O motivo:** aplicar a troca só na caixa deixaria o documento dizendo que o telefone vai para um "futuro curso" num lugar e para "a escolinha" em outros dois. Num termo cuja razão de existir é declarar a quem o dado é entregue, duas palavras para a mesma organização é ambiguidade no pior lugar possível.
+
+**Se a intenção era outra** — manter "escolinha" no corpo e usar "futuro curso" só na caixa —, isto se desfaz com uma versão `v1.2`, pelo mesmo procedimento descrito no fim deste arquivo.
+
+### O que mudou, e o que explicitamente não mudou
+
+Nenhuma promessa do termo foi alterada: os mesmos dados coletados, as mesmas finalidades, o mesmo prazo de retenção, o mesmo canal de exclusão, os mesmos destinatários do repasse e as mesmas três caixas, com `obrigatorio` idêntico em cada uma. O hash vigia essa última parte por fora do texto, justamente para que transformar um opcional em obrigatório não passe como mudança de redação.
+
+### Checklist de RF-09, relido para a versão nova
+
+As seções do termo não foram tocadas, então os itens 1 a 7 e 9 a 11 valem como estão na tabela acima. Dois itens mereciam releitura, e foram relidos:
+
+| #   | Exigência                                                     | Situação na `v1.1`                                                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 8   | Aceite explícito do participante antes de concluir o cadastro | ✅ A caixa continua obrigatória, em primeira pessoa, e continua nomeando a publicação na página pública. A regra dos 18 anos saiu de dentro dela e continua declarada **em destaque** na seção `exposicao-publica` (item 6) e na tarja logo acima das caixas, no formulário |
+| 12  | Declara a quem os dados são repassados fora da organização    | ✅ FIAP e o **futuro curso** de Lélio Assumpção; só o telefone; mediante autorização opcional, em caixa separada (D-22, D-23). A organização é a mesma; mudou como ela é nomeada                                                                                            |
+
+### O material impresso foi refeito
+
+`npm run fichas` regenerou a ficha de inscrição e o termo impresso contra a `v1.1`, e há teste que falha se o papel e a tela divergirem (RNF-07). **O que estiver impresso em papel com a `v1.0` não serve mais** e precisa ser reimpresso antes do evento.

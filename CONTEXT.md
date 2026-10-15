@@ -1726,6 +1726,37 @@ O bloqueio da marca era a SpeedX com o selo "POWERED BY PrinterX" embaixo, e D-9
 
 **O que foi pedido e não foi feito, e o motivo é de termo e não de código.** O pedido incluía resumir os textos das duas caixas de consentimento. Eles não são texto de interface: são `aceite.texto` da versão `v1.0-2026-08-19`, aprovada por escrito (`docs/aprovacao-termo.md`), e **entram no hash de conteúdo** que `integridade.ts` declara — reescrevê-los sem trocar o identificador quebra a suíte de propósito, que é o defeito que aquele arquivo existe para impedir. O caminho correto é uma versão nova, e versão nova nasce `rascunho`; sob rascunho `assegurarTermoAprovado` recusa registrar qualquer consentimento (D-18), ou seja, **ninguém se inscreve até a aprovação por escrito sair**. Fica como pedido pendente, com o custo nomeado — é a mesma mecânica que `o-que-falta-para-voce.md` já descreve em D1 para a troca de "pista" por "Cockpit".
 
+### D-100 — A v1.1 do termo: duas caixas mais curtas, e a mecânica de versão exercitada pela primeira vez
+
+**Decidido em 2026-10-14**, com aprovação por escrito registrada em `docs/aprovacao-termo.md`.
+
+O pedido era de interface: as caixas de consentimento são longas demais num celular. Só que **o texto das caixas não é interface** — é `aceite.texto`, que entra no hash de conteúdo que `integridade.ts` declara. Encurtá-lo no lugar quebraria a suíte de propósito, e é exatamente o defeito que aquele arquivo existe para impedir: alguém corrige uma vírgula num termo aprovado, não troca o identificador, e os cadastros anteriores passam a apontar para um `v1.0-…` que já não é o texto que aquelas pessoas leram.
+
+Então a resposta não foi editar, foi **publicar uma versão**. Esta é a primeira vez que o caminho descrito no fim de `aprovacao-termo.md` foi percorrido de verdade, e ele funcionou como escrito: arquivo novo, hash novo declarado ao lado do antigo sem tocá-lo, `TERMO_VIGENTE` apontado para a nova, a velha mantida em `TERMOS_PUBLICADOS`.
+
+**O que mudou no texto, e o quanto:**
+
+| caixa                           | antes | agora | redução |
+| ------------------------------- | ----- | ----- | ------- |
+| `participante` (obrigatória)    | 264   | 143   | 46%     |
+| `compartilhamento` (opcional)   | 179   | 147   | 18%     |
+
+**O que saiu da caixa obrigatória foi a regra dos 18 anos**, e ela não saiu da tela: continua escrita na seção `exposicao-publica`, que é a seção com `destaque: true` que RF-09 exige, e na tarja rosa imediatamente acima das caixas no formulário. O que a caixa afirma continua sendo o que RF-08 e RF-09 pedem — li, entendi, e autorizo a publicação do nome na página pública —, e há teste que recusa a frase se "autorizo" ou "página pública de classificação" sumirem dela.
+
+**O que ficou na caixa opcional foi "me inscrever assim mesmo"**, e isso foi escolha contra a versão mais curta das duas propostas. É a frase que impede o opcional de virar obrigatório na prática, que é o que D-23 existe para proteger.
+
+**"Escolinha" virou "curso", nas três vezes.** A troca foi pedida para o texto da caixa; as outras duas ocorrências vieram junto por uma razão que está registrada no documento de aprovação: aplicá-la só na caixa deixaria o termo dizendo que o telefone vai para um "futuro curso" num lugar e para "a escolinha" em outros dois. Num documento cuja razão de existir é declarar a quem o dado é entregue, duas palavras para a mesma organização é ambiguidade no pior lugar possível. A decisão está marcada como minha e não de quem aprovou, para que possa ser desfeita por uma v1.2 se a intenção era outra.
+
+Junto, o vocabulário foi alinhado no código e nos documentos de operação — `expurgar.ts`, `retencao.md`, os comentários de Custódia e o `README`. **`CONTEXT.md` e o registro da v1.0 ficaram como estavam**: são histórico, contam o que foi decidido em agosto com a palavra usada em agosto, e reescrever registro é apagá-lo.
+
+**Nenhuma promessa mudou**, e isso é o que mais importa nesta decisão: os mesmos dados, as mesmas finalidades, o mesmo prazo, o mesmo canal de exclusão, os mesmos destinatários e as mesmas três caixas com `obrigatorio` idêntico. O hash vigia essa última parte por fora do texto, justamente para que transformar um opcional em obrigatório não passe como mudança de redação.
+
+**O papel foi junto, e não por zelo.** `npm run fichas` regenerou a ficha e o termo impresso contra a v1.1 — e não por disciplina de quem lembrou: **três testes de `contingencia.test.ts` reprovaram** no instante em que a versão vigente mudou, porque eles comparam o HTML impresso com os aceites do termo vigente, palavra por palavra. É RNF-07 funcionando: o papel não pode prometer uma coisa e a tela outra. A consequência prática é que **ficha impressa com a v1.0 não serve mais**.
+
+**Custo no orçamento: nenhum.** O primeiro carregamento continua em 146,3 KB gzip e 10 recursos — texto menor não move o ponteiro, e o que tinha movido foi a saída do selo (D-99).
+
+**O que esta decisão deixa barato.** A cerimônia de versão já foi paga. `o-que-falta-para-voce.md` registra, em D1, que o termo ainda diz "pista" onde o sistema inteiro diz **Cockpit** (D-75), e que corrigir isso exigiria versão nova. Exigiria — e agora o caminho está percorrido e documentado. Enquanto ninguém tiver se cadastrado em produção, trocar a palavra custa uma v1.2 e uma frase de aprovação.
+
 ---
 
 ## 4. Premissas assumidas

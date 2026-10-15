@@ -111,7 +111,7 @@ export const consentimento = pgTable(
     /** Nulo para maiores de idade; obrigatoriamente verdadeiro para menores (RNF-07). */
     aceiteResponsavel: boolean('aceite_responsavel'),
     /**
-     * Autorização **opcional** para repassar o telefone à FIAP e à escolinha
+     * Autorização **opcional** para repassar o telefone à FIAP e ao curso
      * (D-22, D-23). Diferente dos dois acima, `false` é um valor legítimo: quem
      * recusa se inscreve normalmente, e é justamente esse "não" que precisa
      * ficar registrado. Por isso não há `check` obrigando `true` aqui.

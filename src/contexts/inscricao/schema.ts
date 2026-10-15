@@ -143,7 +143,7 @@ const entrada = z.object({
   idade,
   cockpits,
   consentimento,
-  /** Repasse à FIAP e à escolinha: opcional (D-23). Ausente significa recusa. */
+  /** Repasse à FIAP e ao curso: opcional (D-23). Ausente significa recusa. */
   aceiteCompartilhamento: z.boolean().default(false),
   responsavel: dadosDoResponsavel.optional(),
   aceiteResponsavel: z.boolean().optional(),

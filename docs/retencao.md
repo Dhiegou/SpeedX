@@ -149,7 +149,7 @@ leitura.
 
 **3. Encaminhar, se o comprovante mandar.** Quando a pessoa tinha autorizado o
 repasse do telefone, o comando avisa em letras maiúsculas. **O termo promete
-encaminhar o pedido a quem recebeu a cópia** (a FIAP e a escolinha), e nós não
+encaminhar o pedido a quem recebeu a cópia** (a FIAP e o curso), e nós não
 apagamos a cópia deles. Escrever no mesmo dia, e guardar a resposta junto do
 comprovante.
 
@@ -203,4 +203,4 @@ Para marcar no dia, e anexar ao comprovante.
 - [ ] Site fora do ar: `/classificacao` não responde mais.
 - [ ] Pedidos individuais recebidos durante o evento: todos com comprovante.
 - [ ] Para cada pedido de quem autorizou o repasse: encaminhamento à FIAP e à
-      escolinha enviado, e resposta guardada.
+      curso enviado, e resposta guardada.

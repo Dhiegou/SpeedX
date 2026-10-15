@@ -320,13 +320,11 @@ async function individual(db: Db, argumentos: Argumentos): Promise<void> {
     console.log(
       '\nATENÇÃO: esta pessoa tinha autorizado o repasse do telefone.\n' +
         'O termo promete encaminhar o pedido a quem recebeu. Escreva HOJE para a FIAP e\n' +
-        'para a escolinha pedindo a exclusão da cópia que está com eles, e guarde a\n' +
+        'para o curso pedindo a exclusão da cópia que está com eles, e guarde a\n' +
         'resposta junto deste comprovante. Nós não apagamos a cópia deles.',
     )
   } else {
-    console.log(
-      '\nEsta pessoa não autorizou o repasse: não há cópia com a FIAP nem com a escolinha.',
-    )
+    console.log('\nEsta pessoa não autorizou o repasse: não há cópia com a FIAP nem com o curso.')
   }
 }
 

@@ -81,4 +81,5 @@ export function hashDoConteudo(termo: TermoConsentimento): string {
  */
 export const HASHES_PUBLICADOS: Readonly<Record<string, string>> = {
   'v1.0-2026-08-19': '9614118b061d5922172c67b63eb1e2408cf745c3a13045edbee241f64e3541c4',
+  'v1.1-2026-10-14': 'eb93b14a7e24c5566262cbb083e7ad926251e3f535b4b845cd1b42617695b753',
 }

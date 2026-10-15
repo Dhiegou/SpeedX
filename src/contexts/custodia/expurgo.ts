@@ -250,7 +250,7 @@ export type ResultadoDaExclusao = {
  *
  * **Lê antes de apagar, e não é detalhe.** `autorizouRepasse` só existe
  * enquanto a linha de Consentimento existe; depois do DELETE não há como
- * responder se o telefone daquela pessoa foi para a FIAP e para a escolinha —
+ * responder se o telefone daquela pessoa foi para a FIAP e para o curso —
  * e o termo promete encaminhar o pedido a quem recebeu. Perguntar depois seria
  * tarde para sempre.
  *
