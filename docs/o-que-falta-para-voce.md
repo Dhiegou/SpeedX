@@ -1,7 +1,7 @@
 # O que falta, e é com você
 
-Tudo o que o repositório podia resolver sozinho está resolvido: 22 tarefas, 636
-testes, auditoria de privacidade executada. **O que sobrou não se resolve
+Tudo o que o repositório podia resolver sozinho está resolvido: 22 tarefas, 703
+testes (contados em 2026-10-17), auditoria de privacidade executada. **O que sobrou não se resolve
 escrevendo código** — depende de decidir, contratar, imprimir e reunir gente.
 
 Esta é a sua lista, em ordem de prazo. Cada item diz **quanto tempo leva**, **o
@@ -11,7 +11,7 @@ que acontece se ficar de fora** e, quando existe, **o comando exato**.
 > [`checklist-pre-evento.md`](checklist-pre-evento.md). Este documento aqui é a
 > versão prática: o que fazer, na ordem.
 
-**Evento: 24/10/2026. Faltam 57 dias.**
+**Evento: 24/10/2026.**
 
 ---
 
@@ -66,16 +66,24 @@ aceitos e 170 recusados**.
 
 No local, dezenas de celulares saem do mesmo IP pelo Wi-Fi, e na rede móvel a
 operadora coloca milhares de assinantes atrás de um endereço só. Com o valor
-atual, o 31º da fila é recusado e não tem como saber que o problema não é ele.
+antigo, o 31º da fila era recusado e não tinha como saber que o problema não era
+ele.
 
-Configure na Vercel, em _Settings → Environment Variables_:
+**Decidido em D-90 (2026-09-01): 800 e 2400.** Esses já são os padrões do código
+(`src/shared/env.ts`), então um ambiente sem as variáveis herda o número certo.
+Configure-as na Vercel, em _Settings → Environment Variables_, para o valor
+ficar visível a quem operar no dia:
 
-| variável                          | hoje | ponha    |
-| --------------------------------- | ---- | -------- |
-| `RATE_LIMIT_CADASTROS_POR_JANELA` | 30   | **300**  |
-| `RATE_LIMIT_CADASTROS_POR_HORA`   | 100  | **1200** |
+| variável                          | antes | ponha    |
+| --------------------------------- | ----- | -------- |
+| `RATE_LIMIT_CADASTROS_POR_JANELA` | 30    | **800**  |
+| `RATE_LIMIT_CADASTROS_POR_HORA`   | 100   | **2400** |
 
-A conta que chega nesses números está em [`relatorio-carga.md`](relatorio-carga.md) §4.
+**Não use 300 e 1200.** Esse foi o número que [`relatorio-carga.md`](relatorio-carga.md)
+§4 propôs e que D-90 rejeitou: a proposta supunha três a cinco IPs de saída, e o
+organizador não garante Wi-Fi no local. Definir 300 baixaria o limite para menos
+da metade do calibrado. Se a variável já estiver na Vercel com 300 ou 1200,
+corrija e faça _redeploy_ da última publicação (`deploy.md` §6).
 
 ---
 
@@ -129,17 +137,17 @@ formada.
 Nada aqui precisa de código. Tudo aqui precisa de gente, e **procedimento nunca
 ensaiado falha na hora**.
 
-| #   | ensaio                                                  | quem        | o que provar                                                                                                                                                                                      |
-| --- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Contingência**: preencher 5 fichas, digitar, conferir | 2 pessoas   | O procedimento funciona e o time sabe onde as fichas estão                                                                                                                                        |
-| 2   | **Lançamento cronometrado** no painel                   | supervisor  | Cabe em 15 s: buscar, selecionar, digitar, confirmar                                                                                                                                              |
-| 3   | **Cadastro cronometrado** com 5 pessoas de cada perfil  | 10 pessoas  | Cabe em 2 minutos, inclusive com responsável                                                                                                                                                      |
-| 4   | **QR com três leitores diferentes**                     | 3 celulares | Abre de primeira, sem terceira tentativa                                                                                                                                                          |
-| 5   | **Classificação em celular de 360 px**, sob sol         | 1 pessoa    | Nada rola de lado; dá para ler na arquibancada                                                                                                                                                    |
-| 6   | **Exportações no Excel em português**                   | 1 pessoa    | Acento certo, colunas separadas, e um nome começando com `=` não vira fórmula                                                                                                                     |
-| 7   | **Cadastro em 3G de verdade**, com o cache vazio        | 1 celular   | Abre em até 3 segundos. **Medido em emulador antes do ensaio** (`npm run perf:rede`): 1,5 s em 3G rápido e **4,6 s em 3G lento, que reprova**. Leve o número e confira contra a rede real (D-102) |
-| 8   | **Disparo do alerta**: derrube o site de propósito      | técnico     | O aviso chega no celular de quem pode agir                                                                                                                                                        |
-| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `Alt+1`/`Alt+2` trocam de Cockpit, `F2` ausência, `F3` busca, `Esc` cancela                                                                                                                       |
+| #   | ensaio                                                  | quem        | o que provar                                                                                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Contingência**: preencher 5 fichas, digitar, conferir | 2 pessoas   | O procedimento funciona e o time sabe onde as fichas estão                                                                                                                                                                                                                                                |
+| 2   | **Lançamento cronometrado** no painel                   | supervisor  | Cabe em 15 s: buscar, selecionar, digitar, confirmar                                                                                                                                                                                                                                                      |
+| 3   | **Cadastro cronometrado** com 5 pessoas de cada perfil  | 10 pessoas  | Cabe em 2 minutos, inclusive com responsável                                                                                                                                                                                                                                                              |
+| 4   | **QR com três leitores diferentes**                     | 3 celulares | Abre de primeira, sem terceira tentativa                                                                                                                                                                                                                                                                  |
+| 5   | **Classificação em celular de 360 px**, sob sol         | 1 pessoa    | Nada rola de lado; dá para ler na arquibancada                                                                                                                                                                                                                                                            |
+| 6   | **Exportações no Excel em português**                   | 1 pessoa    | Acento certo, colunas separadas, e um nome começando com `=` não vira fórmula                                                                                                                                                                                                                             |
+| 7   | **Cadastro em 3G de verdade**, com o cache vazio        | 1 celular   | Abre em até 3 segundos. **Medido em emulador antes do ensaio** (`npm run perf:rede`, contra a publicação, 2026-10-17): 1,6 s em 3G rápido e **5,0 s em 3G lento, que reprova**. Com `inlineCss` (D-106), 2,2 a 2,9 s no local, ainda não medido na publicação. Leve o número e confira contra a rede real |
+| 8   | **Disparo do alerta**: derrube o site de propósito      | técnico     | O aviso chega no celular de quem pode agir                                                                                                                                                                                                                                                                |
+| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `Alt+1`/`Alt+2` trocam de Cockpit, `F2` ausência, `F3` busca, `Esc` cancela                                                                                                                                                                                                                               |
 
 ---
 

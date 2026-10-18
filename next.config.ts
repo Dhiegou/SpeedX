@@ -56,6 +56,16 @@ const config: NextConfig = {
 
   reactStrictMode: true,
 
+  // CSS no `<style>` do HTML, e não em `<link>` (D-102, D-106). Em 3G lento,
+  // cada requisição de CSS a menos é uma ida e volta de 2 s a menos antes da
+  // primeira pintura: medido, 5,1 → 2,2–2,6 s na raiz e 4,8 → 2,7–2,9 s na
+  // Classificação, o que faz RNF-04 passar. O preço é o CSS viajar duas vezes
+  // (no `<style>` e na carga do RSC), e é por ele que o teto de
+  // `scripts/orcamento.mjs` foi a 151 KB. Tirar esta linha devolve os dois.
+  experimental: {
+    inlineCss: true,
+  },
+
   // O projeto vive sob OneDrive, e sem isto o Next infere a raiz como o
   // diretório do usuário, ignora o package-lock e rastreia arquivos de fora
   // do projeto. Fixar a raiz mantém o pacote de deploy previsível.

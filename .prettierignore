@@ -3,6 +3,7 @@ node_modules
 coverage
 package-lock.json
 PRD.md
+PRD-go-live.md
 SDD.md
 CONTEXT.md
 README.md

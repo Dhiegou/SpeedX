@@ -20,9 +20,22 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
  * O teto é medido em **gzip**, e não em brotli, de propósito: brotli é o melhor
  * caso e depende da borda estar configurada. Passar no pior caso é a única
  * garantia que sobrevive a uma mudança de hospedagem (PE-05).
+ *
+ * **O teto era 150 KB e passou a 151 em 2026-10-17, por decisão de quem
+ * responde pelo evento (D-106).** Ele não subiu por conveniência. Subiu porque
+ * este teto é um substituto do tempo de RNF-04, e o substituto e a medida
+ * direta discordaram. `experimental.inlineCss` (next.config.ts) leva a primeira
+ * pintura em 3G lento de ~5 s para ~2,5 s, abaixo dos 3 s que RNF-04 promete,
+ * e custa o CSS viajar duas vezes: `/classificacao` foi a 150,7 KB e `/termo` a
+ * 150,1. Entre o número que representa a promessa e a promessa medida, vale a
+ * promessa.
+ *
+ * **O quilobyte a mais é só desse CSS duplicado.** A folga da Classificação é
+ * de 0,3 KB: qualquer outra gordura de front precisa caber nela ou sair de
+ * outro lugar. Se `inlineCss` sair, o teto volta a 150.
  */
 
-const TETO_GZIP_KB = 150
+const TETO_GZIP_KB = 151
 
 /**
  * As rotas públicas, todas elas.

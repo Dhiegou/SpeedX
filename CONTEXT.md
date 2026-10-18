@@ -1827,6 +1827,102 @@ Então sobra uma decisão de verdade, e ela é de quem responde pelo evento: **o
 
 **O que não é levante de otimização.** O selo da PrinterX saindo (D-99) devolveu 2,6 KB e foi o maior ganho de peso do mês; o resto da gordura é framework, e framework só sai com troca de stack. Enquanto a stack ficar, o teto só se move com o que o produto escreve — e o produto escreve 10 KB.
 
+### D-103 — A verificação de prontidão não abre o portão: o cold start é padrão, e o aquecimento não existe
+
+**Registrado em 2026-10-17**, sete dias antes do evento, ao fim da verificação de prontidão. O relatório inteiro, com a saída de cada comando, está em [`docs/relatorio-prontidao.md`](docs/relatorio-prontidao.md).
+
+**Veredicto: não pode abrir as inscrições hoje.** Isto não é uma decisão de produto. É o registro de que o portão não abriu, e de quais três coisas o abrem.
+
+**O código está verde e o sistema não está pronto, e as duas coisas são verdade ao mesmo tempo.** Contra o commit publicado (`c596953`), `check`, `build` e `orcamento` passam, e os testes são 703 de 703. Contra o ambiente publicado:
+
+- **Cold start: 3 de 3 batidas frias em `/api/saude` devolveram `503`**, e 1 de 3 repetições imediatas também. Somado aos 2 de 2 de D-91, são cinco de cinco. É o padrão, não sorte.
+- **O disparador de aquecimento de D-91 não existe.** O registro de operações do Neon mostra o banco suspenso das 13:17Z às 19:49Z de hoje, sem nada que o acordasse. Os itens 3.19 e 3.20 do checklist seguem abertos.
+- **O job de ponta a ponta do CI falha desde 14/10**, inclusive no commit publicado. A causa não é visível sem login no GitHub.
+
+**Três divergências entre documento e realidade, achadas no caminho:**
+
+1. `docs/o-que-falta-para-voce.md` §3 ainda manda pôr **300/1200** na Vercel. D-90 decidiu **800/2400**, e foi esse documento que levou o PRD de verificação a repetir o número errado. Um documento que manda baixar o limite calibrado é pior que nenhum.
+2. O QR do repositório codifica `https://speedx.exemplo.br`. Ele não serve para nenhuma das duas saídas da decisão do domínio.
+3. `deploy.md` §6 promete bancos distintos para produção e homologação. O Neon tem **uma branch só**, e o `.env` local aponta para ela.
+
+**A decisão do domínio continua pendente do organizador**, nas duas saídas que restaram (registrar hoje, ou assumir `fiapspeedx.vercel.app`). O prazo é o da gráfica.
+
+**O que esta verificação, de propósito, não fez:** corrigir. Cada achado ficou registrado, com quem resolve. A sete dias do evento, uma correção que ninguém pediu é risco.
+
+### D-104 — O e2e vermelho é a fonte do CI, não o site: dois testes de 360 px medem a fonte que a máquina tem
+
+**Registrado em 2026-10-17**, item 3 de `PRD-go-live.md`. A causa ainda espera uma decisão sobre o conserto.
+
+**O site publicado não tem defeito, e isso foi medido, não suposto.** A suíte inteira de ponta a ponta rodou contra o commit publicado (`c596953`), num PostgreSQL 18.3 descartável na porta 5433, com `DATABASE_URL` sobrescrita. O banco de produção ficou de fora, e foi conferido antes de rodar que `loadEnvConfig` não sobrescreve a variável. Resultado: **28 de 28 verdes**.
+
+**A causa é uma dependência de fonte.** O CSS pede `system-ui, -apple-system, 'Segoe UI', Roboto…`. No Windows isso resolve para Segoe UI. No runner Ubuntu do CI, `system-ui` cai no padrão do fontconfig, a DejaVu Sans, bem mais larga. Os testes que `25c07e7` acrescentou a `e2e/telaPequena.spec.ts` contam quantas caixas de linha o texto ocupa em 360 px, e esse número é função da fonte. Repeti as três medições desses testes trocando só a fonte:
+
+| fonte | `:162` nome em 1 linha | `:194` Cockpits | `:225` etiqueta |
+|---|---|---|---|
+| Segoe UI (Windows) | 20/20 | `[1,1]` | passa |
+| **DejaVu Sans (Ubuntu do CI)** | **13/20** — "Larissa Pereira" em 2 linhas, linha de 84 px | **`[2,2]`** | passa |
+| Roboto (Android) | 20/20 | `[1,1]` | passa |
+
+O vermelho começou exatamente no commit que criou esses testes, e nenhum outro arquivo de `e2e/` mudou desde o último verde (`ba96d2c`). A prova definitiva é o `playwright-report` do run `38670617086`, que exige login no GitHub. O que está acima é a reprodução, não a leitura do log.
+
+**Por que o conserto não entrou junto.** Dá para fixar a fonte do projeto `celular-360` em Roboto, a fonte do Galaxy A que o próprio `playwright.config.ts` nomeia. Mas isso muda o que o teste prova: ele deixaria de pegar uma regressão que só aparece com fonte mais larga. A alternativa é afrouxar a asserção, e isso é alterar teste para passar. As duas mudam a régua, e a escolha é de quem responde pela suíte. **Decidido no mesmo dia: fixar em Roboto (D-106).**
+
+**O que ficou sem resposta:** o iPhone. A SF Pro não é distribuível, então não foi medida. Ela é mais larga que a Roboto e mais estreita que a DejaVu.
+
+### D-105 — `inlineCss` medido de novo: resolve RNF-04 em 3G lento, e agora estoura duas rotas, não uma
+
+**Registrado em 2026-10-17**, item 4 de `PRD-go-live.md`. **Não entrou.** A flag está só na branch local `medicao/inline-css` (`79ef0ee`), sem push.
+
+Mesma máquina, mesmo banco local com a massa do e2e, `next build && next start`, mediana de cinco por célula:
+
+| 3G lento, primeira pintura | hoje (`main`) | com `inlineCss` (duas rodadas) |
+|---|---|---|
+| `/` | 5,13 s | **2,24 s · 2,61 s** |
+| `/classificacao` | 4,82 s | **2,91 s · 2,69 s** |
+
+| orçamento, gzip (teto 150) | hoje | com `inlineCss` |
+|---|---|---|
+| `/classificacao` | 143,6 | **150,7 — 0,7 acima** |
+| `/termo` | 145,8 | **150,1 — 0,1 acima** |
+| `/` | 146,3 | 148,3 |
+| `/painel/login` | 136,5 | 136,5 |
+
+**O que mudou desde D-102:** a Classificação também passou do teto, e por mais que o termo. O front de outubro engordou o CSS dela (`classificacao.module.css`), e com `inlineCss` esse CSS viaja duas vezes. Um teto de 151 KB, como o PRD propõe, cobre as duas rotas, mas com folga de só 0,3 KB na Classificação.
+
+**O que a flag não muda:** "tudo carregado" continua em ~8 s em 3G lento. A flag resolve a primeira pintura, que é a métrica de RNF-04 em `perf/rede.ts`. Não resolve o tempo até o formulário aceitar digitação.
+
+**A pergunta de D-102 continua aberta e continua não sendo minha:** quando o substituto (bytes) e a medida direta (tempo) discordam, qual vale? Se entrar, o teto sobe com a justificativa escrita em `scripts/orcamento.mjs`. Se não entrar, a reprovação em 3G lento vira risco aceito, com assinatura. **Decidido no mesmo dia: entra, com teto de 151 KB (D-106).**
+
+### D-106 — `inlineCss` entra e o teto vai a 151 KB; o celular dos testes passa a ter a fonte do Android
+
+**Decidido em 2026-10-17 pelo responsável pelo evento**, fechando as duas perguntas que D-104 e D-105 deixaram abertas.
+
+**1. Quando o substituto e a medida discordam, vale a medida.** O teto de 150 KB existia para servir a RNF-04, e RNF-04 é tempo. `experimental.inlineCss` entrou em `next.config.ts`, e o teto de `scripts/orcamento.mjs` foi a **151 KB**, com o motivo escrito no próprio script. O quilobyte a mais é só o CSS que passa a viajar duas vezes. A Classificação fica com 0,4 KB de folga, a menor da história do projeto, e qualquer outra gordura de front precisa caber nela. Se a flag sair, o teto volta a 150.
+
+Medido em `main` depois da mudança, contra banco local, mediana de cinco:
+
+| 3G lento, primeira pintura | antes | três rodadas com a flag |
+|---|---|---|
+| `/` | 5,13 s | 2,24 · 2,61 · **2,92 s** |
+| `/classificacao` | 4,82 s | 2,91 · 2,69 · 2,52 s |
+
+| orçamento, gzip (teto 151) | |
+|---|---|
+| `/classificacao` | 150,6 — folga 0,4 |
+| `/termo` | 150,1 — folga 0,9 |
+| `/` | 148,3 — folga 2,7 |
+| `/painel/login` | 136,5 — folga 14,5 |
+
+**A margem é fina, e isto não é um passa folgado.** Nas três rodadas, a raiz ficou abaixo de 3 s, mas a última ficou a 0,08 s da linha. O servidor local esconde o TTFB real: em 17/10, a publicação mediu ~0,2 s a mais que o local. Então a raiz publicada pode ficar em torno de 3 s. A conferência que vale é `PERF_ALVO=https://… npm run perf:rede` depois do deploy, e o ensaio com 3G real. "Tudo carregado" continua em ~8 s, e a flag não mexe nisso.
+
+**2. O celular dos testes tem a fonte do Android.** `e2e/apoio/fonteDoCelular.ts` injeta a Roboto (`@fontsource/roboto` 5.3.0, OFL, só em dev) nos pesos que o CSS usa, depois de cada `page.goto` de `telaPequena.spec.ts`. Ele também falha se a fonte não carregar, para o teste nunca medir a fonte de reserva por acidente. Nenhuma asserção mudou. O arquivo de teste só trocou a linha do `import`.
+
+**Como se sabe que funciona, e não só que passa.** Passar no Windows não prova nada, porque já passava antes. A prova é um controle negativo: trocando a fonte do fixture pela DejaVu Sans do Ubuntu, falham **exatamente** os dois testes que falham no CI (`:163` e `:197`), e os outros oito passam. Com a Roboto, 28 de 28. Ou seja, quem decide a fonte agora é o fixture, não a máquina.
+
+**O que se perdeu, e foi aceito:** o teste não pega mais um texto que só quebra em fonte mais larga que a Roboto. A SF Pro do iPhone fica para o ensaio com aparelho.
+
+**O que falta para isto valer no ar:** commit, push e o CI verde no GitHub, que é a primeira prova em Linux de verdade. Depois, o deploy, com o `perf:rede` repetido contra a publicação.
+
 ---
 
 ## 4. Premissas assumidas

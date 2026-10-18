@@ -1,4 +1,6 @@
-import { expect, test, type Page } from '@playwright/test'
+// A fonte é fixada em Roboto, a do Android, para que a contagem de linhas meça
+// o produto e não a máquina que roda a suíte (D-104).
+import { expect, test, type Page } from './apoio/fonteDoCelular'
 
 /**
  * RNF-18 em 360 px (T17).

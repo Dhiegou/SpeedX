@@ -324,7 +324,8 @@ A sessão dura `SESSAO_HORAS` sem uso e se renova enquanto o painel conversa com
 
 ## Peso do primeiro carregamento
 
-**Orçamento: 150 KB comprimidos** para HTML, CSS e o JavaScript que um navegador
+**Orçamento: 151 KB comprimidos** (era 150 até D-106, que trocou 1 KB de CSS inline
+por metade da primeira pintura em 3G lento) para HTML, CSS e o JavaScript que um navegador
 moderno baixa, **em cada uma das quatro rotas públicas**. `npm run orcamento` mede
 contra a aplicação de pé e **falha** se alguma passar do teto — orçamento sem
 verificação vira frase, e teto medido numa rota só esconde as outras três.
@@ -407,7 +408,7 @@ No dia do evento: snapshot manual do banco antes de começar, deploys congelados
 | Custódia | T14 | **Concluído** — três exportações em CSV, com sessão obrigatória e rastro de quem exportou |
 | Custódia | T15 | **Concluído** — expurgo total com três travas, exclusão individual a pedido e higiene automática das tabelas de mecanismo. A data do evento entrou em 2026-08-25 (24/10/2026, retenção vencendo em 04/11); o procedimento de tirar o site do ar está escrito em `docs/deploy.md` §6 |
 | Qualidade e operação | T16 | **Concluído** — `/api/saude`, painel do dia em `/api/metricas` e relatório de métricas a partir do log, com os quatro alertas. O monitor externo foi escolhido em T19 (UptimeRobot); falta configurá-lo, o que depende do domínio |
-| Qualidade e operação | T17 | **Concluído** — 594 testes de unidade e integração em 79 s, 19 de ponta a ponta em 42 s, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
+| Qualidade e operação | T17 | **Concluído** — 703 testes de unidade e integração em 38 arquivos, ~89 s (medido em 2026-10-17), 28 de ponta a ponta, e a rastreabilidade PRD → teste verificada por teste. RNF-18 deixou de depender de aparelho |
 | Qualidade e operação | T18 | **Parcial** — 200 req/s com p95 de 7,9 ms e zero 5xx, documento de 14 KB gzip, propagação de ~20 s. Achou o que procurava: o limite de taxa, como configurado, recusaria a fila do evento — **calibrado em T23**. Faltam borda, 3G real e o ensaio longo |
 | Qualidade e operação | T19 | **Parcial** — código, configuração e os dois documentos de operação prontos, com Vercel, Neon e UptimeRobot escolhidos. Faltam as contas criadas e um domínio: quatro dos sete critérios só se verificam contra um endereço publicado |
 | Qualidade e operação | T20 | **Concluído, menos o ensaio** — ficha de papel, termo impresso e folha de tempos gerados do mesmo termo que a tela, com teste comparando papel e esquema nos dois sentidos. Falta imprimir e ensaiar com o time |
