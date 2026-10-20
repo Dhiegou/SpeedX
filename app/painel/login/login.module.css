@@ -75,6 +75,42 @@
   outline-offset: 1px;
 }
 
+/* O campo de senha e o botão Mostrar na mesma linha; o campo leva a sobra. */
+.senha {
+  display: flex;
+  gap: var(--espaco-2);
+}
+
+.senha .entrada {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mostrar {
+  font: inherit;
+  font-size: var(--texto-apoio);
+  font-weight: 600;
+  /* 44px: RNF-18, o login acontece em tablet. */
+  min-height: 44px;
+  min-width: 5.5rem;
+  padding: 0 var(--espaco-3);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
+  color: var(--marca);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.mostrar:hover {
+  background: var(--marca-clara);
+}
+
+.mostrar:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-recuo);
+}
+
 .botao {
   font: inherit;
   font-weight: 700;

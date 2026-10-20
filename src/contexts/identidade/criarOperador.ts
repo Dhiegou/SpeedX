@@ -1,6 +1,7 @@
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from '@/db/schema'
+import { destravarLogin, type Destravamento } from './destravarLogin'
 import type { Operador } from './modelo'
 import { esquemaUsuario } from './schema'
 import { gerarHash, validarForcaDaSenha } from './senha'
@@ -103,4 +104,77 @@ export async function desativarOperador(db: Db, usuario: string): Promise<boolea
     .returning({ id: schema.operador.id })
 
   return atualizadas.length > 0
+}
+
+export type Redefinicao = {
+  readonly operadorId: string
+  /** A redefinição não reativa conta: se vier `false`, a senha nova não entra. */
+  readonly ativo: boolean
+  readonly sessoesEncerradas: number
+  readonly destravamento: Destravamento
+}
+
+/**
+ * Troca a senha de uma conta existente (D-108). Devolve `null` se o usuário não
+ * existe — e não cria conta nenhuma nesse caso.
+ *
+ * **Três efeitos, sempre juntos, numa transação só:**
+ *
+ *  1. o hash novo;
+ *  2. **o login destravado.** Quem esquece a senha quase sempre já errou até
+ *     travar, e trocar só o hash deixaria a pessoa de fora com a senha certa;
+ *  3. **as sessões abertas encerradas.** Quem esqueceu a senha não está logado,
+ *     então no caso comum isso não custa nada; no caso de senha vazada, deixar
+ *     a sessão viva anularia a redefinição inteira.
+ *
+ * Não há opção para manter as sessões, de propósito: a quatro dias do evento,
+ * uma alavanca a mais é uma forma a mais de errar sob pressão.
+ *
+ * A derivação acontece **antes** da transação: são dois décimos de segundo de
+ * scrypt que não precisam segurar linha nenhuma.
+ */
+export async function redefinirSenha(
+  db: Db,
+  usuario: string,
+  senhaNova: string,
+  agora: number = Date.now(),
+): Promise<Redefinicao | null> {
+  const senha = validarForcaDaSenha(senhaNova)
+  const senhaHash = await gerarHash(senha)
+
+  return db.transaction(async (tx) => {
+    const [alterado] = await tx
+      .update(schema.operador)
+      .set({ senhaHash })
+      .where(eq(sql`lower(${schema.operador.usuario})`, usuario.trim().toLowerCase()))
+      .returning({ id: schema.operador.id, ativo: schema.operador.ativo })
+
+    if (alterado === undefined) return null
+
+    const encerradas = await tx
+      .update(schema.sessao)
+      .set({ encerradaEm: new Date(agora) })
+      .where(and(eq(schema.sessao.operadorId, alterado.id), isNull(schema.sessao.encerradaEm)))
+      .returning({ id: schema.sessao.id })
+
+    const destravamento = await destravarLogin(tx, usuario)
+
+    return {
+      operadorId: alterado.id,
+      ativo: alterado.ativo,
+      sessoesEncerradas: encerradas.length,
+      destravamento,
+    }
+  })
+}
+
+/** Se a conta existe, para o terminal recusar antes de pedir a senha. */
+export async function existeOperador(db: Db, usuario: string): Promise<boolean> {
+  const linhas = await db
+    .select({ id: schema.operador.id })
+    .from(schema.operador)
+    .where(eq(sql`lower(${schema.operador.usuario})`, usuario.trim().toLowerCase()))
+    .limit(1)
+
+  return linhas.length > 0
 }

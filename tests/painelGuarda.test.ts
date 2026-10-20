@@ -112,7 +112,7 @@ describe('sem auto-cadastro (RNF-14)', () => {
     // comentário que não há caminho HTTP até a criação de conta, e um teste que
     // proibisse a palavra puniria justamente quem escreveu a razão da regra.
     const alcanca =
-      /from '.*(criarOperador|destravarLogin)'|\b(criarOperador|desativarOperador|destravarLogin)\s*\(/
+      /from '.*(criarOperador|destravarLogin)'|\b(criarOperador|desativarOperador|destravarLogin|redefinirSenha)\s*\(/
 
     const infratores = arquivos(join(RAIZ, 'app'))
       .filter((c) => c.endsWith('.ts') || c.endsWith('.tsx'))

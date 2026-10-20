@@ -30,6 +30,10 @@ const AVISOS: Record<Exclude<Situacao, 'parado' | 'enviando'>, string> = {
 export default function FormularioLogin({ destino }: { destino: string }) {
   const router = useRouter()
   const [situacao, setSituacao] = useState<Situacao>('parado')
+  // Estado só da página aberta, de propósito: nada de cookie nem armazenamento.
+  // O login acontece num balcão com gente em volta, e mostrar a senha é decisão
+  // daquele momento, não preferência a lembrar (D-108).
+  const [senhaVisivel, setSenhaVisivel] = useState(false)
 
   async function enviar(evento: FormEvent<HTMLFormElement>): Promise<void> {
     evento.preventDefault()
@@ -106,14 +110,34 @@ export default function FormularioLogin({ destino }: { destino: string }) {
         <label className={estilos.rotulo} htmlFor="senha">
           Senha
         </label>
-        <input
-          className={estilos.entrada}
-          id="senha"
-          name="senha"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
+        <div className={estilos.senha}>
+          <input
+            className={estilos.entrada}
+            id="senha"
+            name="senha"
+            type={senhaVisivel ? 'text' : 'password'}
+            autoComplete="current-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            required
+          />
+          {/*
+            `type="button"` é o que impede o clique de submeter o formulário
+            com a senha pela metade. Texto e não ícone (RNF-04), e o texto que
+            muda já anuncia o estado ao leitor de tela.
+          */}
+          <button
+            className={estilos.mostrar}
+            type="button"
+            aria-controls="senha"
+            onClick={() => {
+              setSenhaVisivel((visivel) => !visivel)
+            }}
+          >
+            {senhaVisivel ? 'Ocultar' : 'Mostrar'}
+          </button>
+        </div>
       </div>
 
       <button className={estilos.botao} type="submit" disabled={enviando}>

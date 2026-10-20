@@ -4,7 +4,9 @@ import { autenticar } from '@/contexts/identidade/autenticar'
 import {
   criarOperador,
   desativarOperador,
+  existeOperador,
   OperadorDuplicadoError,
+  redefinirSenha,
 } from '@/contexts/identidade/criarOperador'
 import { destravarLogin } from '@/contexts/identidade/destravarLogin'
 import {
@@ -511,5 +513,86 @@ describe('sessão (RF-12)', () => {
     const restantes = await banco.db.select().from(schema.sessao)
     expect(restantes).toHaveLength(1)
     expect(restantes[0]?.tokenHash).toBe(digerirToken(viva.token))
+  })
+})
+
+describe('redefinição de senha (D-108)', () => {
+  const SENHA_NOVA = 'outra-senha-de-operador'
+
+  async function entrar(senha: string) {
+    return autenticar(banco.db, {
+      corpo: { usuario: 'marina', senha },
+      origem: '203.0.113.7',
+      agora: AGORA,
+    })
+  }
+
+  it('o caminho completo: a senha velha para de entrar, a nova entra, e a sessão anterior morre', async () => {
+    const operador = await operadorDeTeste()
+    const { token } = await abrirSessao(banco.db, operador.id, AGORA)
+
+    const redefinicao = await redefinirSenha(banco.db, 'marina', SENHA_NOVA, AGORA)
+
+    expect(redefinicao?.operadorId).toBe(operador.id)
+    expect(redefinicao?.sessoesEncerradas).toBe(1)
+
+    // O teste óbvio e o mais fácil de esquecer: a senha velha tem de parar.
+    expect((await entrar(SENHA)).situacao).toBe('credenciais_invalidas')
+    expect((await entrar(SENHA_NOVA)).situacao).toBe('autenticado')
+    expect(await resolverSessao(banco.db, token, AGORA)).toBeNull()
+  })
+
+  it('destrava junto: quem errou até travar entra com a senha nova na hora', async () => {
+    await operadorDeTeste()
+
+    for (let i = 0; i < 10; i += 1) {
+      await entrar('errada-porem-longa-' + String(i))
+    }
+    expect((await entrar(SENHA)).situacao).toBe('limite_excedido')
+
+    const redefinicao = await redefinirSenha(banco.db, 'MARINA', SENHA_NOVA, AGORA)
+
+    expect(redefinicao?.destravamento).toEqual({ porConta: 10, porOrigem: 10 })
+    expect((await entrar(SENHA_NOVA)).situacao).toBe('autenticado')
+  })
+
+  it('usuário inexistente é recusado, e nenhuma conta nasce', async () => {
+    await operadorDeTeste()
+
+    expect(await existeOperador(banco.db, 'ninguem')).toBe(false)
+    expect(await redefinirSenha(banco.db, 'ninguem', SENHA_NOVA, AGORA)).toBeNull()
+
+    expect(await banco.db.select().from(schema.operador)).toHaveLength(1)
+  })
+
+  it('recusa senha curta antes de tocar no banco', async () => {
+    const operador = await operadorDeTeste()
+    const antes = await banco.db
+      .select({ hash: schema.operador.senhaHash })
+      .from(schema.operador)
+      .where(eq(schema.operador.id, operador.id))
+
+    await expect(redefinirSenha(banco.db, 'marina', 'curta', AGORA)).rejects.toBeInstanceOf(
+      SenhaFracaError,
+    )
+
+    const depois = await banco.db
+      .select({ hash: schema.operador.senhaHash })
+      .from(schema.operador)
+      .where(eq(schema.operador.id, operador.id))
+    expect(depois).toEqual(antes)
+  })
+
+  it('grava hash, nunca a senha, e não reativa conta desativada', async () => {
+    await operadorDeTeste()
+    await desativarOperador(banco.db, 'marina')
+
+    const redefinicao = await redefinirSenha(banco.db, 'marina', SENHA_NOVA, AGORA)
+    expect(redefinicao?.ativo).toBe(false)
+
+    const [linha] = await banco.db.select().from(schema.operador)
+    expect(linha?.senhaHash).not.toContain(SENHA_NOVA)
+    expect(linha?.senhaHash.startsWith('scrypt$')).toBe(true)
+    expect((await entrar(SENHA_NOVA)).situacao).toBe('credenciais_invalidas')
   })
 })

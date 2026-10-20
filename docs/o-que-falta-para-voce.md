@@ -236,17 +236,14 @@ Existem duas contas no banco de desenvolvimento: `seed` (criada pela massa de
 teste, com hash inválido de propósito — ela **não loga**) e `dhiego`, criada em
 22/08. Se você lembra a senha dessa, ela funciona.
 
-Se não lembra, **crie outra conta** — leva vinte segundos:
+Se não lembra, **redefina** (D-108):
 
 ```bash
-npm run criar-operador -- --usuario dhiego2 --nome "Dhiego"
+npm run criar-operador -- --redefinir-senha dhiego
 ```
 
-A senha é digitada no prompt, sem eco. Ela não entra por argumento de propósito:
-argumento aparece no histórico do shell e na lista de processos da máquina, onde
-qualquer usuário do sistema lê.
-
-**Uma lacuna que vale registrar:** não existe comando para _redefinir_ a senha de
-uma conta existente — só `--desativar` e `--destravar`. Criar uma segunda conta
-resolve, mas se você quiser um `--redefinir-senha` antes do evento, é um pedido
-pequeno.
+A senha nova é digitada no prompt, sem eco. Ela não entra por argumento de
+propósito: argumento aparece no histórico do shell e na lista de processos da
+máquina, onde qualquer usuário do sistema lê. O comando também destrava o login
+e encerra as sessões abertas daquela conta. O resto está em
+`docs/seguranca-do-painel.md`.

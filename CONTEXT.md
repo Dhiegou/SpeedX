@@ -1971,6 +1971,28 @@ Medido em `main` depois da mudança, contra banco local, mediana de cinco:
 4. **`npm run orcamento` não foi medido nesta sessão.** O `next build` falhou com `EPERM` ao apagar `.next/static/qbUzI0s5VvedkDHi6z7bY`, uma pasta de um build de 18/10 que o OneDrive transformou em marcador (`ReadOnly`, `ReparsePoint`). A mudança só remove código, CSS e um campo por linha do documento embutido, então o peso só pode ter caído, mas isso é dedução, não medida;
 5. o cadastro de ponta a ponta feito à mão: inscrever, lançar o tempo, ver na Classificação.
 
+### D-108 — Redefinir senha destrava e derruba as sessões, e o login ganha Mostrar/Ocultar
+
+**Decidido em 2026-10-20**, a quatro dias do evento. Pedido em `PRD-redefinir-senha.md`.
+
+**`npm run criar-operador -- --redefinir-senha <usuario>`.** Mesmo script e mesmo prompt oculto de `--desativar` e `--destravar`. A senha não entra por argumento. O caso de uso é `redefinirSenha`, em `identidade/criarOperador.ts`, ao lado de `desativarOperador`. Mora ali para herdar a vigilância de `tests/painelGuarda.test.ts`: nenhum arquivo de `app/` importa daquele módulo, e o único chamador é o script. O padrão do teste passou a procurar também a chamada `redefinirSenha(`.
+
+**Três efeitos, numa transação só, sem opção de desligar nenhum:**
+
+1. o hash novo, por `validarForcaDaSenha` e `gerarHash`, mínimo de 12;
+2. **o login destravado**, por `destravarLogin`. Quem esquece a senha quase sempre errou até travar, e trocar só o hash deixaria a pessoa de fora com a senha certa;
+3. **as sessões abertas encerradas** (`sessao.encerrada_em`). No caso comum não custa nada: quem esqueceu a senha não está logado. No caso de senha vazada, é o que faz a redefinição valer.
+
+A derivação acontece antes da transação, para os 0,2 s de scrypt não segurarem linha. Usuário inexistente é recusado **antes** do prompt (`existeOperador`) e de novo dentro da transação, sem criar conta. A redefinição **não reativa** conta desativada, e o comando avisa quando é o caso.
+
+**Log.** `identidade.redefinir_senha`, com `referencia` = id do Operador e `contagens` de sessões e travas limpas. Sem senha, sem hash, sem nome de usuário. O "quem redefiniu" é quem tem a `DATABASE_URL`: o terminal não identifica a pessoa, e o log registra `motivo: 'terminal'`. Erro inesperado na troca imprime só a mensagem do Postgres, porque o erro de consulta do Drizzle traz os parâmetros no texto, e um deles seria o hash novo.
+
+**Mostrar/Ocultar no login.** Botão de texto (RNF-04 proíbe ícone baixado), `type="button"`, 44 px, `var(--foco)`. Começa escondido e o estado vive só na página: nem cookie, nem armazenamento. O texto que muda é o anúncio ao leitor de tela. Não há `aria-pressed` junto, para não anunciar duas vezes. O campo ganhou `autoCapitalize="none"`, `autoCorrect="off"` e `spellCheck={false}`: com a senha visível, o campo vira `type="text"`, e o teclado do tablet passaria a capitalizar e corrigir a senha. A frase de recusa não mudou.
+
+**Segurança conferida, nada alterado.** A tabela do PRD §4.1 bateu linha a linha com `senha.ts`, `sessao.ts` e `servico.ts`. Nenhum parâmetro de scrypt, atributo de cookie, duração de sessão ou limite de tentativas mudou. O resumo para o organizador está em `docs/seguranca-do-painel.md`. A única ressalva é de data: a auditoria de 17/10 contou nove rotas com 401, e uma delas (`POST /api/painel/tentativa`) saiu depois, em D-107.
+
+**Testes.** `tests/identidade.test.ts` ganhou o caminho completo (a senha velha para de entrar, a nova entra, a sessão anterior morre), o destravamento junto, o usuário inexistente, a senha curta e a conta desativada. `tests/formularioLogin.test.tsx` cobre o botão.
+
 ---
 
 ## 4. Premissas assumidas
