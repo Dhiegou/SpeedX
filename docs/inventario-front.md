@@ -146,7 +146,7 @@ Listo para o redesenho não gastar esforço aqui — e, principalmente, para nã
 
 **Inscrição (`/`)** é a superfície mais trabalhada do projeto:
 
-- resumo de erros no topo, e **cada erro é um link que foca o campo** — com `preventDefault`, para o foco de teclado ir junto com a rolagem;
+- erros só junto de cada campo, sem resumo no topo: a etiqueta vermelha já diz o que corrigir (removido em 2026-10-20, a pedido do organizador);
 - foco automático no primeiro campo inválido, com `scrollIntoView`;
 - botão de envio **preso ao rodapé no celular**, com justificativa medida: o formulário passa de duas telas em 360px, e quem termina de marcar os aceites interpretaria a rolagem como travamento;
 - máscara de telefone, `inputMode` e `enterKeyHint` por campo;

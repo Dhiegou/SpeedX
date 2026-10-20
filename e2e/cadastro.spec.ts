@@ -81,10 +81,8 @@ test.describe('cadastro público', () => {
 
     await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
 
-    // Pelo texto, e não por `role=alert`: o Next mantém um anunciador de rota
-    // com esse mesmo papel em toda página, e um seletor por papel encontra os
-    // dois. O que interessa é o resumo de erros do formulário.
-    await expect(page.getByText(/faltou corrigir/i)).toBeVisible()
+    // O erro aparece só junto da caixa do termo: não há resumo no topo.
+    await expect(page.getByText(/É preciso aceitar o termo/)).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Inscrição concluída' })).toBeHidden()
   })
 

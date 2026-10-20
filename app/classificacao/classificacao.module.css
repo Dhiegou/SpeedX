@@ -15,9 +15,9 @@
  */
 
 .pagina {
-  max-width: 44rem;
+  max-width: var(--largura-site);
   margin: 0 auto;
-  padding: 1rem 0.75rem 4rem;
+  padding: 1rem var(--margem-site) 4rem;
 }
 
 .titulo {

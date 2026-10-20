@@ -3,7 +3,8 @@
  *
  * Restrições que ditam quase tudo aqui:
  *  - RNF-18: tela de celular, nenhuma rolagem horizontal em 360px, alvos de
- *    toque de no mínimo 44px. Por isso coluna única e nada de grade lateral.
+ *    toque de no mínimo 44px. Por isso coluna única no celular; a grade de
+ *    duas colunas só entra a partir de 48rem.
  *  - RNF-04: rede móvel congestionada. Sem fonte externa, sem imagem, sem
  *    animação — o custo de cada byte aqui é multiplicado por 2000 pessoas.
  *  - RNF-15: dois minutos de preenchimento. O que separa campo de campo é
@@ -11,9 +12,9 @@
  */
 
 .pagina {
-  max-width: 32rem;
+  max-width: var(--largura-site);
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 2rem var(--margem-site) 4rem;
   /*
    * O texto do termo tem palavras longas e o participante digita e-mails
    * longos. Sem isto, uma única palavra que não cabe em 360px estende a página
@@ -266,14 +267,6 @@
   color: var(--erro);
 }
 
-.resumo {
-  margin: var(--espaco-2) 0 0;
-  padding-left: var(--espaco-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--espaco-1);
-}
-
 /* --- Envio --- */
 
 .botao {
@@ -355,18 +348,6 @@
   padding: 2rem 1rem 4rem;
 }
 
-/* --- Resumo de erros com link para o campo --- */
-
-.linkErro {
-  color: var(--erro);
-  font-weight: 600;
-}
-
-.linkErro:focus-visible {
-  outline: var(--foco);
-  outline-offset: 2px;
-}
-
 /* --- Envio ---
  *
  * Preso ao rodapé em tela de celular, botão comum em tela grande. O porquê
@@ -404,6 +385,44 @@
     padding: 0;
     border-top: 0;
     background: none;
+  }
+}
+
+/*
+ * Desktop e TV: os campos em duas colunas.
+ *
+ * Com a página larga, um campo de nome esticado por 70rem fica longe do
+ * rótulo e do campo seguinte. Em par, o olho desce metade do caminho. O que
+ * não é campo — aviso, dica, o texto de destaque — ocupa a linha inteira.
+ */
+@media (min-width: 48rem) {
+  .formulario {
+    padding: var(--espaco-6) var(--espaco-7);
+  }
+
+  .secao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem var(--espaco-5);
+  }
+
+  .secao > :not(.campo) {
+    grid-column: 1 / -1;
+  }
+
+  .aceites {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  }
+
+  .envio {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .envio .botao {
+    width: auto;
+    min-width: 16rem;
   }
 }
 

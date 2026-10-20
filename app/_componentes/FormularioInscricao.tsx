@@ -405,45 +405,6 @@ export default function FormularioInscricao({
 
       {contratempo !== null && <Aviso contratempo={contratempo} />}
 
-      {erros.length > 0 && (
-        <div className={`${estilos.aviso} ${estilos.avisoErro}`} role="alert">
-          <strong>
-            Faltou corrigir {erros.length === 1 ? 'um item' : `${String(erros.length)} itens`}:
-          </strong>
-          {/*
-            Cada erro é um link para o campo que o causou.
-
-            O foco já vai para o primeiro campo inválido ao enviar, mas quem
-            tem três erros precisa alcançar o segundo e o terceiro — e rolar
-            um formulário longo procurando qual campo está vermelho é o que
-            faz alguém desistir na fila (RNF-15).
-          */}
-          <ul className={estilos.resumo}>
-            {erros.map((erro) => (
-              <li key={`${erro.campo}-${erro.codigo}`}>
-                <a
-                  className={estilos.linkErro}
-                  href={`#${idDoCampo(erro.campo)}`}
-                  onClick={(evento) => {
-                    // `preventDefault` porque o salto por âncora não move o
-                    // foco do teclado: quem navega sem mouse ficaria com a
-                    // tela no campo certo e o cursor onde estava.
-                    evento.preventDefault()
-                    const alvo =
-                      elementos.current[erro.campo] ??
-                      elementos.current[erro.campo.split('.')[0] ?? '']
-                    alvo?.focus()
-                    alvo?.scrollIntoView({ block: 'center' })
-                  }}
-                >
-                  {erro.mensagem}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/*
         `noValidate` desliga as mensagens do navegador. Elas chegam antes das
         nossas, em texto que não segue RNF-17 e que muda de navegador para

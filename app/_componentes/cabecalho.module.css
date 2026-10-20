@@ -20,12 +20,14 @@
   border-bottom: 3px solid var(--acento-pura);
 }
 
+/* No celular o logotipo fica centralizado, com a faixa de navegação abaixo. */
 .interior {
-  max-width: 44rem;
+  max-width: var(--largura-site);
   margin: 0 auto;
-  padding: var(--espaco-3) var(--espaco-4);
+  padding: var(--espaco-3) var(--margem-site);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--espaco-2);
 }
 

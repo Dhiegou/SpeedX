@@ -232,6 +232,15 @@
   /* Medida de linha. Texto corrido além disto cansa; o termo é o caso extremo. */
   --medida: 68ch;
 
+  /* --- Largura das páginas públicas ---
+   *
+   * O teto do conteúdo em desktop e TV, e a margem lateral que cresce com a
+   * tela: 1rem no celular, para não roubar largura útil, até 3rem em tela
+   * grande. Abaixo do teto a página ocupa a largura toda.
+   */
+  --largura-site: 72rem;
+  --margem-site: clamp(1rem, 4vw, 3rem);
+
   /* Números grandes pedem entrelinha curta e negativo no espaçamento: é o que
      faz um tempo ou uma contagem lerem como um bloco, e não como letras. */
   --entrelinha-justa: 1.1;
@@ -353,6 +362,22 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+}
+
+/*
+ * TV e monitor grande: a escala inteira cresce junto, porque tudo aqui é medido
+ * em rem. Lido a dois metros, o texto de 16px de um notebook vira miúdo.
+ */
+@media (min-width: 120rem) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+@media (min-width: 160rem) {
+  html {
+    font-size: 137.5%;
+  }
 }
 
 body {
