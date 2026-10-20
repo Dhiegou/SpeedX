@@ -1,4 +1,4 @@
-import type { LinhaCompacta, Cockpit } from '@/contexts/classificacao'
+import type { LinhaCompacta } from '@/contexts/classificacao'
 import { normalizar } from '@/shared/texto'
 
 /**
@@ -9,40 +9,34 @@ import { normalizar } from '@/shared/texto'
  * digitada, com 2000 pessoas buscando ao mesmo tempo, é o cenário que derruba o
  * sistema (SDD BC-03, T12 escopo 5).
  *
- * Está fora do componente pelo mesmo motivo do painel: a renumeração de RF-29 e
- * a regra de vizinhança de RF-30 são decisões testáveis sem DOM, e testá-las
- * assim é mais barato e mais confiável do que procurá-las na tela.
+ * Está fora do componente pelo mesmo motivo do painel: a regra de vizinhança de
+ * RF-30 é decisão testável sem DOM, e testá-la assim é mais barato e mais
+ * confiável do que procurá-la na tela.
+ *
+ * O filtro por Cockpit que dava nome a este arquivo saiu com RF-29 (D-107). O
+ * nome ficou porque a busca é filtro também, e renomear mexeria em importações
+ * a cinco dias do evento sem mudar comportamento nenhum.
  */
 
 /** Uma linha pronta para a tabela. `posicao` é calculada, nunca persistida. */
 export type LinhaExibida = {
   readonly posicao: number
   readonly nomePublico: string
-  readonly cockpit: Cockpit
   readonly tempoMs: number
-  /** Índice no conjunto filtrado. Serve de chave estável de renderização. */
+  /** Índice no documento. Serve de chave estável de renderização. */
   readonly indice: number
 }
 
-export type FiltroDeCockpit = 'todos' | Cockpit
-
 /**
- * Aplica o filtro de Cockpit e **renumera a partir de 1** (RF-29).
+ * Numera as linhas a partir de 1, na ordem em que o servidor as mandou.
  *
  * A posição não é atributo persistido — é calculada na apresentação (SDD §3).
- * É o que torna correto dizer "3º no Cockpit 2" para quem é 47º no geral: são
- * duas perguntas diferentes, e a segunda é a que a pessoa faz.
+ * Desde D-107 não há filtro que a renumere: a posição de cada pessoa é uma só.
  */
-export function classificar(
-  linhas: readonly LinhaCompacta[],
-  cockpit: FiltroDeCockpit,
-): readonly LinhaExibida[] {
-  const escolhidas = cockpit === 'todos' ? linhas : linhas.filter(([, p]) => p === cockpit)
-
-  return escolhidas.map(([nomePublico, p, tempoMs], indice) => ({
+export function classificar(linhas: readonly LinhaCompacta[]): readonly LinhaExibida[] {
+  return linhas.map(([nomePublico, tempoMs], indice) => ({
     posicao: indice + 1,
     nomePublico,
-    cockpit: p,
     tempoMs,
     indice,
   }))

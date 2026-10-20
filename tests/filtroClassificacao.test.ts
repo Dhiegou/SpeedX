@@ -12,55 +12,51 @@ import type { LinhaCompacta } from '@/contexts/classificacao'
 /**
  * A lógica da página pública, sem DOM (T13).
  *
- * Dois requisitos vivem aqui e não na tela: a renumeração de RF-29, que é a
- * diferença entre "47º no geral" e "3º no Cockpit 2", e a regra de vizinhança de
- * RF-30, que é o que separa "destacar" de "apenas filtrar".
+ * O requisito que vive aqui e não na tela é a regra de vizinhança de RF-30, que
+ * é o que separa "destacar" de "apenas filtrar". A renumeração por Cockpit de
+ * RF-29 saiu com D-107: a posição de cada pessoa agora é uma só.
  */
 
 const DOC: readonly LinhaCompacta[] = [
-  ['Ana Lima', 1, 80_000],
-  ['Bruno Souza', 2, 81_000],
-  ['Carla Dias', 1, 82_000],
-  ['Diego Ferreira', 2, 83_000],
-  ['Elisa Marinho', 1, 84_000],
-  ['Fábio Assunção', 2, 85_000],
-  ['Gabriela Nunes', 1, 86_000],
+  ['Ana Lima', 80_000],
+  ['Bruno Souza', 81_000],
+  ['Carla Dias', 82_000],
+  ['Diego Ferreira', 83_000],
+  ['Elisa Marinho', 84_000],
+  ['Fábio Assunção', 85_000],
+  ['Gabriela Nunes', 86_000],
 ]
 
-describe('filtro por Cockpit e renumeração (RF-29)', () => {
-  it('sem filtro, a posição é a do documento', () => {
-    const linhas = classificar(DOC, 'todos')
+describe('numeração (D-107)', () => {
+  it('a posição é a do documento, a partir de 1', () => {
+    const linhas = classificar(DOC)
 
     expect(linhas.map((l) => l.posicao)).toEqual([1, 2, 3, 4, 5, 6, 7])
     expect(linhas[0]?.nomePublico).toBe('Ana Lima')
   })
 
-  it('filtrar por Cockpit renumera a partir de 1', () => {
-    const doCockpit2 = classificar(DOC, 2)
-
-    expect(doCockpit2.map((l) => l.nomePublico)).toEqual([
-      'Bruno Souza',
-      'Diego Ferreira',
-      'Fábio Assunção',
-    ])
-    // Bruno é o 2º geral e o 1º do Cockpit 2. São duas perguntas diferentes, e a
-    // segunda é a que a pessoa faz.
-    expect(doCockpit2.map((l) => l.posicao)).toEqual([1, 2, 3])
-  })
-
   it('a ordem do documento é preservada — o servidor já classificou', () => {
-    const linhas = classificar(DOC, 1)
-
-    expect(linhas.map((l) => l.tempoMs)).toEqual([80_000, 82_000, 84_000, 86_000])
+    expect(classificar(DOC).map((l) => l.tempoMs)).toEqual([
+      80_000, 81_000, 82_000, 83_000, 84_000, 85_000, 86_000,
+    ])
   })
 
-  it('Cockpit sem ninguém devolve lista vazia, não erro', () => {
-    expect(classificar([], 1)).toEqual([])
+  it('a linha exibida não carrega Cockpit', () => {
+    expect(Object.keys(classificar(DOC)[0] ?? {}).sort()).toEqual([
+      'indice',
+      'nomePublico',
+      'posicao',
+      'tempoMs',
+    ])
+  })
+
+  it('documento vazio devolve lista vazia, não erro', () => {
+    expect(classificar([])).toEqual([])
   })
 })
 
 describe('busca por nome (RF-30)', () => {
-  const linhas = classificar(DOC, 'todos')
+  const linhas = classificar(DOC)
 
   it('acha sem distinguir caixa nem acento', () => {
     // "Fábio Assunção" tem dois acentos, e ninguém digita acento com pressa.
@@ -85,7 +81,7 @@ describe('busca por nome (RF-30)', () => {
 })
 
 describe('o que a tabela mostra (RF-30, RF-33)', () => {
-  const linhas = classificar(DOC, 'todos')
+  const linhas = classificar(DOC)
 
   it('sem busca, mostra as primeiras `limite` linhas', () => {
     const blocos = montarBlocos(linhas, new Set(), 3)
@@ -96,8 +92,7 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
 
   it('as posições 1 a 100 aparecem sem interação (RF-33)', () => {
     const muitas = classificar(
-      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 1, 80_000 + i]),
-      'todos',
+      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 80_000 + i]),
     )
 
     const blocos = montarBlocos(muitas, new Set(), 100)
@@ -146,8 +141,7 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
     // Quem está em 400º precisa se achar mesmo com só 100 linhas carregadas —
     // senão a busca só serviria para quem já estava visível.
     const muitas = classificar(
-      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 1, 80_000 + i]),
-      'todos',
+      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 80_000 + i]),
     )
 
     const blocos = montarBlocos(muitas, encontrar(muitas, 'Pessoa 400'), 100)
@@ -166,17 +160,17 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
   })
 })
 
-describe('busca sobre o conjunto já filtrado por Cockpit', () => {
-  it('a busca respeita o filtro ativo e a renumeração', () => {
-    const doCockpit1 = classificar(DOC, 1)
-    const achados = encontrar(doCockpit1, 'elisa')
+describe('a busca não renumera (RF-30, D-107)', () => {
+  it('quem é achado mantém a posição do documento', () => {
+    const linhas = classificar(DOC)
+    const achados = encontrar(linhas, 'elisa')
 
-    const blocos = montarBlocos(doCockpit1, achados, 100)
+    const blocos = montarBlocos(linhas, achados, 100)
     const encontrada = blocos
       .flatMap((b): readonly LinhaExibida[] => (b.tipo === 'linhas' ? b.linhas : []))
       .find((l) => l.nomePublico === 'Elisa Marinho')
 
-    // Elisa é a 5ª no geral e a 3ª do Cockpit 1.
-    expect(encontrada?.posicao).toBe(3)
+    // Destacar não é filtrar: Elisa é a 5ª, achada ou não.
+    expect(encontrada?.posicao).toBe(5)
   })
 })

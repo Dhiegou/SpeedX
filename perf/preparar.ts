@@ -14,19 +14,20 @@ import {
 } from './banco'
 
 /**
- * Banco de carga: 2000 Participantes e 4000 Tentativas (T18 §1, RNF-02).
+ * Banco de carga: 4000 Participantes e 4000 Tentativas (T18 §1, RNF-02).
  *
  * **Banco próprio, como o do e2e, e pelo mesmo motivo dobrado.** A massa de
- * carga é o pior caso — todo mundo nos dois Cockpits —, e não é a massa
- * realista com que se desenvolve. Misturar as duas estragaria as duas: o
- * desenvolvimento passaria a ver uma base que não existe, e a medição passaria
- * a depender do que alguém tenha deixado no banco de ontem.
+ * carga é o pior caso, e não é a massa realista com que se desenvolve.
+ * Misturar as duas estragaria as duas: o desenvolvimento passaria a ver uma
+ * base que não existe, e a medição passaria a depender do que alguém tenha
+ * deixado no banco de ontem.
  *
- * **Por que 4000 e não os ~3000 do seed padrão.** O seed de T02 coloca metade
- * da massa nos dois Cockpits, que é a distribuição realista. T18 mede o **teto**
- * do evento: se toda pessoa inscrita disputar os dois, são 4000 Tentativas e é
- * esse o documento público mais pesado que a Classificação pode ter que servir.
- * Medir contra a média mede o dia bom.
+ * **Por que 4000 pessoas, e não as 2000 esperadas.** Até D-107 o teto era 2000
+ * pessoas nos dois Cockpits, 4000 Tentativas. Com um Cockpit só, cada pessoa
+ * tem uma Tentativa, e chegar às 4000 que RNF-02 nomeia exige 4000 pessoas. A
+ * massa mantém o documento público do mesmo tamanho que os relatórios de carga
+ * mediram, e é por isso que eles continuam valendo como limite superior. Medir
+ * contra a média mede o dia bom.
  */
 
 carregarAmbienteDoTerminal()
@@ -92,7 +93,7 @@ async function principal(): Promise<void> {
     `)
 
     const inicio = Date.now()
-    const resumo = await popular(db, { participantes: 2000, proporcaoNosDoisCockpits: 1 })
+    const resumo = await popular(db, { participantes: 4000 })
 
     await criarOperador(db, OPERADOR_DE_CARGA)
 

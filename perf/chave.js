@@ -20,21 +20,3 @@ export function novaChave(contexto, _eventos, seguir) {
   contexto.vars.idempotencia = randomUUID()
   return seguir()
 }
-
-/**
- * Um Operador por Cockpit, alternando (T18 §3).
- *
- * Sem isto os dois usuários virtuais liam a mesma fila e disputavam a **mesma**
- * Tentativa: um gravava, o outro levava `409`. O conflito é tratado
- * corretamente — é a constraint de RF-25 fazendo o trabalho dela —, mas não é o
- * que acontece no evento. Lá são dois Cockpits, duas filas e dois Operadores
- * que nunca se cruzam; a concorrência real é entre a escrita e a leitura
- * massiva, não entre os dois Operadores.
- */
-let proximo = 0
-
-export function escolherCockpit(contexto, _eventos, seguir) {
-  proximo += 1
-  contexto.vars.cockpit = (proximo % 2) + 1
-  return seguir()
-}

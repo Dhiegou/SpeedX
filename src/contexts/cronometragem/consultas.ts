@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
-import type { Cockpit } from '@/contexts/inscricao/contrato'
+import { COCKPIT_UNICO } from '@/contexts/inscricao/contrato'
 import * as schema from '@/db/schema'
 import { normalizarNoBanco, padraoDeBusca } from './busca'
 import type {
@@ -15,7 +15,7 @@ import type {
  * As leituras do contexto: a Fila, a busca global e a trilha de auditoria.
  *
  * Ficam aqui, e não em T10, porque são domínio: a Fila **é** a definição de
- * "quem ainda não tem tempo neste Cockpit" (RF-14), e a derivação dos quatro
+ * "quem ainda não tem tempo" (RF-14), e a derivação dos quatro
  * últimos dígitos do telefone (RF-15) é uma regra de fronteira — o número
  * completo não atravessa o contexto (SDD §2). A rota apenas serializa.
  */
@@ -25,7 +25,7 @@ type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 /**
  * Teto de itens devolvidos.
  *
- * A Fila de um Cockpit começa o dia com mais de mil pendentes. Mandar tudo de uma
+ * A Fila começa o dia com mais de mil pendentes. Mandar tudo de uma
  * vez castiga a rede do tablet e a memória do navegador para mostrar uma lista
  * que ninguém rola até o fim — o Operador busca pelo nome (RF-16). Quem chama
  * recebe `truncado` junto e avisa na tela que há mais.
@@ -58,8 +58,20 @@ function casaONome(padrao: string) {
 }
 
 /**
- * A Fila de um Cockpit: Tentativas Pendentes, da inscrição mais antiga para a mais
- * recente (RF-14).
+ * Pendentes do único Cockpit.
+ *
+ * Com `cockpit` sempre 1 (D-107), a condição não filtra nada, e fica mesmo
+ * assim: `tentativa_fila_idx` começa por `cockpit`, e é ela que deixa o
+ * planejador usar o índice como prefixo em vez de varrer a tabela.
+ */
+const PENDENTE = and(
+  eq(schema.tentativa.cockpit, COCKPIT_UNICO),
+  eq(schema.tentativa.estado, 'pendente'),
+)
+
+/**
+ * A Fila: Tentativas Pendentes, da inscrição mais antiga para a mais recente
+ * (RF-14).
  *
  * Ausentes e resolvidas ficam de fora — é a definição de Fila, e é o que RF-21
  * quer dizer com "removendo-o da fila sem excluir o cadastro".
@@ -70,7 +82,6 @@ function casaONome(padrao: string) {
  */
 export async function listarFila(
   db: Db,
-  cockpit: Cockpit,
   filtro: { busca?: string; limite?: number } = {},
 ): Promise<Pagina<ItemDaFila>> {
   const limite = filtro.limite ?? LIMITE_DA_FILA
@@ -89,25 +100,19 @@ export async function listarFila(
     })
     .from(schema.tentativa)
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
-    .where(
-      and(
-        eq(schema.tentativa.cockpit, cockpit),
-        eq(schema.tentativa.estado, 'pendente'),
-        padrao === null ? undefined : casaONome(padrao),
-      ),
-    )
+    .where(and(PENDENTE, padrao === null ? undefined : casaONome(padrao)))
     .orderBy(asc(schema.tentativa.inscritoEm))
     .limit(limite + 1)
 
   return paginar(linhas, limite)
 }
 
-/** Quantas Tentativas ainda esperam neste Cockpit. O painel mostra em fonte grande. */
-export async function contarPendentes(db: Db, cockpit: Cockpit): Promise<number> {
+/** Quantas Tentativas ainda esperam. O painel mostra em fonte grande. */
+export async function contarPendentes(db: Db): Promise<number> {
   const [linha] = await db
     .select({ total: sql<number>`count(*)::int` })
     .from(schema.tentativa)
-    .where(and(eq(schema.tentativa.cockpit, cockpit), eq(schema.tentativa.estado, 'pendente')))
+    .where(PENDENTE)
 
   return linha?.total ?? 0
 }
@@ -116,13 +121,11 @@ export async function contarPendentes(db: Db, cockpit: Cockpit): Promise<number>
  * Busca global de Participante, **fora** da Fila.
  *
  * A Fila só mostra quem ainda não correu, e é isso que a torna útil. Mas RF-22
- * (corrigir um tempo) e RF-24 (incluir num Cockpit adicional) tratam justamente
- * de quem **saiu** da Fila — já lançado ou marcado como ausente. Sem esta
- * consulta, o Operador não teria como alcançá-los.
+ * (corrigir um tempo) trata justamente de quem **saiu** da Fila — já lançado ou
+ * marcado como ausente. Sem esta consulta, o Operador não teria como alcançá-lo.
  *
- * Devolve as Tentativas de cada pessoa nos dois Cockpits, com estado e Tempo,
- * porque é essa a decisão que o Operador vai tomar em seguida: corrigir esta,
- * ou incluir naquele outro.
+ * Devolve a Tentativa de cada pessoa, com estado e Tempo, porque é essa a
+ * decisão que o Operador vai tomar em seguida: corrigir, ou ver o histórico.
  */
 export async function buscarParticipantes(
   db: Db,
@@ -155,7 +158,6 @@ export async function buscarParticipantes(
     .select({
       tentativaId: schema.tentativa.id,
       participanteId: schema.tentativa.participanteId,
-      cockpit: schema.tentativa.cockpit,
       estado: schema.tentativa.estado,
       tempoMs: schema.tentativa.tempoMs,
       resolvidoEm: schema.tentativa.resolvidoEm,
@@ -167,7 +169,6 @@ export async function buscarParticipantes(
         pagina.itens.map((p) => p.participanteId),
       ),
     )
-    .orderBy(asc(schema.tentativa.cockpit))
 
   const porParticipante = new Map<string, TentativaDoParticipante[]>()
 
@@ -175,7 +176,6 @@ export async function buscarParticipantes(
     const lista = porParticipante.get(t.participanteId) ?? []
     lista.push({
       tentativaId: t.tentativaId,
-      cockpit: t.cockpit === 2 ? 2 : 1,
       estado: t.estado,
       tempoMs: t.tempoMs,
       resolvidoEm: t.resolvidoEm,

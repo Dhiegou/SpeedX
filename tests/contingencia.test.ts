@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
-  CAMPO_COCKPITS,
   CAMPOS_DO_PARTICIPANTE,
   CAMPOS_DO_RESPONSAVEL,
   CHAVES_DA_FICHA,
@@ -54,7 +53,6 @@ function camposExigidosPeloCadastro(): string[] {
     email: 'ana@exemplo.test',
     telefone: '11987654321',
     idade: IDADE_MAIORIDADE - 1,
-    cockpits: [1],
     consentimento: true,
   }
 
@@ -106,7 +104,6 @@ describe('RNF-06 — a ficha de papel coleta os mesmos campos que a tela', () =>
       email: 'ana@exemplo.test',
       telefone: '11987654321',
       idade: IDADE_MAIORIDADE,
-      cockpits: [1],
       consentimento: true,
       responsavel: { nome: 'Rita', sobrenome: 'Silva', telefone: '11987654322' },
     }
@@ -140,12 +137,14 @@ describe('RNF-06 — a ficha de papel coleta os mesmos campos que a tela', () =>
     }
   })
 
-  it('RF-03 — a escolha de Cockpit está na ficha, com as duas opções', () => {
+  it('D-107 — a ficha não pergunta Cockpit', () => {
+    // O evento tem um Cockpit só, e a tela parou de perguntar. Um campo no
+    // papel que a tela não tem é pergunta sem destino na digitação.
     const html = ler('ficha-inscricao.html')
 
-    expect(CHAVES_DA_FICHA).toContain(CAMPO_COCKPITS.chave)
-    expect(html).toContain('Cockpit 1')
-    expect(html).toContain('Cockpit 2')
+    expect(CHAVES_DA_FICHA).not.toContain('cockpits')
+    expect(html).not.toContain('Vou correr em')
+    expect(html).not.toMatch(/Cockpit [12]/)
   })
 })
 
@@ -202,15 +201,15 @@ describe('RF-31 — a folha de tempos registra o horário real da corrida', () =
     const html = ler('planilha-tempos.html')
 
     expect(html).toContain('Horário real')
-    expect(html).toContain('mm:ss.cc')
+    expect(html).toContain('Melhor volta (mm:ss.cc)')
     expect(html).toContain('4 últimos dígitos do telefone')
   })
 
-  it('há uma folha por Cockpit', () => {
+  it('D-107 — é uma folha única, sem Cockpit', () => {
     const html = ler('planilha-tempos.html')
 
-    expect(html).toContain('Cockpit 1')
-    expect(html).toContain('Cockpit 2')
+    expect(html.match(/<section class="folha">/g)).toHaveLength(1)
+    expect(html).not.toMatch(/Cockpit/i)
   })
 })
 

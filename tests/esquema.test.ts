@@ -147,7 +147,9 @@ describe('consentimento', () => {
 })
 
 describe('tentativa', () => {
-  it('RF-25 — duas tentativas no mesmo Cockpit para a mesma pessoa são recusadas', async () => {
+  it('RF-25 — uma segunda Tentativa da mesma pessoa é recusada pelo banco', async () => {
+    // Com `cockpit` sempre 1 (D-107), a unicidade `(participante_id, cockpit)`
+    // é exatamente "uma Tentativa por pessoa". A regra nova não custou SQL.
     const participanteId = await criarParticipante()
 
     await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
@@ -157,7 +159,11 @@ describe('tentativa', () => {
     ).toMatch(/tentativa_participante_cockpit_unica/)
   })
 
-  it('RF-03 e RF-24 — a mesma pessoa pode disputar os dois Cockpits', async () => {
+  it('D-107 — o banco ainda aceita cockpit 2; a regra vem do valor fixo, não do esquema', async () => {
+    // Esta é a dívida declarada: sem migração, a coluna continua aceitando 2, e
+    // o que garante uma Tentativa por pessoa é nenhum caminho do sistema gravar
+    // outro valor além de 1. Se este teste começar a falhar, alguém migrou a
+    // coluna — e o PRD de 2026-10-19 proíbe migração antes do evento.
     const participanteId = await criarParticipante()
 
     await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
@@ -167,7 +173,7 @@ describe('tentativa', () => {
     ).resolves.toBeDefined()
   })
 
-  it('só existem os Cockpits 1 e 2', async () => {
+  it('o check da coluna continua sendo 1 e 2 (D-107: a coluna fica)', async () => {
     const participanteId = await criarParticipante()
 
     expect(

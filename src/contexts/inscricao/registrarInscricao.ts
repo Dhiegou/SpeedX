@@ -1,12 +1,12 @@
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from '@/db/schema'
 import { assegurarTermoAprovado, TERMO_VIGENTE } from './consentimento'
-import type { Cockpit } from './contrato'
+import { COCKPIT_UNICO } from './contrato'
 import { InscricaoInvalidaError, paraErrosDeValidacao } from './erros'
 import { esquemaInscricao, type Inscricao } from './schema'
 
 /**
- * Caso de uso: registrar uma Inscrição (RF-01 a RF-10).
+ * Caso de uso: registrar uma Inscrição (RF-01, RF-02, RF-04 a RF-10).
  *
  * Domínio puro no que importa: não sabe o que é HTTP, não lê `request`, não
  * devolve status. T05 embrulha isto num endpoint; o teste chama direto.
@@ -25,7 +25,6 @@ export type InscricaoRegistrada = {
   readonly participanteId: string
   readonly nome: string
   readonly sobrenome: string
-  readonly cockpits: readonly Cockpit[]
   readonly versaoTermo: string
 }
 
@@ -99,18 +98,18 @@ export async function registrarInscricao(db: Db, entrada: unknown): Promise<Insc
       aceiteCompartilhamento: inscricao.aceiteCompartilhamento,
     })
 
-    // A Tentativa nasce Pendente na Inscrição (SDD BC-02), uma por Cockpit
-    // declarado. `inscrito_em` vem do relógio do servidor, pelo default da
-    // tabela: nunca do dispositivo de quem se inscreveu.
+    // A Tentativa nasce Pendente na Inscrição (SDD BC-02), uma só, no único
+    // Cockpit (D-107). As três voltas acontecem no simulador; o sistema recebe
+    // a melhor delas como um Tempo. `inscrito_em` vem do relógio do servidor,
+    // pelo default da tabela: nunca do dispositivo de quem se inscreveu.
     await tx
       .insert(schema.tentativa)
-      .values(inscricao.cockpits.map((cockpit) => ({ participanteId: participante.id, cockpit })))
+      .values({ participanteId: participante.id, cockpit: COCKPIT_UNICO })
 
     return {
       participanteId: participante.id,
       nome: inscricao.nome,
       sobrenome: inscricao.sobrenome,
-      cockpits: inscricao.cockpits,
       versaoTermo: TERMO_VIGENTE.versao,
     }
   })

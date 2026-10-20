@@ -26,6 +26,10 @@ const FILA: Pessoa[] = [
 ]
 
 const enviados: { url: string; metodo: string; corpo: Record<string, unknown> }[] = []
+/** Toda URL pedida à Fila, para conferir o que o painel manda na consulta. */
+const consultasDaFila: string[] = []
+/** O que a busca global devolve. Vazia, salvo no teste que precisa de alguém. */
+let achadosDaBusca: unknown[] = []
 let respostaDeEscrita: () => Promise<Response> = () => Promise.resolve(resposta({}, 201))
 
 function resposta(corpo: unknown, status = 200): Response {
@@ -36,18 +40,13 @@ function resposta(corpo: unknown, status = 200): Response {
   } as Response
 }
 
-function filaDoCockpit(cockpit: number) {
-  // O Cockpit 2 tem gente diferente: é como RF-13 se verifica.
-  const pessoas =
-    cockpit === 1 ? FILA : [{ nome: 'Carla', sobrenome: 'Dias', ultimos4Telefone: '9900' }]
-
+function filaUnica() {
   return {
-    cockpit,
-    pendentes: pessoas.length,
+    pendentes: FILA.length,
     truncado: false,
-    itens: pessoas.map((p, i) => ({
-      tentativaId: `tentativa-${String(cockpit)}-${String(i)}`,
-      participanteId: `participante-${String(cockpit)}-${String(i)}`,
+    itens: FILA.map((p, i) => ({
+      tentativaId: `tentativa-${String(i)}`,
+      participanteId: `participante-${String(i)}`,
       ...p,
       inscritoEm: new Date(2026, 8, 12, 8, i).toISOString(),
     })),
@@ -56,16 +55,18 @@ function filaDoCockpit(cockpit: number) {
 
 beforeEach(() => {
   enviados.length = 0
+  consultasDaFila.length = 0
+  achadosDaBusca = []
   respostaDeEscrita = () => Promise.resolve(resposta({}, 201))
 
   vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
     if (url.startsWith('/api/painel/fila')) {
-      const cockpit = Number(new URLSearchParams(url.split('?')[1] ?? '').get('cockpit') ?? '1')
-      return Promise.resolve(resposta(filaDoCockpit(cockpit)))
+      consultasDaFila.push(url)
+      return Promise.resolve(resposta(filaUnica()))
     }
 
     if (url.startsWith('/api/painel/participante')) {
-      return Promise.resolve(resposta({ truncado: false, itens: [] }))
+      return Promise.resolve(resposta({ truncado: false, itens: achadosDaBusca }))
     }
 
     enviados.push({
@@ -92,7 +93,7 @@ afterEach(() => {
 
 function montar(): UserEvent {
   const teclado = userEvent.setup()
-  render(<Painel operador="Marina Costa" cockpitInicial={1} />)
+  render(<Painel operador="Marina Costa" />)
   return teclado
 }
 
@@ -154,7 +155,7 @@ describe('o fluxo por teclado (RF-19, RF-20)', () => {
 
     await lancar(teclado, 3, '12345')
 
-    expect(enviados[0]?.corpo.tentativaId).toBe('tentativa-1-3')
+    expect(enviados[0]?.corpo.tentativaId).toBe('tentativa-3')
   })
 })
 
@@ -211,7 +212,7 @@ describe('RF-18 — a confirmação com o nome em destaque', () => {
   })
 })
 
-describe('a Fila (RF-13, RF-15)', () => {
+describe('a Fila (RF-15)', () => {
   it('dois homônimos são distinguíveis pelo que a lista mostra', async () => {
     montar()
 
@@ -222,28 +223,61 @@ describe('a Fila (RF-13, RF-15)', () => {
     expect(itens[0]?.textContent).toContain('4321')
     expect(itens[1]?.textContent).toContain('8765')
   })
+})
 
-  it('Alt+1 e Alt+2 trocam de Cockpit e a lista muda (RF-13)', async () => {
+describe('D-107 — uma Fila só', () => {
+  it('não há abas de Cockpit, e a consulta não pede Cockpit', async () => {
+    montar()
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+
+    expect(screen.queryAllByRole('tab')).toHaveLength(0)
+    expect(screen.queryByText(/Cockpit/)).toBeNull()
+    expect(consultasDaFila.length).toBeGreaterThan(0)
+    expect(consultasDaFila.every((url) => !url.includes('cockpit'))).toBe(true)
+  })
+
+  it('Alt+1 e Alt+2 não fazem nada, e a ajuda não os anuncia', async () => {
+    const teclado = montar()
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+    const antes = consultasDaFila.length
+
+    await teclado.keyboard('{Alt>}2{/Alt}')
+    await teclado.keyboard('{Alt>}1{/Alt}')
+
+    // A lista é a mesma, e nenhuma troca disparou consulta nova.
+    expect(screen.getByRole('button', { name: /Bruno Souza/ })).toBeTruthy()
+    expect(consultasDaFila).toHaveLength(antes)
+    expect(screen.queryByText(/Alt/)).toBeNull()
+  })
+
+  it('a busca global oferece corrigir, e não incluir em outro Cockpit', async () => {
+    achadosDaBusca = [
+      {
+        participanteId: 'participante-x',
+        nome: 'Marina',
+        sobrenome: 'Costa',
+        ultimos4Telefone: '4321',
+        tentativas: [
+          {
+            tentativaId: 'tentativa-x',
+            estado: 'valida',
+            tempoMs: 83_450,
+            tempo: '01:23.45',
+            resolvidoEm: new Date(2026, 8, 12, 9, 0).toISOString(),
+          },
+        ],
+      },
+    ]
+
     const teclado = montar()
     await screen.findByRole('button', { name: /Bruno Souza/ })
 
-    await teclado.keyboard('{Alt>}2{/Alt}')
+    await teclado.keyboard('{F3}')
+    await teclado.keyboard('marina')
 
-    await screen.findByRole('button', { name: /Carla Dias/ })
-    expect(screen.queryByRole('button', { name: /Bruno Souza/ })).toBeNull()
-  })
-
-  it('digitar no campo de busca não troca de Cockpit', async () => {
-    // Sem esta guarda, o Operador digitando "12345" no tempo trocaria de aba a
-    // cada tecla — e é o número que ele mais digita no dia.
-    const teclado = montar()
-    const busca = await screen.findByLabelText(/Buscar na fila/)
-
-    await teclado.click(busca)
-    await teclado.keyboard('12')
-    expect((busca as HTMLInputElement).value).toBe('12')
-
-    expect(screen.queryByRole('button', { name: /Carla Dias/ })).toBeNull()
+    await screen.findByRole('button', { name: 'Corrigir' })
+    expect(screen.getByText('01:23.45', { exact: false })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Incluir/ })).toBeNull()
   })
 })
 

@@ -8,7 +8,6 @@ import {
   violouUnicidade,
 } from '@/infra/idempotencia'
 import { termoEstaAprovado } from './consentimento'
-import type { Cockpit } from './contrato'
 import { InscricaoInvalidaError, type ErroDeValidacao } from './erros'
 import {
   consumirLimite,
@@ -51,7 +50,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export type RespostaInscricao = {
   readonly nome: string
   readonly sobrenome: string
-  readonly cockpits: readonly Cockpit[]
 }
 
 export type ComandoInscricao = {
@@ -104,15 +102,9 @@ function respostaDeFachada(corpo: unknown): RespostaInscricao {
     return typeof valor === 'string' ? valor.trim().slice(0, 60) : ''
   }
 
-  const enviados = campo(corpo, 'cockpits')
-  const cockpits = Array.isArray(enviados)
-    ? enviados.filter((p): p is Cockpit => p === 1 || p === 2)
-    : []
-
   return {
     nome: texto('nome'),
     sobrenome: texto('sobrenome'),
-    cockpits: cockpits.length > 0 ? cockpits : [1],
   }
 }
 
@@ -192,7 +184,6 @@ export async function submeterInscricao(
   const resposta: RespostaInscricao = {
     nome: inscricao.nome,
     sobrenome: inscricao.sobrenome,
-    cockpits: inscricao.cockpits,
   }
 
   try {

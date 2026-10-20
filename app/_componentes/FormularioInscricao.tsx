@@ -11,11 +11,11 @@ import {
 import type { Aceite, AceiteId } from '@/contexts/inscricao/consentimento'
 import { paraErrosDeValidacao, type ErroDeValidacao } from '@/contexts/inscricao/erros'
 import { IDADE_MAIORIDADE, IDADE_MINIMA } from '@/contexts/inscricao/idades'
-import { nomeDoCockpit, COCKPIT } from '@/shared/vocabulario'
 import estilos from './formulario.module.css'
 
 /**
- * Formulário público de cadastro (T06 — RF-02 a RF-10, RNF-15, RNF-17, RNF-18).
+ * Formulário público de cadastro (T06 — RF-02, RF-04 a RF-10, RNF-15, RNF-17,
+ * RNF-18).
  *
  * A única superfície que duas mil pessoas vão tocar, de celular, na fila, em
  * rede congestionada. Três decisões vêm daí:
@@ -41,6 +41,9 @@ import estilos from './formulario.module.css'
  *    `obrigatorio` vindo do dado. Escrever `required` à mão aqui é exatamente
  *    como um consentimento opcional vira bloqueante sem ninguém decidir isso
  *    (D-23).
+ *
+ * Não pergunta Cockpit (D-107). O evento tem um só, e a inscrição cria a
+ * Tentativa nele sem que a pessoa precise escolher nada.
  */
 
 export type PropsFormulario = {
@@ -52,7 +55,7 @@ export type PropsFormulario = {
   readonly linkTermo: { readonly href: string; readonly target: string; readonly rel: string }
 }
 
-type Confirmacao = { nome: string; sobrenome: string; cockpits: number[] }
+type Confirmacao = { nome: string; sobrenome: string }
 
 /** Falhas que não são de campo: rede, limite, servidor. */
 type Contratempo =
@@ -61,8 +64,6 @@ type Contratempo =
   | { tipo: 'expirado' }
   | { tipo: 'conflito' }
   | { tipo: 'indisponivel'; mensagem: string }
-
-const COCKPITS = [1, 2] as const
 
 /**
  * Carrega a validação uma vez, sob demanda.
@@ -157,7 +158,6 @@ export default function FormularioInscricao({
   linkTermo,
 }: PropsFormulario) {
   const [campos, setCampos] = useState<Campos>(VAZIO)
-  const [cockpits, setCockpits] = useState<number[]>([])
   const [marcados, setMarcados] = useState<Partial<Record<AceiteId, boolean>>>({})
   const [erros, setErros] = useState<readonly ErroDeValidacao[]>([])
   const [contratempo, setContratempo] = useState<Contratempo | null>(null)
@@ -218,13 +218,6 @@ export default function FormularioInscricao({
     if (adulto) setMarcados((atual) => ({ ...atual, responsavel: false }))
   }
 
-  function alternarCockpit(cockpit: number): void {
-    mudou()
-    setCockpits((atual) =>
-      atual.includes(cockpit) ? atual.filter((p) => p !== cockpit) : [...atual, cockpit].sort(),
-    )
-  }
-
   function alternarAceite(id: AceiteId): void {
     mudou()
     setMarcados((atual) => ({ ...atual, [id]: atual[id] !== true }))
@@ -240,7 +233,6 @@ export default function FormularioInscricao({
       // Ausente, e não `0` nem `''`: o servidor precisa distinguir "não
       // preencheu" de "preencheu errado" para escolher a mensagem (RNF-17).
       ...(campos.idade === '' ? {} : { idade: Number(campos.idade) }),
-      cockpits,
       consentimento: marcados.participante === true,
       aceiteCompartilhamento: marcados.compartilhamento === true,
       ...(menor
@@ -549,40 +541,6 @@ export default function FormularioInscricao({
         )}
 
         <fieldset className={estilos.secao}>
-          <legend className={estilos.legenda}>{COCKPIT.plural}</legend>
-          <p className={estilos.dica}>
-            Escolha {COCKPIT.artigoIndefinido} ou {COCKPIT.ambas}. Dá para correr {COCKPIT.emAmbas}.
-          </p>
-
-          <div className={estilos.opcoes}>
-            {COCKPITS.map((cockpit) => (
-              <label
-                key={cockpit}
-                className={`${estilos.opcao} ${cockpits.includes(cockpit) ? estilos.opcaoMarcada : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  className={estilos.caixa}
-                  checked={cockpits.includes(cockpit)}
-                  onChange={() => {
-                    alternarCockpit(cockpit)
-                  }}
-                  ref={(el) => {
-                    if (cockpit === COCKPITS[0]) elementos.current['cockpits'] = el
-                  }}
-                  aria-invalid={erroDe('cockpits') !== undefined}
-                />
-                {nomeDoCockpit(cockpit)}
-              </label>
-            ))}
-          </div>
-
-          {erroDe('cockpits') !== undefined && (
-            <span className={estilos.erro}>{erroDe('cockpits')?.mensagem}</span>
-          )}
-        </fieldset>
-
-        <fieldset className={estilos.secao}>
           <legend className={estilos.legenda}>Consentimento</legend>
 
           <p className={estilos.destaque}>
@@ -712,7 +670,7 @@ function Aviso({ contratempo }: { contratempo: Contratempo }) {
   )
 }
 
-/** Tela de sucesso (RF-10): o nome registrado e as pistas escolhidas. */
+/** Tela de sucesso (RF-10): o nome registrado. */
 function Confirmado({ dados }: { dados: Confirmacao }) {
   return (
     <main className={estilos.confirmacao}>
@@ -730,12 +688,6 @@ function Confirmado({ dados }: { dados: Confirmacao }) {
 
         <p className={estilos.nomeConfirmado}>
           {dados.nome} {dados.sobrenome}
-        </p>
-
-        <p className={estilos.cockpitsConfirmados}>
-          {dados.cockpits.length === 1
-            ? nomeDoCockpit(dados.cockpits[0] ?? 1)
-            : dados.cockpits.map(nomeDoCockpit).join(' e ')}
         </p>
       </div>
 

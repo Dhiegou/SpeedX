@@ -27,7 +27,7 @@ export default async function PainelDoOperador() {
 
   return (
     <>
-      <Painel operador={operador.nome} cockpitInicial={1} />
+      <Painel operador={operador.nome} />
       <div className={estilos.rodapeSair}>
         <BotaoSair />
       </div>

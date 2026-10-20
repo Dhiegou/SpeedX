@@ -4,7 +4,11 @@ import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from './schema'
 
 /**
- * Massa de desenvolvimento: 2000 Participantes e ~3000 Tentativas (RNF-02).
+ * Massa de desenvolvimento: 2000 Participantes, uma Tentativa cada (RNF-02).
+ *
+ * Até D-107 havia o sorteio de um ou dois Cockpits por pessoa. Com um Cockpit
+ * só, cada pessoa tem exatamente uma Tentativa, no valor 1 — que é o que a
+ * Inscrição grava, e a massa precisa representar o evento.
  *
  * Não é dado bonito — é dado que reproduz o que quebra:
  *  - **homônimos**, porque em 2000 cadastros brasileiros nomes repetidos são
@@ -103,19 +107,9 @@ export async function popular(
   {
     participantes = 2000,
     semente = SEMENTE_PADRAO,
-    proporcaoNosDoisCockpits = 0.5,
   }: {
     participantes?: number
     semente?: number
-    /**
-     * Fração que disputa os **dois** Cockpits (RF-03). Padrão 0,5, que é a
-     * massa realista de desenvolvimento — cerca de 1,5 Tentativa por pessoa.
-     *
-     * T18 usa 1: 2000 pessoas viram 4000 Tentativas, que é o **teto** do
-     * evento e o pior caso do documento público. Um teste de carga contra a
-     * média mede o dia bom; o número que interessa é o do dia cheio.
-     */
-    proporcaoNosDoisCockpits?: number
   } = {},
 ): Promise<ResumoSeed> {
   const rnd = aleatorio(semente)
@@ -186,44 +180,41 @@ export async function popular(
       aceiteCompartilhamento: rnd() < 0.66,
     })
 
-    // Metade corre os dois Cockpits (RF-03) — ou toda a massa, sob T18.
-    const cockpits = rnd() < proporcaoNosDoisCockpits ? [1, 2] : [rnd() < 0.5 ? 1 : 2]
+    // Uma Tentativa por pessoa, no único Cockpit (D-107), como a Inscrição cria.
+    const cockpit = 1
+    const sorteio = rnd()
 
-    for (const cockpit of cockpits) {
-      const sorteio = rnd()
+    // Tempos concentrados numa faixa estreita e em passos de 100 ms, para que
+    // empates aconteçam de verdade e o desempate seja exercitado (RF-31).
+    const tempoMs = 60_000 + Math.floor(rnd() * 600) * 100
 
-      // Tempos concentrados numa faixa estreita e em passos de 100 ms, para que
-      // empates aconteçam de verdade e o desempate seja exercitado (RF-31).
-      const tempoMs = 60_000 + Math.floor(rnd() * 600) * 100
-
-      if (sorteio < 0.82) {
-        resumo.validas += 1
-        tentativasLinhas.push({
-          participanteId: id,
-          cockpit,
-          estado: 'valida',
-          tempoMs,
-          inscritoEm,
-          resolvidoEm: new Date(inicio + 3_600_000 + resumo.validas * 1_000),
-          operadorId,
-        })
-      } else if (sorteio < 0.9) {
-        resumo.ausentes += 1
-        tentativasLinhas.push({
-          participanteId: id,
-          cockpit,
-          estado: 'ausente',
-          inscritoEm,
-          resolvidoEm: new Date(inicio + 3_600_000 + resumo.ausentes * 1_000),
-          operadorId,
-        })
-      } else {
-        resumo.pendentes += 1
-        tentativasLinhas.push({ participanteId: id, cockpit, inscritoEm })
-      }
-
-      resumo.tentativas += 1
+    if (sorteio < 0.82) {
+      resumo.validas += 1
+      tentativasLinhas.push({
+        participanteId: id,
+        cockpit,
+        estado: 'valida',
+        tempoMs,
+        inscritoEm,
+        resolvidoEm: new Date(inicio + 3_600_000 + resumo.validas * 1_000),
+        operadorId,
+      })
+    } else if (sorteio < 0.9) {
+      resumo.ausentes += 1
+      tentativasLinhas.push({
+        participanteId: id,
+        cockpit,
+        estado: 'ausente',
+        inscritoEm,
+        resolvidoEm: new Date(inicio + 3_600_000 + resumo.ausentes * 1_000),
+        operadorId,
+      })
+    } else {
+      resumo.pendentes += 1
+      tentativasLinhas.push({ participanteId: id, cockpit, inscritoEm })
     }
+
+    resumo.tentativas += 1
   }
 
   await inserirEmLotes(participantesLinhas, (lote) => db.insert(schema.participante).values(lote))

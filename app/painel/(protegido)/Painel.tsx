@@ -5,10 +5,9 @@ import * as api from './api'
 import { focoDe, INICIAL, nomeCompleto, reduzir, type Alvo, type Estado } from './fluxo'
 import { digitosDoCampo, formatarDigitacao, pareceCompleto } from './mascaraDeTempo'
 import estilos from './painel.module.css'
-import { COCKPIT, nomeDoCockpit } from '@/shared/vocabulario'
 
 /**
- * O painel do Operador (T11 — RF-13 a RF-22, RF-24, RNF-16).
+ * O painel do Operador (T11 — RF-14 a RF-22, RNF-16).
  *
  * A tela que alguém usa por dez horas, de pé, a ~3 lançamentos por minuto. O
  * PRD é explícito: fricção aqui vira fila de gente esperando. Daí as três
@@ -26,6 +25,11 @@ import { COCKPIT, nomeDoCockpit } from '@/shared/vocabulario'
  * 3. **Nada some por causa de erro.** O comando fica guardado no estado até
  *    dar certo ou ser cancelado, e a retentativa reusa a mesma chave de
  *    idempotência — repetir não duplica (FL-06).
+ *
+ * **Uma Fila só** (D-107). O evento tem um Cockpit, e cada pessoa corre três
+ * voltas no simulador; o Operador lê a melhor na tela dele e digita esse
+ * número, como digitaria qualquer tempo. O sistema nunca fica sabendo das
+ * outras duas.
  */
 
 const INTERVALO_DE_ATUALIZACAO_MS = 10_000
@@ -33,12 +37,10 @@ const DURACAO_DO_AVISO_MS = 4_000
 
 type Props = {
   readonly operador: string
-  readonly cockpitInicial: 1 | 2
 }
 
-export default function Painel({ operador, cockpitInicial }: Props) {
+export default function Painel({ operador }: Props) {
   const [estado, despachar] = useReducer(reduzir, INICIAL)
-  const [cockpit, setCockpit] = useState<1 | 2>(cockpitInicial)
   const [busca, setBusca] = useState('')
   const [foraDaFila, setForaDaFila] = useState(false)
   const [fila, setFila] = useState<api.RespostaDaFila | null>(null)
@@ -70,8 +72,8 @@ export default function Painel({ operador, cockpitInicial }: Props) {
   // ---------------------------------------------------------------- dados
 
   const consultarFila = useCallback(
-    (sinal?: AbortSignal) => api.buscarFila(cockpit, foraDaFila ? '' : busca, sinal),
-    [cockpit, busca, foraDaFila],
+    (sinal?: AbortSignal) => api.buscarFila(foraDaFila ? '' : busca, sinal),
+    [busca, foraDaFila],
   )
 
   /**
@@ -117,7 +119,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
   }, [recarregar])
 
   /**
-   * Busca global, só quando o Operador pede (RF-22, RF-24).
+   * Busca global, só quando o Operador pede (RF-22).
    *
    * O efeito não limpa `achados` quando a busca esvazia — quem decide o que
    * aparece é a renderização, com `achadosVisiveis`. Limpar aqui seria manter
@@ -246,20 +248,6 @@ export default function Painel({ operador, cockpitInicial }: Props) {
     })
   }, [])
 
-  async function incluirNoOutroCockpit(
-    p: api.ParticipanteEncontrado,
-    destino: 1 | 2,
-  ): Promise<void> {
-    const r = await api.incluirNoCockpit(p.participanteId, destino)
-
-    setSucesso(
-      r.ok
-        ? `${p.nome} ${p.sobrenome} entrou na fila do ${nomeDoCockpit(destino)}.`
-        : r.falha.mensagem,
-    )
-    if (r.ok) recarregar()
-  }
-
   async function verHistorico(tentativaId: string): Promise<void> {
     const r = await api.buscarHistorico(tentativaId)
     setHistorico(r.ok ? r.dados.lancamentos : [])
@@ -268,29 +256,15 @@ export default function Painel({ operador, cockpitInicial }: Props) {
   // ------------------------------------------------------------- teclado
 
   /**
-   * Atalhos globais (RF-13, RF-19).
+   * Atalhos globais (RF-19).
    *
-   * `1` e `2` só trocam de Cockpit quando o foco **não** está num campo de texto —
-   * senão o Operador digitando "12345" no tempo trocaria de aba a cada tecla.
+   * Todos em tecla de função ou Esc. Os atalhos `Alt+1` e `Alt+2`, que
+   * trocavam de Cockpit, saíram com a segunda Fila (D-107).
    */
   useEffect(() => {
     function aoPressionar(evento: KeyboardEvent): void {
-      const alvo = evento.target as HTMLElement | null
-      const digitando = alvo?.tagName === 'INPUT' || alvo?.tagName === 'TEXTAREA'
-
       if (evento.key === 'Escape') {
         voltarAoInicio()
-        return
-      }
-
-      // A T11 pede `1` e `2` para trocar de Cockpit. Sozinho, o atalho é
-      // inutilizável: o foco vive no campo de busca durante toda a navegação da
-      // Fila, e `1` e `2` são justamente os dígitos que mais se digita no
-      // campo de tempo. `Alt` desempata sem tirar a mão do teclado, e as teclas
-      // sozinhas continuam valendo quando o foco não está num campo de texto.
-      if ((evento.altKey || !digitando) && (evento.key === '1' || evento.key === '2')) {
-        evento.preventDefault()
-        setCockpit(evento.key === '1' ? 1 : 2)
         return
       }
 
@@ -403,26 +377,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
         </p>
       </header>
 
-      <div
-        className={estilos.abas}
-        role="tablist"
-        aria-label={`Escolha ${COCKPIT.artigo} ${COCKPIT.singular}`}
-      >
-        {([1, 2] as const).map((numero) => (
-          <button
-            key={numero}
-            type="button"
-            role="tab"
-            aria-selected={cockpit === numero}
-            className={`${estilos.aba} ${cockpit === numero ? estilos.abaAtiva : ''}`}
-            onClick={() => {
-              setCockpit(numero)
-            }}
-          >
-            {nomeDoCockpit(numero)}
-          </button>
-        ))}
-
+      <div className={estilos.faixa}>
         <p className={estilos.contagem}>
           {fila?.pendentes ?? '—'} <span className={estilos.contagemRotulo}>na fila</span>
         </p>
@@ -550,7 +505,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
           {itens.length === 0 && (
             <li className={estilos.vazio}>
               {busca.trim() === ''
-                ? `Nenhuma tentativa pendente ${COCKPIT.artigo === 'o' ? 'neste' : 'nesta'} ${COCKPIT.singular}.`
+                ? 'Nenhuma tentativa pendente na fila.'
                 : 'Ninguém na fila com esse nome. F3 busca em todos os inscritos.'}
             </li>
           )}
@@ -569,7 +524,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
                 <div className={estilos.historico}>
                   {p.tentativas.map((t) => (
                     <span key={t.tentativaId}>
-                      {nomeDoCockpit(t.cockpit)}: {t.estado === 'valida' ? t.tempo : t.estado}{' '}
+                      {t.estado === 'valida' ? t.tempo : t.estado}{' '}
                       {t.estado === 'valida' && (
                         <button
                           type="button"
@@ -590,18 +545,6 @@ export default function Painel({ operador, cockpitInicial }: Props) {
                       </button>{' '}
                     </span>
                   ))}
-                  {([1, 2] as const)
-                    .filter((n) => !p.tentativas.some((t) => t.cockpit === n))
-                    .map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        className={estilos.botao}
-                        onClick={() => void incluirNoOutroCockpit(p, n)}
-                      >
-                        Incluir {COCKPIT.artigo === 'o' ? 'no' : 'na'} {nomeDoCockpit(n)}
-                      </button>
-                    ))}
                 </div>
               </div>
             </li>
@@ -692,10 +635,7 @@ export default function Painel({ operador, cockpitInicial }: Props) {
       )}
 
       <footer className={estilos.rodape}>
-        <span>
-          Alt+1 / Alt+2 troca de {COCKPIT.singular} · ↑ ↓ navega · Enter seleciona · F2 ausência ·
-          F3 busca global · Esc cancela
-        </span>
+        <span>↑ ↓ navega · Enter seleciona · F2 ausência · F3 busca global · Esc cancela</span>
         {fila?.truncado === true && (
           <span>Mostrando os primeiros {itens.length} — refine a busca.</span>
         )}

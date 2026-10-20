@@ -3,8 +3,12 @@
  *
  * **PE-01 fechada em 2026-08-25: o termo oficial é Cockpit.** Não era escolha
  * entre "Pitch" e "Pista" — as duas estavam erradas. O evento não tem pista:
- * tem dois cockpits, que é onde fica o simulador. A palavra que o supervisor
- * vai dizer no dia é a palavra que a tela mostra (SDD §3).
+ * tem um cockpit, que é onde fica o simulador. A palavra que o supervisor vai
+ * dizer no dia é a palavra que a tela mostra (SDD §3).
+ *
+ * **Eram dois até 2026-10-19** (D-107). Com um só, as telas deixaram de nomear
+ * o Cockpit, e saíram daqui as formas que só existiam para "os dois" e "nos
+ * dois". `nomeDoCockpit` ficou porque o resumo do expurgo ainda o imprime.
  *
  * O arquivo continua existindo depois de a pendência fechar, e por um motivo
  * melhor do que o que o criou: foi ele que fez a troca custar duas linhas em
@@ -29,13 +33,9 @@ export const COCKPIT = {
   artigo: 'o',
   /** Artigo indefinido: `um` para Cockpit, `uma` para Pista. */
   artigoIndefinido: 'um',
-  /** `os dois` / `as duas` — são sempre dois (premissa P-03). */
-  ambas: 'os dois',
-  /** `nos dois` / `nas duas`. */
-  emAmbas: 'nos dois',
 } as const
 
-/** `Cockpit 1`, `Cockpit 2` — o rótulo de um dos dois. */
+/** `Cockpit 1` — o rótulo pelo número gravado em `tentativa.cockpit`. */
 export function nomeDoCockpit(numero: number): string {
   return `${COCKPIT.singular} ${String(numero)}`
 }

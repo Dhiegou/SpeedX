@@ -13,7 +13,7 @@
  *  - nenhum Participante existe sem Consentimento registrado (RF-08)
  *  - nenhum Participante menor de 18 existe sem Responsável completo (RF-06, RNF-07)
  *  - idade inferior a 13 não produz Participante (RF-04)
- *  - toda Inscrição declara ao menos um Cockpit (RF-03)
+ *  - toda Inscrição cria exatamente uma Tentativa, no único Cockpit (RF-25, D-107)
  *
  * Este módulo é a fachada pública do contexto: termo de consentimento (T03),
  * regra e caso de uso da Inscrição (T04) e a borda de rede (T05).
@@ -39,12 +39,7 @@ export { ESCOPO_CADASTRO } from './limiteDeTaxa'
  * Contingência em papel (T20). A ficha impressa coleta os mesmos campos que a
  * tela porque a digitação posterior passa pelo mesmo caso de uso (RNF-13).
  */
-export {
-  CAMPO_COCKPITS,
-  CAMPOS_DO_PARTICIPANTE,
-  CAMPOS_DO_RESPONSAVEL,
-  CHAVES_DA_FICHA,
-} from './ficha'
+export { CAMPOS_DO_PARTICIPANTE, CAMPOS_DO_RESPONSAVEL, CHAVES_DA_FICHA } from './ficha'
 export type { CampoDaFicha } from './ficha'
 
 /**

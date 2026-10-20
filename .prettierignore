@@ -4,6 +4,7 @@ coverage
 package-lock.json
 PRD.md
 PRD-go-live.md
+PRD-cockpit-unico.md
 SDD.md
 CONTEXT.md
 README.md

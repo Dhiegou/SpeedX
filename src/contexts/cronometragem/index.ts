@@ -1,7 +1,7 @@
 /**
  * BC-02 — Cronometragem.
  *
- * Responsabilidade: registrar o desfecho da participação de uma pessoa em um
+ * Responsabilidade: registrar o desfecho da participação de uma pessoa no
  * Cockpit, e manter a rastreabilidade de quem registrou o quê.
  *
  * É o único contexto com escrita sob pressão de tempo real e com operador
@@ -16,8 +16,9 @@
  *       └──marcar ausência──▶ Ausente┘  (lançar tempo)
  *
  * Invariantes (SDD BC-02), e onde cada uma é garantida:
- *  - no máximo uma Tentativa por Participante por Cockpit (RF-25) — `UNIQUE` no
- *    banco, traduzido para mensagem de negócio em `adicionarTentativa`;
+ *  - no máximo uma Tentativa por Participante (RF-25) — `UNIQUE` em
+ *    `(participante_id, cockpit)` no banco, com `cockpit` sempre 1 (D-107). A
+ *    Inscrição cria a única; nenhum caminho cria uma segunda;
  *  - Tentativa Válida sempre possui Tempo; Pendente e Ausente nunca possuem
  *    (RF-21) — `CHECK` no banco, e a máquina de estados nunca tenta o contrário;
  *  - toda transição registra Operador e instante do servidor (RF-23) — `CHECK`
@@ -52,12 +53,6 @@ export {
   type ComandoDeLancamento,
   type ResultadoDeLancamento,
 } from './lancamento'
-
-export {
-  adicionarTentativa,
-  type ComandoDeInclusao,
-  type ResultadoDeInclusao,
-} from './adicionarTentativa'
 
 export {
   buscarParticipantes,

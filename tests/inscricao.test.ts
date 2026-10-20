@@ -40,7 +40,6 @@ function entrada(sobrescrever: Record<string, unknown> = {}) {
     email: 'marina@exemplo.com',
     telefone: '(11) 98765-4321',
     idade: 30,
-    cockpits: [1],
     consentimento: true,
     ...sobrescrever,
   }
@@ -68,8 +67,8 @@ describe('registrarInscricao — o que fica gravado', () => {
     expect(linha?.aceiteResponsavel).toBeNull()
   })
 
-  it('RF-03 — um Cockpit gera uma Tentativa Pendente', async () => {
-    await registrarInscricao(banco.db, entrada({ cockpits: [1] }))
+  it('RF-25 — a inscrição cria uma Tentativa Pendente, com cockpit 1', async () => {
+    await registrarInscricao(banco.db, entrada())
 
     const linhas = await banco.db.select().from(schema.tentativa)
 
@@ -82,13 +81,14 @@ describe('registrarInscricao — o que fica gravado', () => {
     expect(linhas[0]?.tempoMs).toBeNull()
   })
 
-  it('RF-03 — dois Cockpits geram duas Tentativas Pendentes', async () => {
+  it('RF-25 — um envio antigo pedindo os dois Cockpits ainda cria uma Tentativa só', async () => {
+    // O formulário de antes de D-107 mandava `cockpits: [1, 2]`. Se a Inscrição
+    // ainda obedecesse, nasceria a segunda Tentativa que o evento não tem.
     await registrarInscricao(banco.db, entrada({ cockpits: [1, 2] }))
 
     const linhas = await banco.db.select().from(schema.tentativa)
 
-    expect(linhas.map((l) => l.cockpit).sort()).toEqual([1, 2])
-    expect(linhas.every((l) => l.estado === 'pendente')).toBe(true)
+    expect(linhas.map((l) => l.cockpit)).toEqual([1])
   })
 
   it('o instante da inscrição vem do relógio do servidor, não da entrada', async () => {
@@ -102,11 +102,10 @@ describe('registrarInscricao — o que fica gravado', () => {
   })
 
   it('RF-10 — o resultado devolve exatamente o que foi enviado', async () => {
-    const resultado = await registrarInscricao(banco.db, entrada({ cockpits: [2, 1] }))
+    const resultado = await registrarInscricao(banco.db, entrada())
 
     expect(resultado.nome).toBe('Marina')
     expect(resultado.sobrenome).toBe('Costa')
-    expect(resultado.cockpits).toEqual([2, 1])
     expect(resultado.versaoTermo).toBe(TERMO_VIGENTE.versao)
     expect(resultado.participanteId).toMatch(/^[0-9a-f-]{36}$/)
   })
@@ -256,10 +255,13 @@ describe('RNF-13 — o servidor revalida, mesmo com o cliente burlado', () => {
     expect(await banco.db.select().from(schema.consentimento)).toHaveLength(0)
   })
 
-  it('recusa Cockpit inexistente antes de chegar ao banco', async () => {
-    await expect(registrarInscricao(banco.db, entrada({ cockpits: [3] }))).rejects.toBeInstanceOf(
-      InscricaoInvalidaError,
-    )
+  it('um Cockpit forjado na requisição não escolhe onde a Tentativa nasce', async () => {
+    // Desde D-107 o Cockpit não é entrada: quem decide é o servidor, sempre 1.
+    await registrarInscricao(banco.db, entrada({ cockpits: [3], cockpit: 2 }))
+
+    const linhas = await banco.db.select().from(schema.tentativa)
+
+    expect(linhas.map((l) => l.cockpit)).toEqual([1])
   })
 })
 

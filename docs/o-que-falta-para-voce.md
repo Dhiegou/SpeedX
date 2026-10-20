@@ -93,14 +93,14 @@ corrija e faça _redeploy_ da última publicação (`deploy.md` §6).
 
 Rode `npm run fichas` **depois** de o domínio existir e leve para imprimir:
 
-| peça                         | quantidade             | arquivo                             |
-| ---------------------------- | ---------------------- | ----------------------------------- |
-| Ficha de inscrição em papel  | 200                    | `contingencia/ficha-inscricao.html` |
-| Termo de consentimento       | 5 cópias               | `contingencia/termo-impresso.html`  |
-| Folha de tempos              | 5 por Cockpit          | `contingencia/planilha-tempos.html` |
-| QR code                      | conforme a sinalização | `qr/inscricao.svg`                  |
-| Plano do dia                 | 3 cópias               | `plano-do-dia.md`                   |
-| Procedimento de contingência | 3 cópias               | `contingencia.md`                   |
+| peça                         | quantidade              | arquivo                             |
+| ---------------------------- | ----------------------- | ----------------------------------- |
+| Ficha de inscrição em papel  | 200                     | `contingencia/ficha-inscricao.html` |
+| Termo de consentimento       | 5 cópias                | `contingencia/termo-impresso.html`  |
+| Folha de tempos              | 10 cópias (folha única) | `contingencia/planilha-tempos.html` |
+| QR code                      | conforme a sinalização  | `qr/inscricao.svg`                  |
+| Plano do dia                 | 3 cópias                | `plano-do-dia.md`                   |
+| Procedimento de contingência | 3 cópias                | `contingencia.md`                   |
 
 Abra o HTML no navegador e use Ctrl+P, A4, **sem cabeçalho e rodapé do
 navegador**. Os tamanhos mínimos do QR por distância de leitura estão em
@@ -147,7 +147,7 @@ ensaiado falha na hora**.
 | 6   | **Exportações no Excel em português**                   | 1 pessoa    | Acento certo, colunas separadas, e um nome começando com `=` não vira fórmula                                                                                                                                                                                                                             |
 | 7   | **Cadastro em 3G de verdade**, com o cache vazio        | 1 celular   | Abre em até 3 segundos. **Medido em emulador antes do ensaio** (`npm run perf:rede`, contra a publicação, 2026-10-17): 1,6 s em 3G rápido e **5,0 s em 3G lento, que reprova**. Com `inlineCss` (D-106), 2,2 a 2,9 s no local, ainda não medido na publicação. Leve o número e confira contra a rede real |
 | 8   | **Disparo do alerta**: derrube o site de propósito      | técnico     | O aviso chega no celular de quem pode agir                                                                                                                                                                                                                                                                |
-| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `Alt+1`/`Alt+2` trocam de Cockpit, `F2` ausência, `F3` busca, `Esc` cancela                                                                                                                                                                                                                               |
+| 9   | **Atalhos do painel** com o supervisor                  | supervisor  | `F2` ausência, `F3` busca, `Esc` cancela. `Alt+1`/`Alt+2` saíram com o segundo Cockpit (D-107)                                                                                                                                                                                                            |
 
 ---
 
@@ -181,13 +181,10 @@ e não gasta rede, **o servidor não vê nada disso**. As duas saídas:
 Recomendo a primeira. A segunda coloca rastreamento exatamente onde o termo
 promete o contrário.
 
-### D3 · Quem incluiu alguém no Cockpit errado?
+### D3 · ~~Quem incluiu alguém no Cockpit errado?~~ — deixou de existir em 2026-10-19
 
-Hoje não há registro. Se um Operador incluir uma pessoa no Cockpit 2 por engano,
-não há como saber quem foi. Está dentro do requisito (RF-23 cobre gravação e
-alteração de **tempo**), mas é uma decisão consciente.
-
-Custo de mudar: uma migração pequena. Se quiser, é um pedido.
+A inclusão em Cockpit adicional saiu do sistema junto com o segundo Cockpit
+(D-107, RF-24 encerrado). Não há mais inclusão a rastrear.
 
 ### D4 · Existe patrocinador com logotipo na página?
 

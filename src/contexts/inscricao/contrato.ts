@@ -13,8 +13,17 @@
  * Implementação em T04/T09.
  */
 
-/** Um dos dois Cockpits do evento. Atributo da Tentativa, nunca do Participante. */
-export type Cockpit = 1 | 2
+/**
+ * O Cockpit do evento. **Um só desde 2026-10-19** (D-107).
+ *
+ * A coluna `tentativa.cockpit` ficou, e toda Tentativa nasce com este valor.
+ * Com ele fixo, a unicidade `(participante_id, cockpit)` passa a dizer "uma
+ * Tentativa por Participante", que é a regra do evento (RF-25). Ninguém escolhe
+ * Cockpit: nem o participante no formulário, nem o Operador no painel.
+ */
+export const COCKPIT_UNICO = 1
+
+export type Cockpit = typeof COCKPIT_UNICO
 
 /** Identidade mínima para o Operador distinguir duas pessoas na Fila (RF-15). */
 export type ParticipanteNaFila = {
@@ -28,6 +37,5 @@ export type ParticipanteNaFila = {
 /** Evento publicado quando uma Inscrição é confirmada. Não carrega dado pessoal. */
 export type InscricaoConfirmada = {
   participanteId: string
-  cockpits: readonly Cockpit[]
   inscritoEm: Date
 }

@@ -165,48 +165,6 @@
   font-size: 0.9375rem;
 }
 
-/* --- Escolha de pista (RF-03) --- */
-
-.opcoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-/*
- * As duas caixas de Cockpit, lado a lado.
- *
- * **O recuo lateral é menor que o vertical de propósito.** Com `1rem` dos dois
- * lados, em 360px sobravam uns noventa pixels de texto por caixa — e "Cockpit
- * 2" quebrava em duas linhas enquanto "Cockpit 1" cabia, porque o dígito 2 é
- * alguns pixels mais largo que o 1. Duas caixas irmãs com alturas diferentes
- * por causa de um dígito. O alvo de toque não muda: quem manda nele é o
- * `min-height`, e ele continua acima dos 44px que RNF-18 pede.
- */
-.opcao {
-  flex: 1 1 8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 56px;
-  padding: 0.75rem;
-  font-weight: 600;
-  border: 1px solid var(--borda-forte);
-  border-radius: var(--raio-pequeno);
-  background: var(--superficie);
-  cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
-}
-
-.opcaoMarcada {
-  border-color: var(--marca);
-  border-width: 2px;
-  background: var(--marca-clara);
-  color: var(--marca-forte);
-}
-
 .caixa {
   /* O controle nativo em tamanho utilizável: RNF-18 vale para ele também. */
   width: 24px;
@@ -395,12 +353,6 @@
   max-width: 32rem;
   margin: 0 auto;
   padding: 2rem 1rem 4rem;
-}
-
-.cockpitsConfirmados {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--marca-forte);
 }
 
 /* --- Resumo de erros com link para o campo --- */

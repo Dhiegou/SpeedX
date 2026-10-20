@@ -1923,6 +1923,54 @@ Medido em `main` depois da mudança, contra banco local, mediana de cinco:
 
 **O que falta para isto valer no ar:** commit, push e o CI verde no GitHub, que é a primeira prova em Linux de verdade. Depois, o deploy, com o `perf:rede` repetido contra a publicação.
 
+### D-107 — Um Cockpit, melhor de três voltas: a escolha de Cockpit sai do sistema, e a coluna fica valendo 1
+
+**Decidido em 2026-10-19 pelo organizador**, a cinco dias do evento. Pedido em `PRD-cockpit-unico.md`.
+
+**A mudança.** O evento passa a ter um Cockpit só. Cada pessoa corre três voltas no simulador, e vale a melhor. **O sistema nunca fica sabendo das três voltas**: o Operador lê a melhor na tela do simulador e digita esse número, como digitava qualquer tempo. Para o banco, continua sendo uma pessoa, uma Tentativa, um Tempo. Se um dia virar "o Operador digita as três e o sistema escolhe", esta decisão não serve: aí é esquema, fila e painel novos, e o lançamento sai dos 15 s de RNF-16.
+
+**A coluna `tentativa.cockpit` fica, e toda Tentativa nasce com 1.** Nenhuma migração foi criada. Três razões:
+
+1. a unicidade `tentativa_participante_cockpit_unica`, com o valor fixo, passa a dizer exatamente "uma Tentativa por pessoa", que é a regra nova. RF-25 continua garantido pelo banco sem SQL novo;
+2. `check (cockpit in (1, 2))` continua passando com 1;
+3. migração contra produção a cinco dias exige a string direta (`deploy.md` §3), e o meio de uma migração é o pior lugar para falhar.
+
+**A dívida, declarada.** O banco fica com uma coluna que não significa nada, e o `check` ainda aceita 2. O que garante uma Tentativa por pessoa é **nenhum caminho do sistema gravar outro valor**: a Inscrição grava `COCKPIT_UNICO` (`inscricao/contrato.ts`), o seed grava 1, e a inclusão em Cockpit adicional deixou de existir. `tests/esquema.test.ts` tem um teste que documenta isso e falha se alguém migrar a coluna. Depois do evento, se o projeto continuar, ela sai numa migração feita com calma.
+
+**O que saiu, por superfície:**
+
+| superfície | saiu | ficou |
+|---|---|---|
+| formulário `/` | a seção "Cockpits", as duas caixas, o campo `cockpits` do esquema e os três códigos de erro dele | os cinco campos, os aceites. Um `cockpits` que ainda chegue (aba aberta antes do deploy) é descartado pelo `z.object` e não recusa a inscrição |
+| confirmação | a linha "Cockpit 1 e Cockpit 2" | o nome |
+| Classificação | as abas Todos · Cockpit 1 · Cockpit 2, o filtro de `filtro.ts`, a coluna e o rótulo embutido do telefone, o Cockpit do modelo e do documento (`[nome, cockpit, tempo]` → `[nome, tempo]`) | busca, pódio, paginação, destaque |
+| painel | as abas, `Alt+1`/`Alt+2`, a segunda fila, a linha de ajuda que os anunciava, o botão "Incluir no Cockpit N", a rota `POST /api/painel/tentativa` e o caso de uso `adicionarTentativa` | buscar, selecionar, digitar, confirmar. A contagem "na fila" ficou na faixa fixa do topo |
+| API do painel | o parâmetro `cockpit` da Fila (um `?cockpit=` que ainda chegue é ignorado, não dá 400) e o campo `cockpit` das respostas | o resto da forma das respostas |
+| exportação | a coluna `cockpit` da completa e da de pendências | o cursor da completa continua sendo `(participante_id, cockpit)`: é a chave da unicidade, e sem ela uma linha antiga com `cockpit = 2` empataria e sumiria entre dois lotes |
+| vocabulário | `COCKPIT.ambas` e `COCKPIT.emAmbas` | `nomeDoCockpit()`, porque o resumo do expurgo ainda o imprime |
+| papel | o campo "Vou correr em" da ficha; a planilha virou folha única, com a coluna **Melhor volta** | o termo impresso (saiu idêntico), QR, banner |
+
+**A remoção foi feita deletando, não comentando.** O responsável pelo projeto autorizou na sessão. O git é o histórico, e código comentado é o "caminho morto" que o PRD pede para não deixar.
+
+**O que ficou de propósito, e por quê:**
+
+- a Fila continua filtrando `cockpit = 1`. O filtro não seleciona nada, mas é o prefixo de `tentativa_fila_idx`. Medido: com 2000 e com 4000 pessoas o planejador usa o índice. Com as 300 da massa de `seed.test.ts` ele varre, que é a escolha certa para uma tabela tão pequena. Por isso o teste de índice mudou para `escala.test.ts`, que tem a massa do evento;
+- `metricas.ts` e o resumo anônimo do expurgo continuam agrupando por Cockpit. Com um Cockpit, mostram uma linha só, e uma segunda linha ali é o alarme de que existe Tentativa com `cockpit = 2` na base.
+
+**Requisitos.** O PRD (agora 2.1) encerrou **RF-03, RF-13, RF-24 e RF-29**. RF-13 ("separar o painel por pista") não estava na lista do pedido. Entrou por decisão do responsável nesta sessão, porque sem segunda pista ele vira um requisito sem objeto. RF-25 foi reescrito ("por participante", sem "por pista"). RF-02, RF-10, RF-14, RF-16, RF-27 e RF-28 perderam a pista do texto. `tests/rastreabilidade.test.ts` passou de **35 para 31 RF**, com o motivo escrito ao lado do número. Encerrado é riscado no PRD, e a extração não lê o que está riscado. CU-03, CU-08, CU-10 e a métrica "correram as duas pistas" também saíram. A premissa **P-03 caiu**.
+
+**Massa de teste.** `src/db/seed.ts` gera uma Tentativa por pessoa, sempre no Cockpit 1, e o parâmetro `proporcaoNosDoisCockpits` deixou de existir. A massa de carga (`perf/preparar.ts`) passou a **4000 pessoas**. Antes eram 2000 pessoas nos dois Cockpits, 4000 Tentativas. Com uma Tentativa por pessoa, chegar às 4000 que RNF-02 nomeia exige 4000 pessoas, e o documento público continua do tamanho que os relatórios de carga mediram. `perf/lancamento.yml` passou a um Operador: dois numa fila só disputariam a mesma primeira pendente a cada volta.
+
+**O e2e vermelho de antes não é o desta mudança.** A falha conhecida é a da fonte do CI (D-104), consertada pelo fixture da Roboto (D-106). Dos dois testes de 360 px que reprovavam com a DejaVu, um (`nenhum dos dois Cockpits quebra em duas linhas`) **deixou de existir**, porque as caixas que ele media saíram. O outro (o nome numa linha só, na Classificação) ficou, e agora sem a etiqueta do Cockpit embaixo do nome. Os e2e de cadastro, Classificação e tela pequena foram ajustados à tela nova. **Não foram rodados nesta sessão**: exigem Postgres descartável e navegador.
+
+**O que precisa acontecer antes do evento, e não é código:**
+
+1. **Conferir a base de produção:** `select cockpit, count(*) from tentativa group by cockpit`. Se houver linha com `cockpit = 2` (ensaio, teste antigo), ela fica fora da Fila e da contagem do painel, mas aparece na Classificação e nas exportações. A base do evento precisa sair dessa consulta só com o valor 1;
+2. **As fichas não foram impressas** (confirmado pelo responsável em 2026-10-19), então a tiragem de `npm run fichas`, já regenerada, é a definitiva;
+3. **O relatório de prontidão de 17/10 vale para o código de 17/10.** Os blocos 1 e 2 precisam ser refeitos;
+4. **`npm run orcamento` não foi medido nesta sessão.** O `next build` falhou com `EPERM` ao apagar `.next/static/qbUzI0s5VvedkDHi6z7bY`, uma pasta de um build de 18/10 que o OneDrive transformou em marcador (`ReadOnly`, `ReparsePoint`). A mudança só remove código, CSS e um campo por linha do documento embutido, então o peso só pode ter caído, mas isso é dedução, não medida;
+5. o cadastro de ponta a ponta feito à mão: inscrever, lançar o tempo, ver na Classificação.
+
 ---
 
 ## 4. Premissas assumidas
@@ -1932,7 +1980,7 @@ Medido em `main` depois da mudança, contra banco local, mediana de cinco:
 | P-01 | ~~Stack Next.js + PostgreSQL (D-03)~~ — **deixou de ser premissa em 2026-08-18**: Next 16.3, React 19.2, TypeScript 6.0, Zod 4.4 e ESLint 9.39 estão instalados e verificados | — |
 | P-07 | PostgreSQL segue como escolha de banco, ainda não instalado nem provisionado | T02 muda; os contextos não, pois nenhum depende do banco ainda |
 | P-02 | A hospedagem anunciará HTTP/3. **A Vercel anuncia** (D-76); o que falta é o `curl --http3` contra o domínio de verdade | FL-02 e FL-07 caem para TCP e RNF-04 fica em risco; verificação obrigatória assim que o domínio existir (`docs/deploy.md` §4), com o risco declarado em T21 |
-| P-03 | Dois Cockpits, valores 1 e 2, fixos | `tentativa_cockpit_valido` e a UI de duas abas precisam mudar |
+| P-03 | ~~Dois Cockpits, valores 1 e 2, fixos~~ — **caiu em 2026-10-19 (D-107)**: o evento tem um Cockpit só. A UI de duas abas saiu; `tentativa_cockpit_valido` **não** mudou, de propósito, porque a coluna fica valendo 1 até uma migração depois do evento | — |
 | P-04 | Um único evento, sem multi-evento | O esquema não tem `evento_id`; acrescentar depois é migração custosa |
 | P-05 | Operadores em número pequeno, criados por CLI | Se forem muitos, será preciso uma tela de administração |
 | P-06 | Idade é informada, não derivada de data de nascimento | Segue o PRD (RF-02 pede "idade"); se virar data de nascimento, T02, T04 e T06 mudam |
@@ -1956,7 +2004,7 @@ Medido em `main` depois da mudança, contra banco local, mediana de cinco:
 
 Glossário completo no [SDD §3](SDD.md). Os termos que mais causam confusão:
 
-- **Cockpit** — um dos dois postos de simulador, onde fica o simulador que a pessoa disputa. É atributo da **Tentativa**, nunca do Participante. Uma palavra só, da tela ao nome da coluna `tentativa.cockpit` (D-75, D-77). "Pitch" e "Pista" aparecem no texto histórico deste arquivo porque era o que se pensava até 2026-08-25.
+- **Cockpit** — o posto de simulador onde a pessoa corre três voltas, valendo a melhor. Um só desde 2026-10-19 (D-107); eram dois. É atributo da **Tentativa**, nunca do Participante. Uma palavra só, da tela ao nome da coluna `tentativa.cockpit` (D-75, D-77). "Pitch" e "Pista" aparecem no texto histórico deste arquivo porque era o que se pensava até 2026-08-25.
 - **Tentativa** — intenção registrada de um Participante disputar um Pitch. Nasce Pendente na Inscrição. É o agregado raiz da Cronometragem. Evitar chamar de "corrida", porque "corrida" também nomeia o evento inteiro.
 - **Lançamento** — o **ato** de registrar um Tempo. Distinto de **Tempo**, que é o valor. RF-23 rastreia lançamentos, não tempos.
 - **Nome Público** — nome + inicial do sobrenome. Existe **somente** no contexto de Classificação; é o único identificador pessoal admissível em superfície pública.

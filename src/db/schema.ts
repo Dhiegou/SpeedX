@@ -213,8 +213,11 @@ export const sessao = pgTable(
 /**
  * Tentativa — agregado raiz da Cronometragem.
  *
- * Carrega o Cockpit, e não o Participante, porque a mesma pessoa pode disputar
- * os dois (RF-03, RF-24). Nasce Pendente na Inscrição.
+ * Carrega o Cockpit porque, até 2026-10-19, a mesma pessoa podia disputar os
+ * dois. Desde D-107 o evento tem um só, e a coluna fica valendo sempre 1:
+ * mudar o esquema a cinco dias do evento custava mais que a coluna parada. É
+ * dívida declarada, para sair numa migração depois do evento. Nasce Pendente na
+ * Inscrição.
  */
 export const tentativa = pgTable(
   'tentativa',
@@ -238,8 +241,9 @@ export const tentativa = pgTable(
     operadorId: uuid('operador_id').references(() => operador.id, { onDelete: 'restrict' }),
   },
   (t) => [
-    // RF-25: no máximo um tempo por Participante por Cockpit. Esta linha é a
-    // única forma de a regra sobreviver a dois operadores lançando juntos.
+    // RF-25: no máximo um tempo por Participante. Com `cockpit` sempre 1
+    // (D-107), a unicidade do par é a unicidade da pessoa. Esta linha é a única
+    // forma de a regra sobreviver a dois operadores lançando juntos.
     unique('tentativa_participante_cockpit_unica').on(t.participanteId, t.cockpit),
 
     check('tentativa_cockpit_valido', sql`${t.cockpit} in (1, 2)`),

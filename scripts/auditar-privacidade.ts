@@ -167,11 +167,10 @@ async function auditarRotasProtegidas(): Promise<void> {
     ['GET', '/api/exportacao?tipo=repasse'],
     ['GET', '/api/exportacao?tipo=pendencias'],
     ['GET', '/api/metricas'],
-    ['GET', '/api/painel/fila?cockpit=1'],
+    ['GET', '/api/painel/fila'],
     ['GET', '/api/painel/participante?busca=a'],
     ['POST', '/api/painel/tempo'],
     ['POST', '/api/painel/ausencia'],
-    ['POST', '/api/painel/tentativa'],
   ]
 
   const abertas: string[] = []

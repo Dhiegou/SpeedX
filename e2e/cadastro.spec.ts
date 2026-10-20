@@ -33,14 +33,13 @@ test.describe('cadastro público', () => {
     await expect(page.getByRole('heading', { name: 'Inscrição na corrida' })).toBeVisible()
   })
 
-  test('RF-02 — os seis campos estão na tela e são obrigatórios', async ({ page }) => {
+  test('RF-02 — os cinco campos estão na tela e são obrigatórios', async ({ page }) => {
     for (const rotulo of ['Nome', 'Sobrenome', 'E-mail', 'Telefone com DDD', 'Idade']) {
       await expect(page.getByLabel(rotulo, { exact: true })).toBeVisible()
     }
 
-    // O sexto é a escolha de pista, que é caixa e não campo de texto.
-    await expect(page.getByLabel('Cockpit 1')).toBeVisible()
-    await expect(page.getByLabel('Cockpit 2')).toBeVisible()
+    // Até D-107 havia um sexto, a escolha de Cockpit. O evento tem um só.
+    await expect(page.getByLabel(/Cockpit/)).toHaveCount(0)
   })
 
   test('RF-05 — o bloco do Responsável aparece em 13 e 17, e não em 18 e 19', async ({ page }) => {
@@ -77,22 +76,8 @@ test.describe('cadastro público', () => {
     await expect(blocoDoResponsavel(page)).toHaveValue('')
   })
 
-  test('RF-03 — enviar sem escolher pista é recusado', async ({ page }) => {
-    await preencherBase(page)
-    await page.getByRole('checkbox', { name: /li e entendi/i }).check()
-
-    await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
-
-    // Pelo texto, e não por `role=alert`: o Next mantém um anunciador de rota
-    // com esse mesmo papel em toda página, e um seletor por papel encontra os
-    // dois. O que interessa é o resumo de erros do formulário.
-    await expect(page.getByText(/faltou corrigir/i)).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Inscrição concluída' })).toBeHidden()
-  })
-
   test('RF-08 — enviar sem o aceite do termo é recusado', async ({ page }) => {
     await preencherBase(page)
-    await page.getByLabel('Cockpit 1').check()
 
     await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
 
@@ -103,16 +88,14 @@ test.describe('cadastro público', () => {
     await expect(page.getByRole('heading', { name: 'Inscrição concluída' })).toBeHidden()
   })
 
-  test('RF-10 — a confirmação mostra o nome e as pistas enviadas', async ({ page }) => {
+  test('RF-10 — a confirmação mostra o nome enviado', async ({ page }) => {
     await preencherBase(page)
-    await page.getByLabel('Cockpit 1').check()
-    await page.getByLabel('Cockpit 2').check()
     await page.getByRole('checkbox', { name: /li e entendi/i }).check()
 
     await page.getByRole('button', { name: /concluir|enviar|inscrever/i }).click()
 
     await expect(page.getByRole('heading', { name: 'Inscrição concluída' })).toBeVisible()
     await expect(page.getByText(`${ADULTA.nome} ${ADULTA.sobrenome}`)).toBeVisible()
-    await expect(page.getByText('Cockpit 1 e Cockpit 2')).toBeVisible()
+    await expect(page.getByText(/Cockpit/)).toHaveCount(0)
   })
 })

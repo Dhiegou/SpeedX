@@ -24,6 +24,10 @@ import {
  * do outro lado — e aí o telefone de quem **recusou** o repasse já teria saído
  * daqui. O termo promete que o telefone só vai para quem autorizou (D-23); a
  * promessa só se cumpre se o filtro estiver na consulta.
+ *
+ * **Nenhum dos três tem coluna de Cockpit** desde D-107. Com um Cockpit só, ela
+ * valeria 1 em toda linha, e uma coluna constante confunde quem abre a planilha
+ * depois do evento sem o contexto da mudança.
  */
 
 type Db = PgDatabase<PgQueryResultHKT, typeof schema>
@@ -52,7 +56,6 @@ const CABECALHO_COMPLETO = [
   'consentimento_registrado_em',
   'aceite_compartilhamento',
   'inscrito_em',
-  'cockpit',
   'estado',
   'tempo',
   'tempo_ms',
@@ -82,7 +85,6 @@ function linhaCompleta(l: LinhaDaExportacao): string {
     iso(l.consentimentoRegistradoEm),
     sn(l.aceiteCompartilhamento),
     iso(l.inscritoEm),
-    l.cockpit,
     l.estado,
     // Formatado e bruto: um para ler, outro para reprocessar sem ambiguidade.
     l.tempoMs === null ? '' : formatTempo(l.tempoMs),
@@ -148,17 +150,10 @@ export async function gerarPendencias(db: Db): Promise<string> {
 
   return (
     BOM +
-    linha(['tentativa_id', 'nome', 'sobrenome', 'ultimos4_telefone', 'cockpit', 'inscrito_em']) +
+    linha(['tentativa_id', 'nome', 'sobrenome', 'ultimos4_telefone', 'inscrito_em']) +
     linhas
       .map((l) =>
-        linha([
-          l.tentativaId,
-          l.nome,
-          l.sobrenome,
-          l.ultimos4Telefone,
-          l.cockpit,
-          l.inscritoEm.toISOString(),
-        ]),
+        linha([l.tentativaId, l.nome, l.sobrenome, l.ultimos4Telefone, l.inscritoEm.toISOString()]),
       )
       .join('')
   )

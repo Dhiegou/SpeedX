@@ -12,7 +12,7 @@ enquanto alguém tenta descobrir o que fazer.
 
 - [ ] **Fichas impressas**, ao menos 200 (`docs/contingencia/ficha-inscricao.html`)
 - [ ] **Termo integral impresso**, 5 cópias, no balcão (`termo-impresso.html`)
-- [ ] **Folhas de tempo**, 5 por Cockpit (`planilha-tempos.html`)
+- [ ] **Folhas de tempo**, 10 cópias da folha única (`planilha-tempos.html`) — eram 5 por Cockpit; o total de linhas não mudou (D-107)
 - [ ] **Canetas** — mais do que parece necessário
 - [ ] Fichas e folhas guardadas em **um lugar só**, e o time inteiro sabe qual
 - [ ] Ensaio feito: cinco fichas preenchidas, digitadas e conferidas
@@ -26,7 +26,7 @@ cabeçalho nem rodapé do navegador.
 
 ### 1. Avise, não espere
 
-Quem percebe fala em voz alta com o ponto de inscrição e com os dois Cockpits.
+Quem percebe fala em voz alta com o ponto de inscrição e com o Cockpit.
 Não confira, não teste, não tente reiniciar nada antes de avisar. O procedimento
 custa nada e desfazer custa nada; a fila parada custa o evento.
 
@@ -41,7 +41,9 @@ custa nada e desfazer custa nada; a fila parada custa o evento.
 
 ### 3. Tempos passam para a folha
 
-Uma folha por Cockpit, uma linha por corrida.
+Uma folha só, uma linha por pessoa. A coluna de tempo é a **melhor volta**: a
+pessoa corre três voltas no simulador, e anota-se a melhor delas, o mesmo número
+que o Operador digitaria no painel.
 
 **Escreva o horário real da corrida.** Quando esses tempos forem digitados, o
 sistema vai registrar a hora da digitação, não a da corrida — e o desempate por

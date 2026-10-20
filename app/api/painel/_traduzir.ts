@@ -22,7 +22,6 @@ export function serializarTentativa(t: TentativaResolvida) {
   return {
     tentativaId: t.id,
     participanteId: t.participanteId,
-    cockpit: t.cockpit,
     estado: t.estado,
     tempoMs: t.tempoMs,
     tempo: t.tempoMs === null ? null : formatTempo(t.tempoMs),

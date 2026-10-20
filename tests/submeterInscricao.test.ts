@@ -49,7 +49,6 @@ function corpo(sobrescrever: Record<string, unknown> = {}) {
     email: 'marina@exemplo.com',
     telefone: '(11) 98765-4321',
     idade: 30,
-    cockpits: [1],
     consentimento: true,
     token: emitirTokenFormulario(AGORA - 30_000),
     ...sobrescrever,
@@ -83,7 +82,7 @@ describe('FL-03 — idempotência', () => {
 
     // Não basta não duplicar: a segunda resposta precisa ser a mesma, senão a
     // tela de confirmação muda embaixo de quem já tinha visto a primeira.
-    expect(segunda).toMatchObject({ corpo: { nome: 'Marina', sobrenome: 'Costa', cockpits: [1] } })
+    expect(segunda).toMatchObject({ corpo: { nome: 'Marina', sobrenome: 'Costa' } })
   })
 
   it('o mesmo envio com chave diferente produz dois Participantes', async () => {
@@ -193,7 +192,7 @@ describe('RNF-13 — a validação do servidor não depende da tela', () => {
   it('devolve a lista inteira de problemas, não o primeiro', async () => {
     const resultado = await submeterInscricao(
       banco.db,
-      envio({ corpo: corpo({ email: 'sem-arroba', telefone: '123', cockpits: [] }) }),
+      envio({ corpo: corpo({ email: 'sem-arroba', telefone: '123', idade: 12 }) }),
     )
 
     if (resultado.situacao !== 'invalida') throw new Error('esperava recusa por validação')

@@ -1,6 +1,6 @@
 # SpeedX — Cadastro e Classificação de Corrida
 
-Sistema de inscrição, cronometragem e classificação pública para um evento presencial de corrida de simulador de um dia — **24 de outubro de 2026, em São Paulo** —, com dois Cockpits e 2000+ participantes. Substitui a ficha em papel e a planilha de resultados por um fluxo digital ponta a ponta: o participante se inscreve pelo celular escaneando um QR code, o Operador lança o tempo assim que a corrida termina, e a classificação fica pública e atualizada durante todo o evento.
+Sistema de inscrição, cronometragem e classificação pública para um evento presencial de corrida de simulador de um dia — **24 de outubro de 2026, em São Paulo** —, com um Cockpit (três voltas por pessoa, vale a melhor) e 2000+ participantes. Substitui a ficha em papel e a planilha de resultados por um fluxo digital ponta a ponta: o participante se inscreve pelo celular escaneando um QR code, o Operador lança o tempo assim que a corrida termina, e a classificação fica pública e atualizada durante todo o evento.
 
 > **Estado:** trilha de Inscrição fechada (T01–T07) e acesso do Operador em pé (T08). Ver [Estado do projeto](#estado-do-projeto).
 
@@ -260,17 +260,16 @@ A raiz **serve o formulário diretamente**, sem redirecionamento: é o destino d
 |---|---|---|
 | `/` | Público | Formulário de inscrição — destino do QR code, sem redirecionamento |
 | `/termo` | Público | Texto integral do consentimento — estático, aberto em aba nova pelo formulário |
-| `/classificacao` | Público | Tabela com filtro por Cockpit, busca com destaque e atualização a cada 15 s — filtro e busca rodam no dispositivo |
+| `/classificacao` | Público | Tabela com busca com destaque e atualização a cada 15 s — a busca roda no dispositivo |
 | `/api/classificacao` | Público, em cache | Documento completo (62,7 KB / 10,9 KB gzip com 2.422 linhas); `s-maxage=15`, ETag |
 | `/painel` | Autenticado | Fila, lançamento, correção, ausência e histórico — tudo por teclado |
 | `/painel/login` | Público | Autenticação de Operador |
 | `/api/painel/sessao` | Misto | `POST` login, `DELETE` logout, `GET` autenticado |
 | `/api/inscricao` | Público, com limite de taxa | Recebe o cadastro |
-| `/api/painel/fila` | Autenticado | `GET` — pendentes do Cockpit, com busca (RF-13, RF-14, RF-16) |
+| `/api/painel/fila` | Autenticado | `GET` — a Fila única de pendentes, com busca (RF-14, RF-16) |
 | `/api/painel/tempo` | Autenticado | `POST` registra, `PATCH` corrige (RF-17, RF-22) |
 | `/api/painel/ausencia` | Autenticado | `POST` — marca ausente (RF-21) |
-| `/api/painel/tentativa` | Autenticado | `POST` — inclui em Cockpit adicional (RF-24) |
-| `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22, RF-24) |
+| `/api/painel/participante` | Autenticado | `GET` — busca global, fora da Fila (RF-22) |
 | `/api/painel/tentativa/:id/historico` | Autenticado | `GET` — trilha de auditoria (RF-23) |
 | `/api/exportacao?tipo=` | Autenticado | `completa` (base inteira), `repasse` (só quem autorizou) ou `pendencias` (métrica do PRD §7) |
 | `/api/saude` | Público | Health check do monitor externo: 200 com o banco de pé, 503 sem — e nada sobre infraestrutura no corpo |
@@ -284,7 +283,7 @@ Aceita `application/json` e exige o cabeçalho `Idempotency-Key` com um UUID ger
 
 | Status | Quando |
 |---|---|
-| 201 | Cadastro criado. Corpo: `{ nome, sobrenome, cockpits }` |
+| 201 | Cadastro criado. Corpo: `{ nome, sobrenome }` |
 | 200 | Reenvio da mesma chave — devolve a resposta da primeira vez, sem gravar de novo |
 | 400 | JSON quebrado, chave ausente, ou formulário aberto há horas demais |
 | 409 | A mesma chave chegou com outro envio |

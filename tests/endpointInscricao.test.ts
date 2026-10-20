@@ -61,7 +61,6 @@ function corpo(sobrescrever: Record<string, unknown> = {}) {
     email: EMAIL,
     telefone: TELEFONE_DIGITADO,
     idade: 30,
-    cockpits: [1],
     consentimento: true,
     token: emitirTokenFormulario(Date.now() - 30_000),
     ...sobrescrever,
@@ -98,14 +97,13 @@ function requisicao(dados: unknown, opcoes: Opcoes = {}): NextRequest {
 }
 
 describe('POST /api/inscricao — sucesso', () => {
-  it('RF-10 — devolve 201 com o nome e os Cockpits enviados', async () => {
+  it('RF-10 — devolve 201 com o nome enviado', async () => {
     const resposta = await POST(requisicao(corpo()))
 
     expect(resposta.status).toBe(201)
     await expect(resposta.json()).resolves.toEqual({
       nome: 'Marina',
       sobrenome: 'Costa',
-      cockpits: [1],
     })
   })
 

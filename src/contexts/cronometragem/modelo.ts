@@ -1,5 +1,3 @@
-import type { Cockpit } from '@/contexts/inscricao/contrato'
-
 /**
  * O vocabulário de BC-02, em tipos.
  *
@@ -20,7 +18,6 @@ export type TipoDeLancamento = 'registro' | 'correcao' | 'ausencia'
 export type TentativaResolvida = {
   readonly id: string
   readonly participanteId: string
-  readonly cockpit: Cockpit
   readonly estado: EstadoDaTentativa
   /** Milissegundos. Presente se e somente se o estado for `valida`. */
   readonly tempoMs: number | null
@@ -65,17 +62,18 @@ export type LancamentoRegistrado = {
 /** Uma Tentativa vista pela busca global: o que o Operador precisa decidir. */
 export type TentativaDoParticipante = {
   readonly tentativaId: string
-  readonly cockpit: Cockpit
   readonly estado: EstadoDaTentativa
   readonly tempoMs: number | null
   readonly resolvidoEm: Date | null
 }
 
 /**
- * Uma pessoa achada pela busca global (T10), com suas Tentativas nos dois
- * Cockpits.
+ * Uma pessoa achada pela busca global (T10), com sua Tentativa.
  *
- * Existe porque a Fila só mostra quem ainda não correu — e RF-22 e RF-24 tratam
+ * `tentativas` continua lista, e não campo único, porque é a forma da linha
+ * que a junção devolve e o painel percorre; desde D-107 ela tem um item só.
+ *
+ * Existe porque a Fila só mostra quem ainda não correu — e RF-22 trata
  * justamente de quem saiu dela. Carrega o mesmo tanto de dado pessoal que a
  * Fila: nome, sobrenome e quatro dígitos. Nada mais atravessa daqui para o
  * painel.

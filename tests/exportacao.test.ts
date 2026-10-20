@@ -102,7 +102,6 @@ type Pessoa = {
   compartilha?: boolean
   responsavel?: boolean
   estado?: 'pendente' | 'valida' | 'ausente'
-  cockpit?: 1 | 2
 }
 
 async function criar(p: Pessoa = {}): Promise<string> {
@@ -143,7 +142,7 @@ async function criar(p: Pessoa = {}): Promise<string> {
 
   await banco.db.insert(schema.tentativa).values({
     participanteId,
-    cockpit: p.cockpit ?? 1,
+    cockpit: 1,
     estado: est,
     tempoMs: est === 'valida' ? 83_450 : null,
     resolvidoEm: resolvida ? AGORA : null,
@@ -304,21 +303,16 @@ describe('a exportação completa (RF-34)', () => {
     expect(csv.trim().split('\r\n')[1]?.endsWith(';0')).toBe(true)
   })
 
-  it('quem correu os dois Cockpits ocupa duas linhas seguidas', async () => {
-    const participanteId = await criar({ nome: 'Dois', cockpit: 1 })
-    await banco.db
-      .insert(schema.tentativa)
-      .values({ participanteId, cockpit: 2, estado: 'pendente' })
+  it('não há coluna de Cockpit, em nenhum dos três arquivos (D-107)', async () => {
+    // Com um Cockpit só, a coluna valeria 1 em toda linha — e uma coluna
+    // constante confunde quem abre a planilha depois do evento.
+    await criar({ nome: 'Pendente', estado: 'pendente', compartilha: true })
 
-    const linhas = (await texto(await exportar('completa')))
-      .split('\r\n')
-      .filter((l) => l.includes('Dois'))
+    for (const tipo of ['completa', 'repasse', 'pendencias'] as const) {
+      const [cabecalho] = (await texto(await exportar(tipo))).split('\r\n')
 
-    expect(linhas).toHaveLength(2)
-    // Ordenadas por participante e Cockpit: as duas linhas da mesma pessoa ficam
-    // juntas na planilha.
-    expect(linhas[0]?.includes(';1;')).toBe(true)
-    expect(linhas[1]?.includes(';2;')).toBe(true)
+      expect(cabecalho, tipo).not.toMatch(/cockpit/i)
+    }
   })
 
   it('sai em lotes maiores que o tamanho do lote, sem perder linha', async () => {
@@ -389,7 +383,10 @@ describe('a lista de repasse (D-23)', () => {
     }
   })
 
-  it('quem correu os dois Cockpits aparece uma vez — é contato, não tentativa', async () => {
+  it('uma linha antiga de ensaio com cockpit 2 não duplica o contato', async () => {
+    // A consulta parte de Participante, e não de Tentativa. Desde D-107 cada
+    // pessoa tem uma Tentativa, mas uma linha de antes da troca não pode fazer
+    // o mesmo telefone sair duas vezes da lista de contato.
     const participanteId = await criar({ nome: 'Unico', compartilha: true })
     await banco.db
       .insert(schema.tentativa)
@@ -408,7 +405,7 @@ describe('o relatório de pendências (PRD §7)', () => {
 
   it('lista exatamente as Tentativas sem tempo e sem ausência', async () => {
     await criar({ nome: 'Pendente1', estado: 'pendente' })
-    await criar({ nome: 'Pendente2', estado: 'pendente', cockpit: 2 })
+    await criar({ nome: 'Pendente2', estado: 'pendente' })
     await criar({ nome: 'Resolvida', estado: 'valida' })
     await criar({ nome: 'Ausente', estado: 'ausente' })
 

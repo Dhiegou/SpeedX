@@ -11,8 +11,8 @@ import { registrarOperacao } from '@/shared/log'
  * abreviado da projeção (RNF-09). Esta rota não filtra nada — ela não teria o
  * que filtrar.
  *
- * **O documento vai inteiro, de uma vez.** Filtro por Cockpit e busca por nome
- * acontecem no dispositivo (SDD BC-03, T12 escopo 5). Uma requisição por tecla
+ * **O documento vai inteiro, de uma vez.** A busca por nome acontece no
+ * dispositivo (SDD BC-03, T12 escopo 5). Uma requisição por tecla
  * digitada, com 2000 pessoas buscando ao mesmo tempo, é o cenário que derruba o
  * sistema — e é o cenário que RNF-01 mede.
  *

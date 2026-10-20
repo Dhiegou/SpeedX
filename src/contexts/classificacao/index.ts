@@ -20,7 +20,7 @@
  * por tamanho e por privacidade.
  */
 
-export type { DocumentoClassificacao, LinhaClassificacao, Cockpit } from './modelo'
+export type { DocumentoClassificacao, LinhaClassificacao } from './modelo'
 export type { DocumentoTransmitido, LinhaCompacta } from './documento'
 export { compactar, etiquetaDe } from './documento'
 export type { OpcoesNomePublico } from './nomePublico'

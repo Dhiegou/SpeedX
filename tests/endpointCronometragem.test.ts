@@ -44,7 +44,6 @@ const sessaoRota = await import('@/../app/api/painel/sessao/route')
 const filaRota = await import('@/../app/api/painel/fila/route')
 const tempoRota = await import('@/../app/api/painel/tempo/route')
 const ausenciaRota = await import('@/../app/api/painel/ausencia/route')
-const tentativaRota = await import('@/../app/api/painel/tentativa/route')
 const participanteRota = await import('@/../app/api/painel/participante/route')
 const historicoRota = await import('@/../app/api/painel/tentativa/[id]/historico/route')
 const { criarOperador } = await import('@/contexts/identidade/criarOperador')
@@ -103,7 +102,6 @@ async function criarParticipante(sobrescrever: Record<string, unknown> = {}): Pr
 }
 
 async function criarTentativa(
-  cockpit: 1 | 2 = 1,
   inscritoEm?: Date,
   participante: Record<string, unknown> = {},
 ): Promise<{ tentativaId: string; participanteId: string }> {
@@ -111,16 +109,16 @@ async function criarTentativa(
 
   const [t] = await banco.db
     .insert(schema.tentativa)
-    .values({ participanteId, cockpit, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
+    .values({ participanteId, cockpit: 1, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
     .returning({ id: schema.tentativa.id })
 
   return { tentativaId: t?.id ?? '', participanteId }
 }
 
-const fila = (busca?: string, cockpit = 1) =>
+const fila = (busca?: string) =>
   filaRota.GET(
     new NextRequest(
-      `${BASE}/fila?cockpit=${String(cockpit)}${busca === undefined ? '' : `&busca=${encodeURIComponent(busca)}`}`,
+      `${BASE}/fila${busca === undefined ? '' : `?busca=${encodeURIComponent(busca)}`}`,
     ),
   )
 
@@ -128,7 +126,7 @@ const fila = (busca?: string, cockpit = 1) =>
 
 describe('a guarda vale em todas as rotas (RF-11)', () => {
   it('sem sessão, toda rota do painel responde 401', async () => {
-    const { tentativaId, participanteId } = await criarTentativa()
+    const { tentativaId } = await criarTentativa()
 
     const respostas = await Promise.all([
       fila(),
@@ -136,13 +134,12 @@ describe('a guarda vale em todas as rotas (RF-11)', () => {
       tempoRota.POST(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() })),
       tempoRota.PATCH(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() }, 'PATCH')),
       ausenciaRota.POST(corpoJson({ tentativaId, chave: randomUUID() })),
-      tentativaRota.POST(corpoJson({ participanteId, cockpit: 2 })),
       historicoRota.GET(new Request(`${BASE}/tentativa/${tentativaId}/historico`), {
         params: Promise.resolve({ id: tentativaId }),
       }),
     ])
 
-    expect(respostas.map((r) => r.status)).toEqual([401, 401, 401, 401, 401, 401, 401])
+    expect(respostas.map((r) => r.status)).toEqual([401, 401, 401, 401, 401, 401])
     // E nada foi escrito por nenhuma delas.
     expect(await banco.db.select().from(schema.lancamento)).toHaveLength(0)
   })
@@ -159,7 +156,7 @@ describe('a guarda vale em todas as rotas (RF-11)', () => {
   })
 })
 
-describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
+describe('GET /fila (RF-14, RF-15, RF-16)', () => {
   beforeEach(async () => {
     await entrar()
   })
@@ -167,9 +164,9 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
   it('não traz lançadas nem ausentes, e respeita a ordem de inscrição', async () => {
     const base = new Date('2026-09-12T08:00:00Z').getTime()
 
-    const primeira = await criarTentativa(1, new Date(base), { nome: 'Ana' })
-    const segunda = await criarTentativa(1, new Date(base + 60_000), { nome: 'Bruno' })
-    const terceira = await criarTentativa(1, new Date(base + 120_000), { nome: 'Carlos' })
+    const primeira = await criarTentativa(new Date(base), { nome: 'Ana' })
+    const segunda = await criarTentativa(new Date(base + 60_000), { nome: 'Bruno' })
+    const terceira = await criarTentativa(new Date(base + 120_000), { nome: 'Carlos' })
 
     await tempoRota.POST(
       corpoJson({ tentativaId: segunda.tentativaId, tempo: '01:23.45', chave: randomUUID() }),
@@ -185,19 +182,29 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     expect(corpo.pendentes).toBe(1)
   })
 
-  it('alternar cockpit altera a lista (RF-13)', async () => {
-    await criarTentativa(1, undefined, { nome: 'DoCockpitUm' })
-    await criarTentativa(2, undefined, { nome: 'DoCockpitDois' })
+  it('a Fila é uma só, e um `cockpit=` na consulta não muda nada (D-107)', async () => {
+    // O painel de antes da troca mandava `?cockpit=1` ou `?cockpit=2`. Uma aba
+    // aberta desde então continua mandando, e não pode receber 400 nem uma
+    // segunda fila vazia.
+    const base = new Date('2026-09-12T08:00:00Z').getTime()
+    await criarTentativa(new Date(base), { nome: 'Ana' })
+    await criarTentativa(new Date(base + 60_000), { nome: 'Bruno' })
 
-    const um = (await (await fila(undefined, 1)).json()) as { itens: { nome: string }[] }
-    const dois = (await (await fila(undefined, 2)).json()) as { itens: { nome: string }[] }
+    for (const consulta of ['', '?cockpit=1', '?cockpit=2', '?cockpit=x']) {
+      const resposta = await filaRota.GET(new NextRequest(`${BASE}/fila${consulta}`))
+      const corpo = (await resposta.json()) as { itens: { nome: string }[] }
 
-    expect(um.itens.map((i) => i.nome)).toEqual(['DoCockpitUm'])
-    expect(dois.itens.map((i) => i.nome)).toEqual(['DoCockpitDois'])
+      expect(resposta.status, consulta).toBe(200)
+      expect(
+        corpo.itens.map((i) => i.nome),
+        consulta,
+      ).toEqual(['Ana', 'Bruno'])
+      expect(Object.keys(corpo), consulta).not.toContain('cockpit')
+    }
   })
 
   it('cada item traz o necessário para distinguir homônimos — e nada além (RF-15)', async () => {
-    await criarTentativa(1, undefined, {
+    await criarTentativa(undefined, {
       nome: 'Marina',
       sobrenome: 'Costa',
       email: 'marina.costa@exemplo.com',
@@ -233,17 +240,13 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     expect(Object.keys(corpo.itens[0] ?? {})).not.toContain('idade')
   })
 
-  it('busca por trecho, sem acento e sem caixa, dentro do Cockpit (RF-16)', async () => {
-    await criarTentativa(1, undefined, { nome: 'João', sobrenome: 'Silva' })
-    await criarTentativa(1, undefined, { nome: 'Lélio', sobrenome: 'Assumpção Neto' })
-    await criarTentativa(1, undefined, { nome: 'Bruno', sobrenome: 'Souza' })
-    // Mesmo nome, outro Cockpit: não pode aparecer na busca do Cockpit 1.
-    await criarTentativa(2, undefined, { nome: 'João', sobrenome: 'Pereira' })
+  it('busca por trecho, sem acento e sem caixa (RF-16)', async () => {
+    await criarTentativa(undefined, { nome: 'João', sobrenome: 'Silva' })
+    await criarTentativa(undefined, { nome: 'Lélio', sobrenome: 'Assumpção Neto' })
+    await criarTentativa(undefined, { nome: 'Bruno', sobrenome: 'Souza' })
 
-    const nomes = async (busca: string, cockpit = 1) =>
-      ((await (await fila(busca, cockpit)).json()) as { itens: { nome: string }[] }).itens.map(
-        (i) => i.nome,
-      )
+    const nomes = async (busca: string) =>
+      ((await (await fila(busca)).json()) as { itens: { nome: string }[] }).itens.map((i) => i.nome)
 
     // Sem acento na busca, com acento no dado.
     expect(await nomes('joao')).toEqual(['João'])
@@ -251,16 +254,7 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
     // Trecho no meio de sobrenome composto — o caso que prefixo não pega.
     expect(await nomes('neto')).toEqual(['Lélio'])
     expect(await nomes('assump')).toEqual(['Lélio'])
-    // O recorte por Cockpit continua valendo.
-    expect(await nomes('joao', 2)).toEqual(['João'])
     expect(await nomes('zzz')).toEqual([])
-  })
-
-  it('recusa cockpit fora de {1,2}', async () => {
-    for (const p of ['0', '3', 'x', '']) {
-      const r = await filaRota.GET(new NextRequest(`${BASE}/fila?cockpit=${p}`))
-      expect(r.status).toBe(400)
-    }
   })
 
   it('manda o instante do servidor no cabeçalho (regra 6)', async () => {
@@ -273,7 +267,7 @@ describe('GET /fila (RF-13, RF-14, RF-15, RF-16)', () => {
 
   it('avisa quando o teto cortou resultados', async () => {
     for (let i = 0; i < 3; i += 1) {
-      await criarTentativa(1, undefined, { email: `p${String(i)}@exemplo.com` })
+      await criarTentativa(undefined, { email: `p${String(i)}@exemplo.com` })
     }
 
     const cheia = (await (await fila()).json()) as { truncado: boolean }
@@ -454,46 +448,17 @@ describe('POST /ausencia (RF-21)', () => {
   })
 })
 
-describe('POST /tentativa (RF-24)', () => {
+describe('GET /participante (RF-22)', () => {
   beforeEach(async () => {
     await entrar()
   })
 
-  it('inclui no outro Cockpit mantendo um único cadastro', async () => {
-    const { participanteId } = await criarTentativa(1)
-
-    expect((await tentativaRota.POST(corpoJson({ participanteId, cockpit: 2 }))).status).toBe(201)
-
-    const dois = (await (await fila(undefined, 2)).json()) as { itens: unknown[] }
-    expect(dois.itens).toHaveLength(1)
-    expect(await banco.db.select().from(schema.participante)).toHaveLength(1)
-  })
-
-  it('incluir de novo no mesmo Cockpit é 409', async () => {
-    const { participanteId } = await criarTentativa(1)
-
-    expect((await tentativaRota.POST(corpoJson({ participanteId, cockpit: 1 }))).status).toBe(409)
-  })
-
-  it('participante inexistente é 404', async () => {
-    expect(
-      (await tentativaRota.POST(corpoJson({ participanteId: randomUUID(), cockpit: 2 }))).status,
-    ).toBe(404)
-  })
-})
-
-describe('GET /participante (RF-22, RF-24)', () => {
-  beforeEach(async () => {
-    await entrar()
-  })
-
-  it('acha quem já saiu da Fila, com as tentativas nos dois Cockpits', async () => {
-    const { tentativaId, participanteId } = await criarTentativa(1, undefined, {
+  it('acha quem já saiu da Fila, com a Tentativa e o tempo', async () => {
+    const { tentativaId } = await criarTentativa(undefined, {
       nome: 'Marina',
       sobrenome: 'Costa',
       telefone: '11987654321',
     })
-    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 2 })
 
     await tempoRota.POST(corpoJson({ tentativaId, tempo: '01:23.45', chave: randomUUID() }))
 
@@ -504,17 +469,19 @@ describe('GET /participante (RF-22, RF-24)', () => {
     const corpo = (await (
       await participanteRota.GET(new NextRequest(`${BASE}/participante?busca=marina`))
     ).json()) as {
-      itens: { tentativas: { cockpit: number; estado: string; tempo: string | null }[] }[]
+      itens: { tentativas: Record<string, unknown>[] }[]
     }
 
     expect(corpo.itens).toHaveLength(1)
-    expect(corpo.itens[0]?.tentativas).toHaveLength(2)
-    expect(corpo.itens[0]?.tentativas.find((t) => t.cockpit === 1)?.tempo).toBe('01:23.45')
-    expect(corpo.itens[0]?.tentativas.find((t) => t.cockpit === 2)?.estado).toBe('pendente')
+    expect(corpo.itens[0]?.tentativas).toHaveLength(1)
+    expect(corpo.itens[0]?.tentativas[0]?.['tempo']).toBe('01:23.45')
+    expect(corpo.itens[0]?.tentativas[0]?.['estado']).toBe('valida')
+    // Desde D-107 o Cockpit não sai para o painel: valeria 1 em toda linha.
+    expect(Object.keys(corpo.itens[0]?.tentativas[0] ?? {})).not.toContain('cockpit')
   })
 
   it('busca vazia devolve vazio, não a base inteira', async () => {
-    await criarTentativa(1)
+    await criarTentativa()
 
     const corpo = (await (
       await participanteRota.GET(new NextRequest(`${BASE}/participante?busca=`))
@@ -524,7 +491,7 @@ describe('GET /participante (RF-22, RF-24)', () => {
   })
 
   it('não expõe e-mail nem telefone completo', async () => {
-    await criarTentativa(1, undefined, {
+    await criarTentativa(undefined, {
       nome: 'Marina',
       email: 'marina.costa@exemplo.com',
       telefone: '11987654321',

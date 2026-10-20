@@ -73,22 +73,16 @@ export const CAMPOS_DO_RESPONSAVEL: readonly CampoDaFicha[] = [
 ]
 
 /**
- * A escolha de Cockpit (RF-03).
- *
- * Não é campo de escrita: são duas caixas para marcar, e ao menos uma precisa
- * estar marcada. Na tela isso é um par de caixas; no papel, o mesmo.
- */
-export const CAMPO_COCKPITS = { chave: 'cockpits', rotulo: 'Vou correr em' } as const
-
-/**
  * Toda chave que a ficha coleta, para o teste comparar com o esquema.
  *
  * `consentimento` e `aceiteResponsavel` não entram: no papel eles não são campo,
  * são **assinatura**. A equivalência deles é verificada à parte, contra os
  * aceites do termo.
+ *
+ * O campo "Vou correr em" saiu em 2026-10-19 junto com a escolha de Cockpit da
+ * tela (D-107): o evento tem um Cockpit só, e não há o que marcar.
  */
 export const CHAVES_DA_FICHA: readonly string[] = [
   ...CAMPOS_DO_PARTICIPANTE.map((c) => c.chave),
-  CAMPO_COCKPITS.chave,
   ...CAMPOS_DO_RESPONSAVEL.map((c) => c.chave),
 ]

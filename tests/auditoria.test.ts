@@ -16,7 +16,7 @@ import { compactar } from '@/contexts/classificacao/documento'
  * 2. **O registro pessoal completo mora num contexto só** (BC-05). E-mail,
  *    idade e dados de Responsável não são lidos fora da Custódia; o telefone
  *    inteiro também não.
- * 3. **O documento público tem três posições.** Um quarto campo no array é
+ * 3. **O documento público tem duas posições.** Um terceiro campo no array é
  *    barato de acrescentar e caro de perceber.
  *
  * O que **não** está aqui, porque não se responde lendo arquivo: o corpo que
@@ -161,15 +161,14 @@ describe('BC-05 — o registro pessoal completo mora num contexto só', () => {
   })
 })
 
-describe('RNF-08 — o documento público tem três posições, e só', () => {
-  it('a linha transmitida é [nomePublico, cockpit, tempoMs]', () => {
+describe('RNF-08 — o documento público tem duas posições, e só', () => {
+  it('a linha transmitida é [nomePublico, tempoMs]', () => {
     const documento = compactar({
       geradoEm: '2026-10-24T12:00:00.000Z',
       linhas: [
         {
           id: '11111111-1111-4111-8111-111111111111',
           nomePublico: 'Marina C.',
-          cockpit: 1,
           tempoMs: 83_450,
           registradoEm: '2026-10-24T11:59:00.000Z',
         },
@@ -178,11 +177,12 @@ describe('RNF-08 — o documento público tem três posições, e só', () => {
 
     const [linha] = documento.linhas
 
-    expect(linha).toEqual(['Marina C.', 1, 83_450])
-    // Um quarto campo é barato de acrescentar e caro de perceber. O `id` e o
+    expect(linha).toEqual(['Marina C.', 83_450])
+    // Um terceiro campo é barato de acrescentar e caro de perceber. O `id` e o
     // `registradoEm` ficaram de fora de propósito (T12): o instante exato em
-    // que uma pessoa nomeada esteve num lugar é exposição por outra porta.
-    expect(linha).toHaveLength(3)
+    // que uma pessoa nomeada esteve num lugar é exposição por outra porta. O
+    // Cockpit saiu em D-107, por valer sempre o mesmo.
+    expect(linha).toHaveLength(2)
     expect(Object.keys(documento).sort()).toEqual(['geradoEm', 'linhas', 'total'])
   })
 

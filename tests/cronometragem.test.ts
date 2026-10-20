@@ -1,7 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { adicionarTentativa } from '@/contexts/cronometragem/adicionarTentativa'
 import {
   contarPendentes,
   historicoDaTentativa,
@@ -14,11 +13,11 @@ import { formatTempo, parseTempo } from '@/shared/tempo'
 import { criarBancoDeTeste, participanteValido, type BancoDeTeste } from './apoio/bancoDeTeste'
 
 /**
- * T09 — Domínio de Cronometragem (RF-17, RF-21 a RF-25, RF-12).
+ * T09 — Domínio de Cronometragem (RF-17, RF-21 a RF-23, RF-25, RF-12).
  *
  * Contra Postgres real, como o resto da suíte: as invariantes que mais importam
  * aqui — coerência entre estado e tempo, autoria obrigatória fora de Pendente,
- * unicidade por Participante e Cockpit — são constraints do banco. Testá-las
+ * uma Tentativa por Participante — são constraints do banco. Testá-las
  * contra um mock verificaria o mock.
  */
 
@@ -64,12 +63,12 @@ async function criarParticipante(sobrescrever: Record<string, unknown> = {}): Pr
   return p?.id ?? ''
 }
 
-async function criarTentativa(cockpit: 1 | 2 = 1, inscritoEm?: Date): Promise<string> {
+async function criarTentativa(inscritoEm?: Date): Promise<string> {
   const participanteId = await criarParticipante()
 
   const [t] = await banco.db
     .insert(schema.tentativa)
-    .values({ participanteId, cockpit, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
+    .values({ participanteId, cockpit: 1, ...(inscritoEm === undefined ? {} : { inscritoEm }) })
     .returning({ id: schema.tentativa.id })
 
   return t?.id ?? ''
@@ -222,7 +221,7 @@ describe('registrar tempo (RF-17, RF-23)', () => {
   })
 })
 
-describe('segundo lançamento no mesmo Cockpit (RF-25)', () => {
+describe('segundo lançamento para a mesma pessoa (RF-25)', () => {
   it('é recusado, e a recusa carrega o tempo que já está lá', async () => {
     const tentativaId = await criarTentativa()
 
@@ -356,7 +355,7 @@ describe('marcar ausente (RF-21)', () => {
   it('sai da Fila, mantém o cadastro e não fica com tempo', async () => {
     const tentativaId = await criarTentativa()
 
-    expect((await listarFila(banco.db, 1)).itens).toHaveLength(1)
+    expect((await listarFila(banco.db)).itens).toHaveLength(1)
 
     const r = await marcarAusente(banco.db, {
       tentativaId,
@@ -371,7 +370,7 @@ describe('marcar ausente (RF-21)', () => {
     expect(r.tentativa.estado).toBe('ausente')
     expect(r.tentativa.tempoMs).toBeNull()
 
-    expect((await listarFila(banco.db, 1)).itens).toHaveLength(0)
+    expect((await listarFila(banco.db)).itens).toHaveLength(0)
     // Não é exclusão: o cadastro continua inteiro.
     expect(await banco.db.select().from(schema.participante)).toHaveLength(1)
     expect(await banco.db.select().from(schema.tentativa)).toHaveLength(1)
@@ -579,50 +578,13 @@ describe('concorrência entre Operadores (RF-12)', () => {
   })
 })
 
-describe('incluir tentativa em Cockpit adicional (RF-24)', () => {
-  it('participante do Cockpit 1 passa a constar no Cockpit 2, com um único cadastro', async () => {
-    const participanteId = await criarParticipante()
-    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
-
-    const r = await adicionarTentativa(banco.db, { participanteId, cockpit: 2 })
-
-    expect(r.situacao).toBe('criada')
-    if (r.situacao !== 'criada') return
-    expect(r.tentativa.estado).toBe('pendente')
-    expect(r.tentativa.tempoMs).toBeNull()
-    // Pendente não tem autoria: a constraint do banco exige isso.
-    expect(r.tentativa.operadorId).toBeNull()
-
-    expect((await listarFila(banco.db, 1)).itens).toHaveLength(1)
-    expect((await listarFila(banco.db, 2)).itens).toHaveLength(1)
-    // Um único registro pessoal — é o ponto inteiro de RF-24.
-    expect(await banco.db.select().from(schema.participante)).toHaveLength(1)
-  })
-
-  it('incluir de novo no mesmo Cockpit é recusado pelo banco, com mensagem de negócio', async () => {
-    const participanteId = await criarParticipante()
-    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
-
-    expect((await adicionarTentativa(banco.db, { participanteId, cockpit: 1 })).situacao).toBe(
-      'ja_existe',
-    )
-  })
-
-  it('participante inexistente é recusa de negócio, não erro', async () => {
-    expect(
-      (await adicionarTentativa(banco.db, { participanteId: randomUUID(), cockpit: 2 })).situacao,
-    ).toBe('participante_inexistente')
-  })
-})
-
 describe('a Fila (RF-14, RF-15, RF-16)', () => {
-  it('traz só pendentes do Cockpit, do cadastro mais antigo para o mais recente', async () => {
+  it('traz só pendentes, do cadastro mais antigo para o mais recente', async () => {
     const base = new Date('2026-09-12T08:00:00Z').getTime()
 
-    const antiga = await criarTentativa(1, new Date(base))
-    const meio = await criarTentativa(1, new Date(base + MINUTO))
-    await criarTentativa(1, new Date(base + 2 * MINUTO))
-    await criarTentativa(2, new Date(base))
+    const antiga = await criarTentativa(new Date(base))
+    const meio = await criarTentativa(new Date(base + MINUTO))
+    await criarTentativa(new Date(base + 2 * MINUTO))
 
     await registrarTempo(banco.db, {
       tentativaId: meio,
@@ -632,20 +594,32 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
       agora: AGORA,
     })
 
-    const fila = (await listarFila(banco.db, 1)).itens
+    const fila = (await listarFila(banco.db)).itens
 
     expect(fila).toHaveLength(2)
     expect(fila[0]?.tentativaId).toBe(antiga)
     expect(fila.map((i) => i.tentativaId)).not.toContain(meio)
-    expect(await contarPendentes(banco.db, 1)).toBe(2)
-    expect(await contarPendentes(banco.db, 2)).toBe(1)
+    expect(await contarPendentes(banco.db)).toBe(2)
+  })
+
+  it('uma Tentativa antiga com cockpit 2 fica fora da Fila e da contagem (D-107)', async () => {
+    // O banco ainda aceita o valor 2 — a coluna e o `check` não mudaram. Uma
+    // linha assim só existe se sobrou de antes da troca, e a Fila a ignora por
+    // filtrar `cockpit = 1`, que é o que mantém o índice em uso. É por isso que
+    // a base de produção precisa ser conferida antes do evento.
+    await criarTentativa()
+    const participanteId = await criarParticipante()
+    await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 2 })
+
+    expect((await listarFila(banco.db)).itens).toHaveLength(1)
+    expect(await contarPendentes(banco.db)).toBe(1)
   })
 
   it('mostra os quatro últimos dígitos do telefone, e só eles (RF-15)', async () => {
     const participanteId = await criarParticipante({ telefone: '11987654321' })
     await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
-    const [item] = (await listarFila(banco.db, 1)).itens
+    const [item] = (await listarFila(banco.db)).itens
 
     expect(item?.ultimos4Telefone).toBe('4321')
     expect(JSON.stringify(item)).not.toContain('11987654321')
@@ -657,7 +631,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
       await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
-    const fila = (await listarFila(banco.db, 1)).itens
+    const fila = (await listarFila(banco.db)).itens
     const marcas = fila.map((i) => i.ultimos4Telefone)
 
     expect(new Set(marcas).size).toBe(2)
@@ -674,12 +648,12 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
       await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
-    expect((await listarFila(banco.db, 1, { busca: 'mar' })).itens).toHaveLength(3)
-    expect((await listarFila(banco.db, 1, { busca: 'MAR' })).itens).toHaveLength(3)
-    expect((await listarFila(banco.db, 1, { busca: 'marina' })).itens).toHaveLength(1)
-    expect((await listarFila(banco.db, 1, { busca: 'sou' })).itens).toHaveLength(1)
-    expect((await listarFila(banco.db, 1, { busca: 'zzz' })).itens).toHaveLength(0)
-    expect((await listarFila(banco.db, 1, { busca: '   ' })).itens).toHaveLength(4)
+    expect((await listarFila(banco.db, { busca: 'mar' })).itens).toHaveLength(3)
+    expect((await listarFila(banco.db, { busca: 'MAR' })).itens).toHaveLength(3)
+    expect((await listarFila(banco.db, { busca: 'marina' })).itens).toHaveLength(1)
+    expect((await listarFila(banco.db, { busca: 'sou' })).itens).toHaveLength(1)
+    expect((await listarFila(banco.db, { busca: 'zzz' })).itens).toHaveLength(0)
+    expect((await listarFila(banco.db, { busca: '   ' })).itens).toHaveLength(4)
   })
 
   it('o curinga do LIKE não vaza pela busca', async () => {
@@ -688,8 +662,8 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
 
     // Sem escape, `%` devolveria a fila inteira e `_` casaria qualquer letra —
     // a busca mentiria para quem está procurando uma pessoa específica.
-    expect((await listarFila(banco.db, 1, { busca: '%' })).itens).toHaveLength(0)
-    expect((await listarFila(banco.db, 1, { busca: '_arina' })).itens).toHaveLength(0)
+    expect((await listarFila(banco.db, { busca: '%' })).itens).toHaveLength(0)
+    expect((await listarFila(banco.db, { busca: '_arina' })).itens).toHaveLength(0)
   })
 
   it('respeita o teto de itens', async () => {
@@ -698,7 +672,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
       await banco.db.insert(schema.tentativa).values({ participanteId: id, cockpit: 1 })
     }
 
-    expect((await listarFila(banco.db, 1, { limite: 3 })).itens).toHaveLength(3)
+    expect((await listarFila(banco.db, { limite: 3 })).itens).toHaveLength(3)
   })
 })
 

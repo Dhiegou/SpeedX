@@ -1,19 +1,19 @@
 import { createHash } from 'node:crypto'
-import type { DocumentoClassificacao, LinhaClassificacao, Cockpit } from './modelo'
+import type { DocumentoClassificacao, LinhaClassificacao } from './modelo'
 
 /**
  * O que atravessa a rede (T12, escopo 3).
  *
- * O documento inteiro vai para o dispositivo de uma vez, e o filtro por Cockpit
- * e a busca por nome acontecem lá (SDD BC-03). Uma requisição por tecla
- * digitada, com 2000 pessoas buscando ao mesmo tempo, é o cenário capaz de
- * derrubar o sistema — por isso o filtro não volta ao servidor.
+ * O documento inteiro vai para o dispositivo de uma vez, e a busca por nome
+ * acontece lá (SDD BC-03). Uma requisição por tecla digitada, com 2000 pessoas
+ * buscando ao mesmo tempo, é o cenário capaz de derrubar o sistema — por isso a
+ * busca não volta ao servidor.
  *
  * Como o documento é grande e é baixado por todo mundo, a forma dele importa.
  * Duas decisões:
  *
- * **1. Arrays posicionais, não objetos.** `["Marina Costa",1,83450]` contra
- * `{"nomePublico":"Marina Costa","cockpit":1,"tempoMs":83450}` — as chaves
+ * **1. Arrays posicionais, não objetos.** `["Marina Costa",83450]` contra
+ * `{"nomePublico":"Marina Costa","tempoMs":83450}` — as chaves
  * repetidas 4000 vezes custam mais que os dados. O custo é legibilidade do
  * corpo cru, que se paga com este comentário e com um tipo nomeado.
  *
@@ -29,8 +29,16 @@ import type { DocumentoClassificacao, LinhaClassificacao, Cockpit } from './mode
  *    porta. Menos campo na rede é menos superfície, e aqui também é menos risco.
  */
 
-/** `[nomePublico, cockpit, tempoMs]`. A posição no array é a classificação. */
-export type LinhaCompacta = readonly [string, Cockpit, number]
+/**
+ * `[nomePublico, tempoMs]`. A posição no array é a classificação.
+ *
+ * Até D-107 havia o Cockpit no meio, `[nomePublico, cockpit, tempoMs]`. A
+ * página e a rota mudam no mesmo deploy; o que fica descasado é uma aba aberta
+ * antes dele (ou uma resposta ainda nos 15 s da borda), que lê a forma errada
+ * até recarregar. O deploy acontece antes do evento, sem público na página, e
+ * é por isso que o custo foi aceito em vez de manter uma coluna constante.
+ */
+export type LinhaCompacta = readonly [string, number]
 
 export type DocumentoTransmitido = {
   /** Instante em que a projeção foi gerada (RF-32). */
@@ -46,7 +54,6 @@ export function compactar(documento: DocumentoClassificacao): DocumentoTransmiti
     total: documento.linhas.length,
     linhas: documento.linhas.map((l: LinhaClassificacao): LinhaCompacta => [
       l.nomePublico,
-      l.cockpit,
       l.tempoMs,
     ]),
   }

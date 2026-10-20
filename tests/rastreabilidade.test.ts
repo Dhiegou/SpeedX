@@ -116,10 +116,17 @@ describe('rastreabilidade entre o PRD e a suíte (T17)', () => {
   const requisitos = requisitosDoPrd()
   const cobertos = codigosEmNomesDeTeste()
 
-  it('o PRD continua sendo lido — 35 requisitos funcionais e 18 não funcionais', () => {
+  it('o PRD continua sendo lido — 31 requisitos funcionais e 18 não funcionais', () => {
     // Se o PRD mudar de formato e a extração passar a devolver zero, todos os
     // testes abaixo passariam por vacuidade. Esta é a âncora contra isso.
-    expect(requisitos.filter((r) => r.startsWith('RF-'))).toHaveLength(35)
+    //
+    // **Eram 35 até 2026-10-19.** O evento passou a ter uma pista só (D-107), e
+    // quatro requisitos que só existiam por haver duas foram encerrados no PRD:
+    // RF-03 (escolher pista), RF-13 (painel separado por pista), RF-24 (incluir
+    // em pista adicional) e RF-29 (filtro por pista). Encerrado é riscado, e a
+    // extração não lê o que está riscado. O número mudou porque o PRD mudou,
+    // não para a suíte passar: se ele mudar de novo, é o PRD que explica.
+    expect(requisitos.filter((r) => r.startsWith('RF-'))).toHaveLength(31)
     expect(requisitos.filter((r) => r.startsWith('RNF-'))).toHaveLength(18)
   })
 

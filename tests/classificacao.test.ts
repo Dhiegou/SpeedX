@@ -49,7 +49,6 @@ type Corredor = {
   nome: string
   sobrenome: string
   idade?: number
-  cockpit?: 1 | 2
   tempoMs?: number | null
   estado?: 'pendente' | 'valida' | 'ausente'
   resolvidoEm?: Date
@@ -74,7 +73,7 @@ async function criar(c: Corredor): Promise<string> {
     .insert(schema.tentativa)
     .values({
       participanteId: p?.id ?? '',
-      cockpit: c.cockpit ?? 1,
+      cockpit: 1,
       estado,
       tempoMs: estado === 'valida' ? (c.tempoMs ?? 83_450) : null,
       resolvidoEm: resolvida ? (c.resolvidoEm ?? AGORA) : null,
@@ -96,39 +95,16 @@ describe('quem entra na classificação (RF-21, RF-28)', () => {
     expect(linhas.map((l) => l.nomePublico)).toEqual(['Valida Silva'])
   })
 
-  it('quem correu os dois Cockpits ocupa duas linhas (RF-28)', async () => {
-    const [p] = await banco.db
-      .insert(schema.participante)
-      .values({
-        nome: 'Marina',
-        sobrenome: 'Costa',
-        email: 'marina@exemplo.com',
-        telefone: '11987654321',
-        idade: 30,
-      })
-      .returning({ id: schema.participante.id })
-
-    for (const [cockpit, tempoMs] of [
-      [1, 83_450],
-      [2, 91_000],
-    ] as const) {
-      await banco.db.insert(schema.tentativa).values({
-        participanteId: p?.id ?? '',
-        cockpit,
-        estado: 'valida',
-        tempoMs,
-        resolvidoEm: AGORA,
-        operadorId,
-      })
-    }
+  it('cada participante com tempo ocupa uma linha, com a melhor volta (RF-28)', async () => {
+    const tentativaId = await criar({ nome: 'Marina', sobrenome: 'Costa', tempoMs: 83_450 })
+    await criar({ nome: 'Bruno', sobrenome: 'Souza', tempoMs: 91_000 })
 
     const { linhas } = await projetarClassificacao(banco.db, AGORA)
 
-    expect(linhas).toHaveLength(2)
-    expect(linhas.map((l) => l.cockpit).sort()).toEqual([1, 2])
-    // Duas linhas, mesma pessoa, identificadores distintos: a linha é da
-    // Tentativa, não do Participante.
-    expect(new Set(linhas.map((l) => l.id)).size).toBe(2)
+    expect(linhas.map((l) => l.nomePublico)).toEqual(['Marina Costa', 'Bruno Souza'])
+    // A linha continua sendo da Tentativa — e desde D-107 cada pessoa tem uma.
+    expect(linhas[0]?.id).toBe(tentativaId)
+    expect(Object.keys(linhas[0] ?? {})).not.toContain('cockpit')
   })
 })
 
@@ -228,14 +204,14 @@ describe('RNF-09 — o sobrenome do menor não aparece inteiro', () => {
 })
 
 describe('RNF-08 — o que atravessa a rede', () => {
-  it('cada linha tem exatamente três valores, e nenhum é dado pessoal', async () => {
+  it('cada linha tem exatamente dois valores, e nenhum é dado pessoal', async () => {
     await criar({ nome: 'Marina', sobrenome: 'Costa', idade: 34 })
 
     const documento = compactar(await projetarClassificacao(banco.db, AGORA))
 
     expect(documento.linhas).toHaveLength(1)
-    expect(documento.linhas[0]).toHaveLength(3)
-    expect(documento.linhas[0]).toEqual(['Marina Costa', 1, 83_450])
+    expect(documento.linhas[0]).toHaveLength(2)
+    expect(documento.linhas[0]).toEqual(['Marina Costa', 83_450])
     expect(Object.keys(documento).sort()).toEqual(['geradoEm', 'linhas', 'total'])
   })
 

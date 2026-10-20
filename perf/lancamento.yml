@@ -1,4 +1,4 @@
-# Escrita simultânea dos dois Cockpits (T18 §3, RNF-16).
+# Escrita no painel sob leitura massiva (T18 §3, RNF-16).
 #
 # **Roda ao lado da carga de leitura, e não sozinho.** O que este teste procura
 # não é "quanto demora um lançamento" — isso a suíte já mede. É se a latência do
@@ -9,18 +9,20 @@
 #   npx artillery run perf/classificacao.yml &
 #   npx artillery run perf/lancamento.yml
 #
-# Dois Operadores a três lançamentos por minuto cada, por trinta minutos, é o
-# ritmo real de fila do evento — e é ritmo baixo de propósito: o gargalo do
-# painel é a pessoa digitando, não o servidor.
+# Um Operador a três lançamentos por minuto, por trinta minutos, é o ritmo real
+# de fila do evento — e é ritmo baixo de propósito: o gargalo do painel é a
+# pessoa digitando, não o servidor. Até D-107 eram dois, um por Cockpit; com um
+# Cockpit só há uma Fila, e dois usuários virtuais nela disputariam a mesma
+# primeira pendente a cada volta, medindo o 409 de RF-25 em vez da latência.
 config:
   target: 'http://localhost:3300'
   # Uma chave de idempotência nova por lançamento — ver o porquê em chave.js.
   processor: './chave.js'
   phases:
-    # Dois usuários virtuais, cada um vivendo uma sessão inteira de 30 minutos.
-    - duration: 2
-      arrivalCount: 2
-      name: dois operadores
+    # Um usuário virtual, vivendo uma sessão inteira de 30 minutos.
+    - duration: 1
+      arrivalCount: 1
+      name: um operador
   ensure:
     thresholds:
       # RNF-16 dá 15 s para o lançamento inteiro, incluindo a pessoa digitando.
@@ -32,7 +34,6 @@ config:
 scenarios:
   - name: operador lançando
     flow:
-      - function: 'escolherCockpit'
       - post:
           url: '/api/painel/sessao'
           headers:
@@ -58,7 +59,7 @@ scenarios:
       # 90 voltas a 20 s = 30 minutos, que é o que T18 §3 pede.
       - loop:
           - get:
-              url: '/api/painel/fila?cockpit={{ cockpit }}'
+              url: '/api/painel/fila'
               headers:
                 cookie: '{{ sessao }}'
               capture:

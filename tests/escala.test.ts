@@ -33,7 +33,23 @@ describe('RNF-02 — volume do evento', () => {
     expect(resumo.validas).toBeGreaterThan(1000)
   })
 
-  it('a Fila de um Cockpit responde rápido com a base cheia (RNF-16)', async () => {
+  it('RF-14 — com a base do evento, a Fila usa índice, não varredura', async () => {
+    // Medido em 2026-10-19, com o Cockpit sempre 1 (D-107): 300 pessoas varrem a
+    // tabela, 2000 e 4000 usam `tentativa_fila_idx`. O filtro `cockpit = 1` não
+    // seleciona nada, mas é o prefixo do índice, e é por ele que `consultas.ts`
+    // o mantém.
+    const plano = await banco.cliente.query<{ 'QUERY PLAN': string }>(`
+      explain select id, participante_id, inscrito_em
+      from tentativa
+      where cockpit = 1 and estado = 'pendente'
+      order by inscrito_em
+    `)
+
+    const texto = plano.rows.map((r) => r['QUERY PLAN']).join('\n')
+    expect(texto).toMatch(/tentativa_fila_idx/)
+  })
+
+  it('a Fila responde rápido com a base cheia (RNF-16)', async () => {
     const inicio = performance.now()
 
     const fila = await banco.db

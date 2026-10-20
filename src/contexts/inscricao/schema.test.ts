@@ -25,7 +25,6 @@ function entrada(sobrescrever: Record<string, unknown> = {}) {
     email: 'marina@exemplo.com',
     telefone: '11987654321',
     idade: 30,
-    cockpits: [1],
     consentimento: true,
     ...sobrescrever,
   }
@@ -173,19 +172,21 @@ describe('RF-06 e RNF-07 — menor exige responsável completo', () => {
   })
 })
 
-describe('RF-03 — Cockpits declarados', () => {
-  it('recusa lista vazia', () => {
-    expect(codigos(entrada({ cockpits: [] }))).toContain('cockpit_ausente')
+describe('D-107 — a inscrição não pergunta Cockpit', () => {
+  it('é aceita sem campo de Cockpit, e o resultado não carrega um', () => {
+    const inscricao = validarInscricao(entrada())
+
+    expect(Object.keys(inscricao)).not.toContain('cockpits')
   })
 
-  it('aceita um Cockpit e aceita os dois', () => {
-    expect(validarInscricao(entrada({ cockpits: [1] })).cockpits).toEqual([1])
-    expect(validarInscricao(entrada({ cockpits: [1, 2] })).cockpits).toEqual([1, 2])
-  })
+  it('um `cockpits` que ainda chegue é descartado, e não recusa a inscrição', () => {
+    // Uma aba aberta antes da troca ainda manda o campo. Recusar o envio por
+    // causa dele faria a pessoa perder o formulário inteiro na fila.
+    for (const cockpits of [[1], [1, 2], [], [3]]) {
+      const inscricao = validarInscricao(entrada({ cockpits }))
 
-  it('recusa Cockpit inexistente e recusa repetição', () => {
-    expect(codigos(entrada({ cockpits: [3] }))).toContain('cockpit_invalido')
-    expect(codigos(entrada({ cockpits: [1, 1] }))).toContain('cockpit_repetido')
+      expect(Object.keys(inscricao)).not.toContain('cockpits')
+    }
   })
 })
 
@@ -220,16 +221,13 @@ describe('RF-08 e D-23 — os dois consentimentos', () => {
 })
 
 describe('RF-02 — campos obrigatórios e normalização', () => {
-  it.each(['nome', 'sobrenome', 'email', 'telefone', 'idade', 'cockpits'])(
-    'recusa entrada sem %s',
-    (campo) => {
-      const dados = entrada()
-      delete (dados as Record<string, unknown>)[campo]
+  it.each(['nome', 'sobrenome', 'email', 'telefone', 'idade'])('recusa entrada sem %s', (campo) => {
+    const dados = entrada()
+    delete (dados as Record<string, unknown>)[campo]
 
-      expect(campos(dados)).toContain(campo)
-      expect(codigos(dados)).toContain('campo_obrigatorio')
-    },
-  )
+    expect(campos(dados)).toContain(campo)
+    expect(codigos(dados)).toContain('campo_obrigatorio')
+  })
 
   it('normaliza e-mail para minúsculas e remove espaço nas bordas', () => {
     expect(validarInscricao(entrada({ email: '  Marina@Exemplo.COM ' })).email).toBe(
@@ -271,9 +269,9 @@ describe('RF-02 — campos obrigatórios e normalização', () => {
 
 describe('RNF-17 — o erro diz qual campo e o que houve', () => {
   it('reporta todos os problemas de uma vez, não o primeiro', () => {
-    const problemas = campos(entrada({ nome: 'A1', email: 'x', idade: 12, cockpits: [] }))
+    const problemas = campos(entrada({ nome: 'A1', email: 'x', idade: 12, telefone: '1' }))
 
-    expect(new Set(problemas)).toEqual(new Set(['nome', 'email', 'idade', 'cockpits']))
+    expect(new Set(problemas)).toEqual(new Set(['nome', 'email', 'idade', 'telefone']))
   })
 
   it('todo erro traz campo, código e mensagem preenchidos', () => {
@@ -382,12 +380,13 @@ describe('RNF-17 — nenhuma mensagem chega em inglês', () => {
   })
 
   it('até o campo que ninguém previu responde em português', () => {
-    // `cockpits.0` não está na tabela, e não deve estar: é caminho de item de
-    // lista, que só aparece em corpo montado à mão contra a API. A saída
-    // genérica existe para que nem esse caso caia na frase em inglês.
-    const mensagem = mensagemDe(entrada({ cockpits: ['um'] }), 'cockpits.0')
+    // A raiz não está na tabela, e não deve estar: um corpo que nem objeto é só
+    // aparece montado à mão contra a API. A saída genérica existe para que nem
+    // esse caso caia na frase em inglês. (Até D-107 o exemplo era `cockpits.0`,
+    // o único caminho de item de lista do esquema.)
+    const mensagem = mensagemDe('não é um objeto', '(raiz)')
 
     for (const marca of DA_BIBLIOTECA) expect(mensagem).not.toMatch(marca)
-    expect(mensagem).toContain('cockpits.0')
+    expect(mensagem).toContain('(raiz)')
   })
 })

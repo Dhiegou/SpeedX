@@ -1,5 +1,4 @@
 import type { ZodError, core } from 'zod'
-import { COCKPIT } from '@/shared/vocabulario'
 
 /**
  * Erros de validação da Inscrição (RNF-17).
@@ -28,9 +27,6 @@ export type CodigoErro =
   | 'idade_nao_inteira'
   | 'idade_minima'
   | 'idade_maxima'
-  | 'cockpit_ausente'
-  | 'cockpit_invalido'
-  | 'cockpit_repetido'
   | 'consentimento_recusado'
   | 'responsavel_ausente'
   | 'aceite_responsavel_ausente'
@@ -108,7 +104,7 @@ function valorNoCaminho(entrada: unknown, caminho: readonly PropertyKey[]): unkn
  * concordância — "o nome é obrigatório" contra "a idade é obrigatória" — e
  * concordância montada em tempo de execução é como nasce "a idade é
  * obrigatório". Escritas, elas também deixam dizer a coisa certa onde o campo
- * não é texto: faltar `cockpits` não é "preencher", é escolher.
+ * não é texto: faltar `consentimento` não é "preencher", é aceitar.
  */
 const FALTAS: Readonly<Record<string, { readonly ausente: string; readonly invalido: string }>> = {
   nome: { ausente: 'Preencha o nome.', invalido: 'Confira o nome.' },
@@ -121,10 +117,6 @@ const FALTAS: Readonly<Record<string, { readonly ausente: string; readonly inval
   idade: {
     ausente: 'Preencha a idade.',
     invalido: 'Confira a idade: digite só números, em anos completos.',
-  },
-  cockpits: {
-    ausente: `Escolha pelo menos um ${COCKPIT.singular}.`,
-    invalido: `${COCKPIT.singular} inválido: as opções são 1 e 2.`,
   },
   consentimento: {
     ausente: 'É preciso aceitar o termo de consentimento para concluir a inscrição.',

@@ -49,10 +49,14 @@ export type LinhaDaExportacao = {
 /**
  * Percorre a exportação completa em lotes.
  *
- * Ordenada por `(participante_id, cockpit)`: as duas linhas de quem correu os dois
- * Cockpits ficam juntas na planilha, e o par serve de cursor estável — paginar
- * por `OFFSET` reordenaria silenciosamente se algo fosse gravado no meio da
- * leitura, e no fim do evento ainda há Operador lançando.
+ * Ordenada por `(participante_id, cockpit)`, e o par serve de cursor estável —
+ * paginar por `OFFSET` reordenaria silenciosamente se algo fosse gravado no
+ * meio da leitura, e no fim do evento ainda há Operador lançando.
+ *
+ * O Cockpit fica no cursor, e não no arquivo (D-107): é o que torna a chave do
+ * cursor igual à unicidade do banco. Com ele fora, uma linha antiga de ensaio
+ * com `cockpit = 2` empataria com a do mesmo participante e uma das duas
+ * sumiria entre dois lotes.
  */
 export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExportacao> {
   let cursor: { participanteId: string; cockpit: number } | null = null
@@ -136,8 +140,9 @@ export type LinhaDeRepasse = {
  * entrega o telefone de quem recusou no instante em que o arquivo sai daqui —
  * e é exatamente o que a caixa opcional do formulário existe para impedir.
  *
- * Uma pessoa aparece **uma vez**, mesmo tendo corrido os dois Cockpits: isto é
- * uma lista de contato, não uma lista de tentativas.
+ * Uma pessoa aparece **uma vez**: isto é uma lista de contato, não uma lista de
+ * tentativas. A consulta parte de Participante, e não de Tentativa, para que
+ * isso continue verdade sem depender de quantas Tentativas cada um tem.
  */
 export async function lerListaDeRepasse(db: Db): Promise<readonly LinhaDeRepasse[]> {
   return db
@@ -161,7 +166,6 @@ export type Pendencia = {
   nome: string
   sobrenome: string
   ultimos4Telefone: string
-  cockpit: number
   inscritoEm: Date
 }
 
@@ -184,11 +188,10 @@ export async function lerPendencias(db: Db): Promise<readonly Pendencia[]> {
       nome: schema.participante.nome,
       sobrenome: schema.participante.sobrenome,
       ultimos4Telefone: sql<string>`right(${schema.participante.telefone}, 4)`,
-      cockpit: schema.tentativa.cockpit,
       inscritoEm: schema.tentativa.inscritoEm,
     })
     .from(schema.tentativa)
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
     .where(and(eq(schema.tentativa.estado, 'pendente'), isNull(schema.tentativa.resolvidoEm)))
-    .orderBy(asc(schema.tentativa.cockpit), asc(schema.tentativa.inscritoEm))
+    .orderBy(asc(schema.tentativa.inscritoEm))
 }

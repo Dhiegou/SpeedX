@@ -1,7 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  CAMPO_COCKPITS,
   CAMPOS_DO_PARTICIPANTE,
   CAMPOS_DO_RESPONSAVEL,
   type CampoDaFicha,
@@ -13,7 +12,6 @@ import {
   TERMO_VIGENTE,
 } from '@/contexts/inscricao/consentimento'
 import { carregarAmbienteDoTerminal } from '@/shared/ambienteCli'
-import { COCKPIT } from '@/shared/vocabulario'
 
 /**
  * Material impresso da contingência offline (T20, RNF-06).
@@ -24,7 +22,7 @@ import { COCKPIT } from '@/shared/vocabulario'
  *
  *  1. **`ficha-inscricao.html`** — uma ficha numerada por folha A4.
  *  2. **`termo-impresso.html`** — o termo integral, para ficar no balcão.
- *  3. **`planilha-tempos.html`** — a folha de tempos, uma por Cockpit.
+ *  3. **`planilha-tempos.html`** — a folha de tempos, única (D-107).
  *
  * **HTML e não PDF**, e a razão é a de sempre neste projeto: um gerador de PDF
  * é uma dependência a instalar, versionar e manter viva até outubro, para
@@ -167,13 +165,6 @@ function ficha(numero: number, termo: TermoConsentimento): string {
   <h2>Quem vai correr</h2>
   <div class="campos">
 ${CAMPOS_DO_PARTICIPANTE.map(campoHtml).join('\n')}
-    <div class="campo">
-      <label>${escapar(CAMPO_COCKPITS.rotulo)} (marque ao menos um)</label>
-      <div style="margin-top:1mm">
-        <span class="caixa"></span>${escapar(COCKPIT.singular)} 1
-        <span class="caixa" style="margin-left:8mm"></span>${escapar(COCKPIT.singular)} 2
-      </div>
-    </div>
   </div>
 
   <h2>Se tem menos de 18 anos — dados do responsável</h2>
@@ -262,7 +253,12 @@ ${secoes}
 }
 
 /**
- * A folha de tempos, uma por Cockpit (T20 §2).
+ * A folha de tempos (T20 §2). **Uma só desde D-107**: o evento tem um Cockpit,
+ * e a folha deixou de ser uma por Cockpit.
+ *
+ * **A coluna de tempo é a melhor volta.** Cada pessoa corre três voltas no
+ * simulador, e o que se anota é a melhor delas — o mesmo número que o Operador
+ * digitaria no painel. As outras duas não entram no papel nem no sistema.
  *
  * **A coluna do horário real existe por causa de RF-31.** Quando o tempo é
  * digitado horas depois, o instante que o sistema grava é o da digitação, e o
@@ -273,15 +269,15 @@ ${secoes}
 function gerarPlanilha(): string {
   const LINHAS = 22
 
-  const folha = (cockpit: number): string => `<section class="folha">
+  const folha = `<section class="folha">
   <div class="cabecalho">
     <div>
-      <h1>Tempos em papel — ${escapar(COCKPIT.singular)} ${String(cockpit)}</h1>
+      <h1>Tempos em papel</h1>
       <p style="font-size:9pt;margin:1mm 0 0">
-        Use somente com o sistema fora do ar. Uma linha por corrida.
+        Use somente com o sistema fora do ar. Uma linha por pessoa, com a melhor
+        das três voltas.
       </p>
     </div>
-    <div class="numero">${String(cockpit)}<small>${escapar(COCKPIT.singular.toUpperCase())}</small></div>
   </div>
 
   <div class="aviso">
@@ -295,7 +291,7 @@ function gerarPlanilha(): string {
       <tr>
         <th style="width:34%">Nome e sobrenome</th>
         <th style="width:14%">4 últimos dígitos do telefone</th>
-        <th style="width:16%">Tempo (mm:ss.cc)</th>
+        <th style="width:16%">Melhor volta (mm:ss.cc)</th>
         <th style="width:16%">Horário real (hh:mm)</th>
         <th style="width:10%">Iniciais</th>
         <th style="width:10%">Digitado</th>
@@ -312,7 +308,7 @@ ${Array.from({ length: LINHAS }, () => '      <tr><td></td><td></td><td></td><td
   </div>
 </section>`
 
-  return pagina('Folhas de tempo em papel', [1, 2].map(folha).join('\n'))
+  return pagina('Folha de tempos em papel', folha)
 }
 
 function principal(): void {

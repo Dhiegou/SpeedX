@@ -1,7 +1,7 @@
 # PRD — Sistema de Cadastro e Classificação de Corrida
 
-**Versão:** 2.0
-**Escopo:** Evento presencial de um dia, duas pistas, 2000+ participantes
+**Versão:** 2.1 — revisada em 2026-10-19: o evento passou a ter uma pista só, com três voltas por pessoa e a melhor valendo. RF-03, RF-13, RF-24 e RF-29 encerrados; RF-02, RF-10, RF-14, RF-16, RF-25, RF-27 e RF-28 reescritos. Motivo em [CONTEXT.md](CONTEXT.md) D-107 e o pedido em [PRD-cockpit-unico.md](PRD-cockpit-unico.md).
+**Escopo:** Evento presencial de um dia, uma pista, 2000+ participantes
 
 ---
 
@@ -31,7 +31,7 @@ O produto tem sucesso quando o participante consegue se inscrever sem formar fil
 
 ### P1 — Participante adulto
 
-Chega ao evento, vê o QR code, quer se inscrever em menos de dois minutos usando o próprio celular, em rede móvel possivelmente congestionada. Depois de correr, quer conferir sua posição rapidamente. Pode optar por correr uma pista ou as duas.
+Chega ao evento, vê o QR code, quer se inscrever em menos de dois minutos usando o próprio celular, em rede móvel possivelmente congestionada. Depois de correr, quer conferir sua posição rapidamente. Corre três voltas na pista, e vale a melhor. *(Até 2026-10-19 podia escolher entre duas pistas; D-107.)*
 
 **Precisa de:** formulário curto, feedback claro de sucesso ou erro, e uma forma óbvia de se achar na classificação.
 
@@ -67,14 +67,14 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 |---|---|---|
 | CU-01 | Inscrever-se escaneando o QR code | P1 |
 | CU-02 | Inscrever-se sendo menor de idade, com consentimento do responsável | P2, P3 |
-| CU-03 | Escolher em qual pista ou pistas vai correr | P1, P2 |
-| CU-04 | Localizar o próximo participante da fila de uma pista | P4 |
+| CU-03 | ~~Escolher em qual pista ou pistas vai correr~~ — encerrado em 2026-10-19 (D-107) | P1, P2 |
+| CU-04 | Localizar o próximo participante da fila | P4 |
 | CU-05 | Registrar o tempo de um participante que terminou a corrida | P4 |
 | CU-06 | Marcar um inscrito como ausente | P4 |
 | CU-07 | Corrigir um tempo lançado incorretamente | P4 |
-| CU-08 | Incluir uma segunda tentativa para quem decidiu correr a outra pista | P4 |
+| CU-08 | ~~Incluir uma segunda tentativa para quem decidiu correr a outra pista~~ — encerrado em 2026-10-19 (D-107) | P4 |
 | CU-09 | Consultar a classificação geral | P1, P2 |
-| CU-10 | Filtrar a classificação por pista | P1, P2 |
+| CU-10 | ~~Filtrar a classificação por pista~~ — encerrado em 2026-10-19 (D-107) | P1, P2 |
 | CU-11 | Buscar a própria posição pelo nome | P1, P2 |
 | CU-12 | Exportar todos os dados do evento | P5 |
 
@@ -87,11 +87,11 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 **RF-01** — O sistema deve permitir cadastro sem autenticação, acessível diretamente por um endereço único codificado em QR code.
 *Verificação:* escanear o QR com três leitores distintos abre o formulário sem etapa intermediária.
 
-**RF-02** — O formulário deve coletar nome, sobrenome, e-mail, telefone, idade e escolha de pista.
-*Verificação:* todos os seis campos estão presentes e são obrigatórios.
+**RF-02** — O formulário deve coletar nome, sobrenome, e-mail, telefone e idade. *(Revisado em 2026-10-19 — a escolha de pista saiu com RF-03; D-107.)*
+*Verificação:* todos os cinco campos estão presentes e são obrigatórios.
 
-**RF-03** — O sistema deve permitir que o participante selecione uma pista ou ambas no mesmo cadastro, exigindo ao menos uma seleção.
-*Verificação:* enviar sem seleção é rejeitado; enviar com uma e com duas seleções é aceito.
+~~**RF-03** — O sistema deve permitir que o participante selecione uma pista ou ambas no mesmo cadastro, exigindo ao menos uma seleção.~~
+*Encerrado em 2026-10-19:* o evento tem uma pista só, e a inscrição cria a Tentativa nela sem perguntar ([CONTEXT.md](CONTEXT.md) D-107).
 
 **RF-04** — O sistema deve rejeitar cadastros com idade inferior a 13 anos.
 *Verificação:* idade 12 é rejeitada com mensagem explicativa; idade 13 é aceita.
@@ -111,8 +111,8 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 **RF-09** — O termo de consentimento deve informar quais dados são coletados, a finalidade, o prazo de retenção, o meio de solicitar exclusão, e declarar explicitamente que nome e inicial do sobrenome ficarão visíveis em página pública.
 *Verificação:* revisão do texto contra esta lista, com validação do organizador.
 
-**RF-10** — Após o cadastro, o sistema deve confirmar em tela o nome registrado e a pista ou pistas escolhidas.
-*Verificação:* a confirmação exibe exatamente os dados enviados.
+**RF-10** — Após o cadastro, o sistema deve confirmar em tela o nome registrado. *(Revisado em 2026-10-19 — não há mais pista escolhida a confirmar; D-107.)*
+*Verificação:* a confirmação exibe exatamente o nome enviado.
 
 ### Operação do supervisor
 
@@ -122,16 +122,16 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 **RF-12** — O painel deve permitir múltiplos operadores autenticados simultaneamente sem conflito de dados.
 *Verificação:* dois operadores lançando na mesma pista ao mesmo tempo não sobrescrevem lançamentos um do outro.
 
-**RF-13** — O painel deve separar a visualização por pista.
-*Verificação:* alternar entre pistas altera a lista exibida.
+~~**RF-13** — O painel deve separar a visualização por pista.~~
+*Encerrado em 2026-10-19:* com uma pista só, o painel tem uma fila só ([CONTEXT.md](CONTEXT.md) D-107).
 
-**RF-14** — Por padrão, cada pista deve exibir apenas os inscritos que ainda não têm tempo registrado, ordenados do cadastro mais antigo para o mais recente.
+**RF-14** — Por padrão, a fila deve exibir apenas os inscritos que ainda não têm tempo registrado, ordenados do cadastro mais antigo para o mais recente. *(Revisado em 2026-10-19 — era "cada pista"; D-107.)*
 *Verificação:* a lista inicial não contém registros já lançados nem ausentes, e respeita a ordem de inscrição.
 
 **RF-15** — Cada item da lista deve exibir nome, sobrenome e os últimos quatro dígitos do telefone.
 *Verificação:* dois participantes homônimos são distinguíveis apenas pelo que a lista mostra.
 
-**RF-16** — O painel deve permitir buscar um inscrito por nome dentro da pista selecionada.
+**RF-16** — O painel deve permitir buscar um inscrito por nome dentro da fila. *(Revisado em 2026-10-19 — era "dentro da pista selecionada"; D-107.)*
 *Verificação:* busca parcial retorna correspondências.
 
 **RF-17** — O sistema deve permitir registrar o tempo em formato de minutos, segundos e centésimos.
@@ -155,25 +155,25 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 **RF-23** — Toda gravação ou alteração de tempo deve registrar qual operador a realizou e quando.
 *Verificação:* consultar um lançamento revela autor e momento.
 
-**RF-24** — O sistema deve permitir incluir uma tentativa em pista adicional para um participante já cadastrado, sem exigir novo cadastro.
-*Verificação:* participante inscrito apenas na pista 1 passa a constar também na fila da pista 2, mantendo um único registro pessoal.
+~~**RF-24** — O sistema deve permitir incluir uma tentativa em pista adicional para um participante já cadastrado, sem exigir novo cadastro.~~
+*Encerrado em 2026-10-19:* não há pista adicional para onde incluir ([CONTEXT.md](CONTEXT.md) D-107).
 
-**RF-25** — O sistema deve impedir mais de um tempo registrado por participante por pista.
-*Verificação:* tentativa de segundo lançamento na mesma pista é bloqueada ou tratada como correção.
+**RF-25** — O sistema deve impedir mais de um tempo registrado por participante. *(Revisado em 2026-10-19 — era "por participante por pista"; a regra continua, garantida pela mesma constraint; D-107.)*
+*Verificação:* tentativa de segundo lançamento para a mesma pessoa é bloqueada ou tratada como correção.
 
 ### Classificação pública
 
 **RF-26** — A classificação deve ser acessível publicamente, sem autenticação.
 *Verificação:* abre em sessão anônima.
 
-**RF-27** — A classificação deve exibir posição, nome, inicial do sobrenome, pista e tempo.
-*Verificação:* as cinco informações estão presentes e nenhuma outra.
+**RF-27** — A classificação deve exibir posição, nome, inicial do sobrenome e tempo. *(Revisado em 2026-10-19 — a pista saiu da tabela; D-107.)*
+*Verificação:* as quatro informações estão presentes e nenhuma outra.
 
-**RF-28** — Cada tentativa deve ocupar uma linha própria; quem correu as duas pistas aparece duas vezes.
-*Verificação:* participante com dois tempos gera duas linhas distintas.
+**RF-28** — Cada participante com tempo deve ocupar uma linha própria, com a sua melhor volta. *(Revisado em 2026-10-19 — era "quem correu as duas pistas aparece duas vezes"; D-107.)*
+*Verificação:* participante com tempo registrado gera exatamente uma linha.
 
-**RF-29** — A classificação deve oferecer filtro por pista, com a posição recalculada conforme o filtro aplicado.
-*Verificação:* filtrar por pista renumera as posições a partir de 1.
+~~**RF-29** — A classificação deve oferecer filtro por pista, com a posição recalculada conforme o filtro aplicado.~~
+*Encerrado em 2026-10-19:* sem segunda pista não há filtro, e a posição de cada pessoa é uma só ([CONTEXT.md](CONTEXT.md) D-107).
 
 **RF-30** — A classificação deve permitir busca por nome, destacando o resultado encontrado.
 *Verificação:* buscar um nome cadastrado localiza e evidencia a linha correspondente.
@@ -283,7 +283,7 @@ Não opera o sistema no dia. Antes do evento, define regras e valida o texto de 
 |---|---|---|
 | Consultas à classificação por participante | ≥ 2 | Acessos ÷ inscritos |
 | Uso da busca por nome | ≥ 30% das sessões | Interações com o campo |
-| Participantes que correram as duas pistas | acompanhar | Tentativas ÷ participantes |
+| ~~Participantes que correram as duas pistas~~ | encerrada em 2026-10-19 (D-107): uma pista só | — |
 | Cadastros de menores com bloco completo na primeira tentativa | ≥ 90% | Rejeições no bloco de responsável |
 
 ### Contraindicadores

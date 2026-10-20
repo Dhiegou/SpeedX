@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { parseTempo, TempoInvalidoError } from '@/shared/tempo'
-import { COCKPIT } from '@/shared/vocabulario'
 
 /**
  * A forma dos comandos que chegam pela rede (T10, regra 7).
@@ -20,11 +19,6 @@ import { COCKPIT } from '@/shared/vocabulario'
 const uuid = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, {
   error: 'Identificador inválido: esperado um UUID.',
 })
-
-export const esquemaCockpit = z.coerce
-  .number()
-  .int()
-  .refine((v): v is 1 | 2 => v === 1 || v === 2, { error: `${COCKPIT.singular} deve ser 1 ou 2.` })
 
 /**
  * O Tempo chega como texto `mm:ss.cc`, nunca como milissegundos.
@@ -58,11 +52,6 @@ export const esquemaAusencia = z.object({
   chave: uuid,
 })
 
-export const esquemaInclusao = z.object({
-  participanteId: uuid,
-  cockpit: esquemaCockpit,
-})
-
 /**
  * Termo de busca.
  *
@@ -73,4 +62,3 @@ export const esquemaBusca = z.string().max(60, { error: 'Busca longa demais.' })
 
 export type ComandoLancamentoValidado = z.infer<typeof esquemaLancamento>
 export type ComandoAusenciaValidado = z.infer<typeof esquemaAusencia>
-export type ComandoInclusaoValidado = z.infer<typeof esquemaInclusao>

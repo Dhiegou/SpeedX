@@ -95,7 +95,7 @@ export default function CartaoDeCompartilhamento(): ImageResponse {
           textTransform: 'uppercase',
         }}
       >
-        {COCKPIT.plural} · Resultados ao vivo
+        {COCKPIT.singular} · Resultados ao vivo
       </div>
     </div>,
     size,

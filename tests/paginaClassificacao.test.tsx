@@ -8,10 +8,10 @@ import type { DocumentoTransmitido, LinhaCompacta } from '@/contexts/classificac
 /**
  * A página pública (T13).
  *
- * A lógica de renumeração e vizinhança já é testada sem DOM em
- * `filtroClassificacao.test.ts`. Aqui está o que só existe na tela: as quatro
+ * A lógica de numeração e vizinhança já é testada sem DOM em
+ * `filtroClassificacao.test.ts`. Aqui está o que só existe na tela: as três
  * colunas de RF-27 e nenhuma a mais, o destaque de RF-30, o indicador e o botão
- * de RF-32, e a promessa de que filtrar e buscar **não** falam com o servidor.
+ * de RF-32, e a promessa de que buscar **não** fala com o servidor.
  */
 
 const chamadas: string[] = []
@@ -21,11 +21,11 @@ function documento(linhas: readonly LinhaCompacta[]): DocumentoTransmitido {
 }
 
 const BASE: readonly LinhaCompacta[] = [
-  ['Ana Lima', 1, 80_000],
-  ['Bruno Souza', 2, 81_000],
-  ['Carla Dias', 1, 82_000],
-  ['Diego Ferreira', 2, 83_000],
-  ['Fábio Assunção', 1, 84_450],
+  ['Ana Lima', 80_000],
+  ['Bruno Souza', 81_000],
+  ['Carla Dias', 82_000],
+  ['Diego Ferreira', 83_000],
+  ['Fábio Assunção', 84_450],
 ]
 
 beforeEach(() => {
@@ -36,7 +36,7 @@ beforeEach(() => {
     return Promise.resolve({
       ok: true,
       status: 200,
-      json: () => Promise.resolve(documento([...BASE, ['Gabriel Novo', 1, 85_000]])),
+      json: () => Promise.resolve(documento([...BASE, ['Gabriel Novo', 85_000]])),
     } as Response)
   })
 })
@@ -53,11 +53,13 @@ const montar = (linhas: readonly LinhaCompacta[] = BASE) => {
 }
 
 describe('as colunas de RF-27, e nenhuma a mais', () => {
-  it('mostra posição, nome, cockpit e tempo', () => {
+  it('mostra posição, nome e tempo — sem coluna de Cockpit (D-107)', () => {
     montar()
 
     const colunas = screen.getAllByRole('columnheader').map((c) => c.textContent)
-    expect(colunas).toEqual(['#', 'Nome', 'Cockpit', 'Tempo'])
+    expect(colunas).toEqual(['#', 'Nome', 'Tempo'])
+    // Nem coluna, nem o rótulo miúdo que o telefone mostrava embaixo do nome.
+    expect(screen.queryByText(/Cockpit/)).toBeNull()
   })
 
   it('o tempo é formatado pelo formatador compartilhado', () => {
@@ -76,21 +78,17 @@ describe('as colunas de RF-27, e nenhuma a mais', () => {
   })
 })
 
-describe('filtro por Cockpit (RF-29)', () => {
-  it('renumera a partir de 1 e não fala com o servidor', async () => {
-    const teclado = montar()
+describe('D-107 — sem abas de Cockpit', () => {
+  it('não há abas, e a tabela inteira é uma classificação só', () => {
+    montar()
 
-    await teclado.click(screen.getByRole('tab', { name: 'Cockpit 2' }))
+    expect(screen.queryAllByRole('tab')).toHaveLength(0)
+    expect(screen.queryByRole('tablist')).toBeNull()
 
     const linhas = screen.getAllByRole('row').slice(1)
-    expect(linhas).toHaveLength(2)
-
-    // Bruno é o 2º no geral e o 1º do Cockpit 2.
-    expect(within(linhas[0] as HTMLElement).getByText('1')).toBeTruthy()
-    expect(linhas[0]?.textContent).toContain('Bruno Souza')
-
-    // A promessa central de T12/T13: filtrar não custa requisição.
-    expect(chamadas).toHaveLength(0)
+    expect(linhas).toHaveLength(5)
+    expect(within(linhas[1] as HTMLElement).getByText('2')).toBeTruthy()
+    expect(linhas[1]?.textContent).toContain('Bruno Souza')
   })
 })
 
@@ -170,7 +168,6 @@ describe('atualização (RF-32)', () => {
 describe('volume (RF-33)', () => {
   const muitas: readonly LinhaCompacta[] = Array.from({ length: 250 }, (_, i): LinhaCompacta => [
     `Pessoa ${String(i + 1)}`,
-    1,
     80_000 + i,
   ])
 

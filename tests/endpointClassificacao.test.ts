@@ -95,7 +95,7 @@ describe('acesso público (RF-26)', () => {
 
     const corpo = (await resposta.json()) as { total: number; linhas: unknown[] }
     expect(corpo.total).toBe(1)
-    expect(corpo.linhas).toEqual([['Marina Costa', 1, 83_450]])
+    expect(corpo.linhas).toEqual([['Marina Costa', 83_450]])
   })
 
   it('funciona com a classificação vazia, antes da corrida começar', async () => {

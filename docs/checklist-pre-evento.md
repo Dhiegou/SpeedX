@@ -28,11 +28,11 @@ verificação executada contra o banco real.
 
 **Três rotas respondem sem sessão**, e cada uma por um requisito:
 
-| rota                     | por quê                                | o que sai                                                                   |
-| ------------------------ | -------------------------------------- | --------------------------------------------------------------------------- |
-| `GET /api/classificacao` | RF-26 — a tabela é pública             | `{geradoEm, total, linhas}`; cada linha é `[nomePublico, cockpit, tempoMs]` |
-| `POST /api/inscricao`    | RF-01 — quem se inscreve não tem conta | eco do próprio cadastro, sem dado de terceiro                               |
-| `GET /api/saude`         | T16 — monitor externo não autentica    | `{situacao, versao, instante, banco:{alcancavel, latenciaMs}}`              |
+| rota                     | por quê                                | o que sai                                                                  |
+| ------------------------ | -------------------------------------- | -------------------------------------------------------------------------- |
+| `GET /api/classificacao` | RF-26 — a tabela é pública             | `{geradoEm, total, linhas}`; cada linha é `[nomePublico, tempoMs]` (D-107) |
+| `POST /api/inscricao`    | RF-01 — quem se inscreve não tem conta | eco do próprio cadastro, sem dado de terceiro                              |
+| `GET /api/saude`         | T16 — monitor externo não autentica    | `{situacao, versao, instante, banco:{alcancavel, latenciaMs}}`             |
 
 `POST /api/painel/sessao` é o login: a guarda dele é a senha. Está nomeado como
 exceção, não esquecido.
@@ -42,8 +42,8 @@ guarda — o conjunto é fechado por lista, e uma rota nova exige editar o teste
 
 ### 1.2 `LinhaClassificacao` não ganhou campo pessoal
 
-`src/contexts/classificacao/modelo.ts` tem `id`, `nomePublico`, `cockpit`,
-`tempoMs`, `registradoEm`. Nenhum e-mail, telefone, idade ou Responsável — e o
+`src/contexts/classificacao/modelo.ts` tem `id`, `nomePublico`, `tempoMs`,
+`registradoEm` (o `cockpit` saiu em D-107). Nenhum e-mail, telefone, idade ou Responsável — e o
 `sobrenome` **não é campo do modelo**: chega já resolvido da projeção.
 
 O que atravessa a rede é ainda menor: `id` e `registradoEm` ficam de fora do
@@ -212,20 +212,20 @@ pessoas.
 | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | 3.13 | ~~**Calibrar o limite de taxa.**~~ — **resolvido em 2026-09-01 (T23, D-90).** T18 mediu 30 aceitos e **170 recusados** em 200 cadastros do mesmo IP; os padrões passaram a 800 por janela e 2400 por hora, calibrados pelo pior caso porque não há garantia de Wi-Fi no local. Falta só **definir as variáveis nos dois ambientes da Vercel** | feito              |
 | 3.14 | **A métrica de uso da busca (PRD §7, ≥ 30%) não é mensurável** neste desenho: a busca roda no navegador e não gasta rede (D-69). Ou cai do PRD, ou alguém aceita telemetria de navegador na página mais pública do evento                                                                                                                     | antes do evento    |
-| 3.15 | **Rastro de autoria na inclusão de Tentativa (RF-24).** Hoje não existe: se alguém for incluído no Cockpit errado, não há como saber quem incluiu. Custo: um valor no enum, ajuste de constraint e uma migração                                                                                                                               | antes de publicar  |
+| 3.15 | ~~**Rastro de autoria na inclusão de Tentativa (RF-24).**~~ — **deixou de existir em 2026-10-19 (D-107):** a inclusão em Cockpit adicional saiu do sistema junto com o segundo Cockpit, e RF-24 foi encerrado                                                                                                                                 | encerrado          |
 | 3.16 | **O termo ainda diz "pista"** (`v1.0-2026-08-19`, seções `dados` e `publicacao`). Texto aprovado por escrito; versão nova nasce rascunho e **impede cadastro** até nova aprovação (D-18)                                                                                                                                                      | decisão consciente |
 
 ### Verificações que exigem gente e aparelho
 
-| #    | item                                                                                 | requisito   |
-| ---- | ------------------------------------------------------------------------------------ | ----------- |
-| 3.17 | Cronometrar um lançamento completo com o supervisor: alvo ≤ 15 s                     | RNF-16      |
-| 3.18 | Cinco pessoas de cada perfil cronometradas no cadastro                               | RNF-15      |
-| 3.19 | Carga em 3G real, cache vazio, em aparelho                                           | RNF-04      |
-| 3.20 | Classificação em 360 px de largura real, com o sobrenome mais longo da base          | RNF-18      |
-| 3.21 | Abrir as três exportações no Excel pt-BR, inclusive um nome começando por `=`        | RF-34, D-60 |
-| 3.22 | Confirmar os atalhos do painel com o supervisor (`Alt+1`/`Alt+2`, `F2`, `F3`, `Esc`) | D-54        |
-| 3.23 | Disponibilidade observada durante a janela do evento                                 | RNF-05      |
+| #    | item                                                                          | requisito   |
+| ---- | ----------------------------------------------------------------------------- | ----------- |
+| 3.17 | Cronometrar um lançamento completo com o supervisor: alvo ≤ 15 s              | RNF-16      |
+| 3.18 | Cinco pessoas de cada perfil cronometradas no cadastro                        | RNF-15      |
+| 3.19 | Carga em 3G real, cache vazio, em aparelho                                    | RNF-04      |
+| 3.20 | Classificação em 360 px de largura real, com o sobrenome mais longo da base   | RNF-18      |
+| 3.21 | Abrir as três exportações no Excel pt-BR, inclusive um nome começando por `=` | RF-34, D-60 |
+| 3.22 | Confirmar os atalhos do painel com o supervisor (`F2`, `F3`, `Esc`)           | D-54, D-107 |
+| 3.23 | Disponibilidade observada durante a janela do evento                          | RNF-05      |
 
 ---
 

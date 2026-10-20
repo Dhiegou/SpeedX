@@ -94,15 +94,16 @@
 /*
  * A faixa de controle acompanha a rolagem.
  *
- * Com a Fila cheia, o Operador rola a lista e perde de vista as abas e o
- * número de pendentes — e volta ao topo só para trocar de Cockpit. Cada
- * viagem dessas é tempo dentro dos quinze segundos de RNF-16, gasto em
- * navegação em vez de lançamento.
+ * Com a Fila cheia, o Operador rola a lista e perde de vista o número de
+ * pendentes — e volta ao topo só para conferi-lo. Cada viagem dessas é tempo
+ * dentro dos quinze segundos de RNF-16, gasto em navegação em vez de
+ * lançamento. Desde D-107 a faixa não tem mais abas de Cockpit: carrega só a
+ * contagem.
  *
  * Fica opaca de propósito: a lista passa por baixo, e uma faixa translúcida
  * sobre nomes em movimento é pior que nenhuma.
  */
-.abas {
+.faixa {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -113,24 +114,6 @@
   padding: 0.5rem 0;
   margin-bottom: 1rem;
   border-bottom: 2px solid var(--borda);
-}
-
-.aba {
-  font: inherit;
-  font-size: 1.125rem;
-  font-weight: 700;
-  padding: 0.75rem 1.25rem;
-  min-height: 3rem;
-  border: 2px solid var(--marca);
-  border-radius: 0.25rem;
-  background: var(--superficie);
-  color: var(--marca);
-  cursor: pointer;
-}
-
-.abaAtiva {
-  background: var(--marca);
-  color: var(--sobre-marca);
 }
 
 /* A contagem de pendentes, "em fonte grande o suficiente para leitura rápida". */
@@ -189,7 +172,6 @@
 }
 
 .entrada:focus-visible,
-.aba:focus-visible,
 .item:focus-visible,
 .botao:focus-visible {
   outline: var(--foco);
@@ -200,7 +182,7 @@
  * A Fila num cartão.
  *
  * Ela é o objeto que o Operador olha o dia inteiro; separá-la do fundo da
- * página é o que evita procurar onde a lista começa a cada troca de Cockpit.
+ * página é o que evita procurar onde a lista começa a cada lançamento.
  */
 .lista {
   list-style: none;

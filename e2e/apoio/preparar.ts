@@ -117,7 +117,7 @@ async function garantirBanco(base: string): Promise<void> {
 type Db = ReturnType<typeof drizzle<typeof schema>>
 
 async function semearNomeados(db: Db, operadorId: string): Promise<void> {
-  // Os cinco de RF-19: pendentes no Cockpit 1, na ordem de inscrição, que é a
+  // Os cinco de RF-19: pendentes na Fila, na ordem de inscrição, que é a
   // ordem em que a Fila vai apresentá-los.
   for (const [posicao, corredor] of CORREDORES_DE_ENSAIO.entries()) {
     const [pessoa] = await db

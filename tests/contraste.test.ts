@@ -111,7 +111,7 @@ const PARES_DE_TEXTO: readonly (readonly [string, string, string])[] = [
   ['tinta-suave', 'superficie-alt', 'apoio sobre faixa alternada'],
   ['tinta-fraca', 'fundo', 'o texto mais apagado que o sistema permite'],
   ['tinta-fraca', 'superficie', 'o mesmo, sobre cartão'],
-  ['tinta-fraca', 'superficie-alt', 'a lacuna da tabela e o Cockpit'],
+  ['tinta-fraca', 'superficie-alt', 'a lacuna da tabela'],
   ['sobre-marca', 'marca', 'cabeçalho da tabela, botão cheio, aba ativa'],
   ['marca', 'superficie', 'botão secundário: texto da marca sobre o cartão'],
   ['marca-forte', 'superficie', 'o passo adiante, em texto'],

@@ -5,12 +5,12 @@
  * na tela, procurando o próprio nome numa lista de milhares. Tudo aqui decorre
  * disso:
  *
- *  - **360px sem rolagem horizontal** (RNF-18): a tabela tem quatro colunas e
+ *  - **360px sem rolagem horizontal** (RNF-18): a tabela tem três colunas e
  *    nenhuma pode ser cortada.
  *  - **Números tabulares** nos tempos e nas posições: sem isso as colunas
  *    dançam e comparar duas linhas exige parar para ler.
- *  - **Controles fixos no topo**: quem rolou até a posição 400 e quer trocar de
- *    Cockpit não deve ter de voltar ao começo.
+ *  - **Busca fixa no topo**: quem rolou até a posição 400 e quer procurar outro
+ *    nome não deve ter de voltar ao começo.
  *  - **Sem fonte externa, sem imagem**: mesma rede congestionada do cadastro.
  */
 
@@ -32,7 +32,7 @@
   margin: 0 0 1rem;
 }
 
-/* Controles fixos: o filtro acompanha a rolagem (escopo 6). */
+/* Controles fixos: a busca acompanha a rolagem (escopo 6). */
 .controles {
   position: sticky;
   top: 0;
@@ -42,36 +42,6 @@
   padding: 0.75rem 0;
   border-bottom: 2px solid var(--borda);
   margin-bottom: 0.5rem;
-}
-
-.abas {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.aba {
-  flex: 1;
-  font: inherit;
-  font-weight: 600;
-  padding: 0.6rem 0.5rem;
-  min-height: 2.75rem;
-  border: 2px solid var(--marca);
-  border-radius: var(--raio-pequeno);
-  background: var(--superficie);
-  color: var(--marca);
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-.aba:hover:not(.abaAtiva) {
-  background: var(--marca-clara);
-}
-
-.abaAtiva {
-  background: var(--marca);
-  color: var(--sobre-marca);
-  box-shadow: var(--sombra);
 }
 
 .entrada {
@@ -95,7 +65,6 @@
 }
 
 .entrada:focus-visible,
-.aba:focus-visible,
 .botao:focus-visible {
   outline: var(--foco);
   outline-offset: var(--foco-recuo);
@@ -153,7 +122,7 @@
   border-bottom: 1px solid var(--superficie-alt);
 }
 
-/* Faixa alternada: o olho não perde a linha ao atravessar quatro colunas. */
+/* Faixa alternada: o olho não perde a linha ao atravessar as colunas. */
 .tabela tbody tr:nth-child(even) td {
   background: var(--superficie-tenue);
 }
@@ -169,8 +138,8 @@
 /*
  * --- Hierarquia da linha ---
  *
- * As quatro colunas tinham o mesmo peso, e não valem a mesma coisa. Quem abre
- * esta página faz uma pergunta só — "onde eu estou?" — e a responde varrendo a
+ * As colunas tinham o mesmo peso, e não valem a mesma coisa. Quem abre esta
+ * página faz uma pergunta só — "onde eu estou?" — e a responde varrendo a
  * coluna de nomes. Então:
  *
  *  1. **O nome é o maior**, porque é o alvo da varredura.
@@ -178,7 +147,8 @@
  *  3. **A posição é um índice**, não um protagonista: forte, mas menor e mais
  *     apagada — exceto nas três primeiras, onde o pódio a devolve ao primeiro
  *     plano.
- *  4. **O Cockpit é etiqueta**, e some para o fundo até alguém procurá-lo.
+ *
+ * Havia uma quarta coluna, a do Cockpit, que saiu com D-107.
  */
 
 .posicao {
@@ -193,15 +163,6 @@
   font-weight: 700;
   letter-spacing: var(--aperto);
   color: var(--tinta);
-}
-
-.cockpit {
-  width: 4rem;
-  font-size: var(--texto-miudo);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--tinta-fraca);
-  white-space: nowrap;
 }
 
 /*
@@ -338,60 +299,23 @@
  *
  * **A coluna do nome recebia um terço da largura, e é ela que a pessoa
  * varre.** Em 360px a tabela tem 336px e eles estavam repartidos assim:
- * posição 52, nome 109, Cockpit 81, tempo 93. O resultado foi medido no
- * navegador e não sobrou dúvida: **as 56 linhas quebraram em duas, todas**,
- * cada uma com 85px de altura em vez de 46.
+ * posição 52, nome 109, Cockpit 81, tempo 93, e **as 56 linhas quebraram em
+ * duas, todas**, cada uma com 85px de altura em vez de 46. A primeira saída foi
+ * mover o Cockpit para uma linha miúda embaixo do nome no telefone.
  *
- * Duas consequências, e a segunda é a que importa. A lista fica com o dobro
- * do comprimento — com dois mil inscritos, o dobro de rolagem no dedo de quem
- * procura. E o alvo da varredura passa a estar partido ao meio, o que é
- * exatamente o contrário do que a hierarquia desta tabela decidiu quando pôs
- * o nome como o maior elemento da linha.
- *
- * **A largura some com a palavra "Cockpit", não com o dado.** Os 81px eram a
- * palavra repetida em toda linha, e ela é a etiqueta que a hierarquia desta
- * página já manda recuar. Abaixo de 28rem a coluna sai, e o Cockpit passa a
- * ser uma linha miúda embaixo do nome — que é onde uma etiqueta pertence.
- * O nome fica com 191px e cabe inteiro.
+ * Desde D-107 a coluna do Cockpit não existe em largura nenhuma, e o nome fica
+ * com a largura que ela ocupava. O que sobra para o telefone é o recuo: com
+ * dois mil inscritos, cada pixel de altura da linha é rolagem no dedo de quem
+ * procura, e o passo a menos de recuo vertical é o que mantém a linha curta.
  *
  * O ponto de corte é largura de telefone: 28rem são 448px, acima dos 360, 390,
  * 412 e 430 que vão aparecer no evento, e abaixo de qualquer tablet.
  * ================================================================== */
-.cockpitEmbutido {
-  display: none;
-  font-size: var(--texto-miudo);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--tinta-fraca);
-  /* Entrelinha 1: a etiqueta é uma linha de 13px, e qualquer folga aqui é
-     altura cobrada em duas mil linhas de rolagem. */
-  line-height: 1;
-}
-
 @media (max-width: 28rem) {
-  .cockpit {
-    display: none;
-  }
-
-  .cockpitEmbutido {
-    display: block;
-    margin-top: var(--espaco-1);
-  }
-
-  /* Sem a palavra ao lado, o nome manda na linha e pode respirar. */
   .nome {
     line-height: 1.25;
   }
 
-  /*
-   * O recuo vertical desce um passo junto.
-   *
-   * A linha passou a ter duas alturas — o nome e a etiqueta — e manter o recuo
-   * de antes devolveria em espaço o que a quebra de linha deixou de custar. Com
-   * os dois ajustes a linha sai de **85px para perto de 54**, medidos, e o nome
-   * cabe inteiro em vez de partido.
-   */
   .tabela td {
     padding: var(--espaco-2);
   }

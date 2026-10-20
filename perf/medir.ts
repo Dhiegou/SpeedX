@@ -133,13 +133,13 @@ async function medirConsultas(pool: Pool): Promise<void> {
   const consultas: { nome: string; sql: string }[] = [
     {
       nome: 'projeção da Classificação (T12)',
-      sql: `select p.nome, p.sobrenome, p.idade, t.cockpit, t.tempo_ms, t.resolvido_em
+      sql: `select p.nome, p.sobrenome, p.idade, t.tempo_ms, t.resolvido_em
             from tentativa t join participante p on p.id = t.participante_id
             where t.estado = 'valida'
             order by t.tempo_ms asc, t.resolvido_em asc`,
     },
     {
-      nome: 'fila do painel, Cockpit 1 (RF-14)',
+      nome: 'fila do painel (RF-14)',
       sql: `select t.id from tentativa t
             where t.cockpit = 1 and t.estado = 'pendente'
             order by t.inscrito_em asc limit 50`,

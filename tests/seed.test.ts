@@ -26,11 +26,15 @@ afterAll(async () => {
 })
 
 describe('massa de desenvolvimento', () => {
-  it('gera participantes e tentativas na proporção esperada', () => {
+  it('gera uma Tentativa por participante, toda no Cockpit 1 (D-107)', async () => {
     expect(resumo.participantes).toBe(300)
-    // Metade corre os dois Cockpits: entre 1x e 2x o número de pessoas.
-    expect(resumo.tentativas).toBeGreaterThan(resumo.participantes)
-    expect(resumo.tentativas).toBeLessThanOrEqual(resumo.participantes * 2)
+    expect(resumo.tentativas).toBe(resumo.participantes)
+
+    const porCockpit = await banco.cliente.query<{ cockpit: number; n: number }>(`
+      select cockpit, count(*)::int as n from tentativa group by cockpit
+    `)
+    expect(porCockpit.rows).toEqual([{ cockpit: 1, n: 300 }])
+
     expect(resumo.validas + resumo.ausentes + resumo.pendentes).toBe(resumo.tentativas)
   })
 
@@ -88,17 +92,12 @@ describe('massa de desenvolvimento', () => {
 })
 
 describe('consultas quentes do evento', () => {
-  it('RF-14 — a Fila de um Cockpit usa índice, não varredura', async () => {
-    const plano = await banco.cliente.query<{ 'QUERY PLAN': string }>(`
-      explain select id, participante_id, inscrito_em
-      from tentativa
-      where cockpit = 1 and estado = 'pendente'
-      order by inscrito_em
-    `)
-
-    const texto = plano.rows.map((r) => r['QUERY PLAN']).join('\n')
-    expect(texto).toMatch(/tentativa_fila_idx/)
-  })
+  // O teste de que a Fila usa `tentativa_fila_idx` mudou para `escala.test.ts`
+  // em 2026-10-19 (D-107). Com 300 pessoas e uma Tentativa cada, a tabela cabe
+  // em poucas páginas e o planejador varre, que é a escolha certa para esse
+  // tamanho. Antes passava aqui porque metade da massa estava no Cockpit 2 e o
+  // filtro por Cockpit era seletivo. A pergunta é sobre a escala do evento, e é
+  // lá que ela é feita.
 
   it('a Fila devolve apenas pendentes, da inscrição mais antiga para a mais recente', async () => {
     const fila = await banco.db

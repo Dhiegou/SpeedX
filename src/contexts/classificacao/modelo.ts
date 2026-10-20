@@ -12,16 +12,17 @@
  * Consumido pela projeção (T12) e pela página pública (T13).
  */
 
-/** Um dos dois Cockpits do evento. */
-export type Cockpit = 1 | 2
-
-/** Uma linha da tabela pública. Corresponde a uma Tentativa Válida. */
+/**
+ * Uma linha da tabela pública. Corresponde a uma Tentativa Válida.
+ *
+ * Não carrega Cockpit: o evento tem um só (D-107), e um campo que vale sempre
+ * o mesmo é ruído que viaja 4000 vezes por documento.
+ */
 export type LinhaClassificacao = {
   /** Identificador da Tentativa. Opaco: não revela nada sobre a pessoa. */
   id: string
   /** "Dhiego Ferreira" para maiores; "Lucas M." para menores de 18 (RNF-09). */
   nomePublico: string
-  cockpit: Cockpit
   /** Tempo em milissegundos. Formatado como `mm:ss.cc` só na exibição. */
   tempoMs: number
   /** Instante do Lançamento original. Serve ao desempate (RF-31), não à exibição. */
@@ -29,9 +30,9 @@ export type LinhaClassificacao = {
 }
 
 /**
- * Documento completo servido ao cliente e filtrado no dispositivo (SDD BC-03).
+ * Documento completo servido ao cliente e pesquisado no dispositivo (SDD BC-03).
  * Uma requisição por tecla digitada, com 2000 pessoas buscando, é o cenário
- * capaz de derrubar o sistema — por isso o filtro não volta ao servidor.
+ * capaz de derrubar o sistema — por isso a busca não volta ao servidor.
  */
 export type DocumentoClassificacao = {
   /** Instante em que a projeção foi gerada, para o indicador de RF-32. */

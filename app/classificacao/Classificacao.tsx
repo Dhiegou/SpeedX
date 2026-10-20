@@ -2,20 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import estilos from './classificacao.module.css'
-import { classificar, contarLinhas, encontrar, montarBlocos, type FiltroDeCockpit } from './filtro'
+import { classificar, contarLinhas, encontrar, montarBlocos } from './filtro'
 import type { DocumentoTransmitido } from '@/contexts/classificacao'
 import { formatDataHoraDoEvento, formatHoraDoEvento, formatTempo } from '@/shared/tempo'
-import { nomeDoCockpit, COCKPIT } from '@/shared/vocabulario'
 
 /**
- * A tabela pública (T13 — RF-27 a RF-33, RNF-18).
+ * A tabela pública (T13 — RF-27, RF-28, RF-30 a RF-33, RNF-18).
  *
  * O PRD chama isto de "o momento de engajamento hoje desperdiçado": a pessoa
  * quer descobrir a própria posição sem perguntar a ninguém. Três decisões vêm
  * daí:
  *
- * 1. **Filtro e busca não voltam ao servidor.** O documento inteiro chegou de
- *    uma vez (T12); filtrar e procurar acontecem aqui. Uma requisição por tecla
+ * 1. **A busca não volta ao servidor.** O documento inteiro chegou de uma vez
+ *    (T12); procurar acontece aqui. Uma requisição por tecla
  *    digitada, com 2000 pessoas buscando ao mesmo tempo, é o cenário que
  *    derruba o sistema (SDD BC-03).
  *
@@ -26,6 +25,9 @@ import { nomeDoCockpit, COCKPIT } from '@/shared/vocabulario'
  * 3. **Erro de rede nunca esvazia a tabela.** O documento anterior fica na
  *    tela com um aviso discreto. Quem está procurando o próprio nome não pode
  *    perder a lista porque um pacote se perdeu.
+ *
+ * Sem abas e sem coluna de Cockpit desde D-107: o evento tem um só, e cada
+ * linha é o melhor de três voltas de uma pessoa.
  */
 
 /** Polling de fundo (FL-08). Pausa quando a aba sai de vista. */
@@ -110,7 +112,6 @@ function podio(posicao: number): string {
 }
 export default function Classificacao({ inicial }: Props) {
   const [documento, setDocumento] = useState(inicial)
-  const [cockpit, setCockpit] = useState<FiltroDeCockpit>('todos')
   const [busca, setBusca] = useState('')
   const [limite, setLimite] = useState(PAGINA)
   const [atualizando, setAtualizando] = useState(false)
@@ -118,7 +119,7 @@ export default function Classificacao({ inicial }: Props) {
 
   const agora = useSyncExternalStore(assinarRelogio, lerNoCliente, lerNoServidor)
 
-  const linhas = useMemo(() => classificar(documento.linhas, cockpit), [documento.linhas, cockpit])
+  const linhas = useMemo(() => classificar(documento.linhas), [documento.linhas])
   const achados = useMemo(() => encontrar(linhas, busca), [linhas, busca])
   const blocos = useMemo(() => montarBlocos(linhas, achados, limite), [linhas, achados, limite])
 
@@ -163,13 +164,6 @@ export default function Classificacao({ inicial }: Props) {
     }
   }, [atualizar])
 
-  function trocarCockpit(novo: FiltroDeCockpit): void {
-    setCockpit(novo)
-    // A paginação volta ao começo: manter 400 linhas carregadas de um Cockpit ao
-    // trocar para o outro daria uma lista longa que ninguém pediu.
-    setLimite(PAGINA)
-  }
-
   return (
     <main className={estilos.pagina}>
       <h1 className={estilos.titulo}>Classificação</h1>
@@ -178,23 +172,6 @@ export default function Classificacao({ inicial }: Props) {
       </p>
 
       <div className={estilos.controles}>
-        <div className={estilos.abas} role="tablist" aria-label={`Filtrar por ${COCKPIT.singular}`}>
-          {(['todos', 1, 2] as const).map((opcao) => (
-            <button
-              key={String(opcao)}
-              type="button"
-              role="tab"
-              aria-selected={cockpit === opcao}
-              className={`${estilos.aba} ${cockpit === opcao ? estilos.abaAtiva : ''}`}
-              onClick={() => {
-                trocarCockpit(opcao)
-              }}
-            >
-              {opcao === 'todos' ? 'Todos' : nomeDoCockpit(opcao)}
-            </button>
-          ))}
-        </div>
-
         <label className="visually-hidden" htmlFor="busca">
           Buscar por nome
         </label>
@@ -224,9 +201,7 @@ export default function Classificacao({ inicial }: Props) {
       <div className={estilos.numeros}>
         <p className={estilos.numero}>
           <span className={estilos.numeroValor}>{linhas.length}</span>
-          <span className={estilos.numeroRotulo}>
-            {cockpit === 'todos' ? 'tempos registrados' : `tempos ${nomeDoCockpit(cockpit)}`}
-          </span>
+          <span className={estilos.numeroRotulo}>tempos registrados</span>
         </p>
 
         {buscando && (
@@ -287,9 +262,6 @@ export default function Classificacao({ inicial }: Props) {
                 #
               </th>
               <th scope="col">Nome</th>
-              <th scope="col" className={estilos.cockpit}>
-                {COCKPIT.singular}
-              </th>
               <th scope="col" className={estilos.tempo}>
                 Tempo
               </th>
@@ -299,7 +271,7 @@ export default function Classificacao({ inicial }: Props) {
             {blocos.map((bloco, i) =>
               bloco.tipo === 'lacuna' ? (
                 <tr key={`lacuna-${String(i)}`} className={estilos.lacuna}>
-                  <td colSpan={4}>⋯ {bloco.quantidade} posição(ões) entre os resultados ⋯</td>
+                  <td colSpan={3}>⋯ {bloco.quantidade} posição(ões) entre os resultados ⋯</td>
                 </tr>
               ) : (
                 bloco.linhas.map((linha) => (
@@ -311,25 +283,7 @@ export default function Classificacao({ inicial }: Props) {
                     <td className={`${estilos.posicao} ${podio(linha.posicao)}`}>
                       {linha.posicao}
                     </td>
-                    <td className={estilos.nome}>
-                      {linha.nomePublico}
-                      {/*
-                        O mesmo Cockpit, dito duas vezes no markup e uma só na
-                        tela. Em telefone, a coluna própria sai e esta linha
-                        entra; acima disso, o contrário. É media query, não
-                        JavaScript — a escolha não pode depender de medir a
-                        janela depois de hidratar, senão a primeira pintura sai
-                        com a coluna errada.
-
-                        **Quem está escondido por `display: none` também some
-                        para o leitor de tela**, então em nenhuma largura o
-                        Cockpit é anunciado duas vezes.
-                      */}
-                      <span className={estilos.cockpitEmbutido}>
-                        {nomeDoCockpit(linha.cockpit)}
-                      </span>
-                    </td>
-                    <td className={estilos.cockpit}>{nomeDoCockpit(linha.cockpit)}</td>
+                    <td className={estilos.nome}>{linha.nomePublico}</td>
                     <td className={estilos.tempo}>{formatTempo(linha.tempoMs)}</td>
                   </tr>
                 ))

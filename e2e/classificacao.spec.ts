@@ -84,21 +84,21 @@ test.describe('classificação pública', () => {
     const linhas = documento.linhas as unknown[]
     const primeira = linhas[0]
 
-    // **Arrays posicionais, e não objetos** (D-57): `["Marina R.",1,83400]`. As
+    // **Arrays posicionais, e não objetos** (D-57): `["Marina R.",83400]`. As
     // chaves repetidas quatro mil vezes custariam mais que os dados, e o
     // documento inteiro é baixado por todo mundo em rede de evento.
     //
-    // Três elementos, e a contagem é o que importa: `resolvidoEm` ficou de fora
+    // Dois elementos, e a contagem é o que importa: o Cockpit saiu em D-107, por
+    // valer sempre o mesmo, e `resolvidoEm` ficou de fora
     // de propósito. Ele serve ao desempate, que o servidor já resolveu ao
     // ordenar — mandá-lo adiante publicaria o instante exato em que uma pessoa
     // nomeada esteve num lugar, que para menores de 18 é a exposição que RNF-09
     // existe para evitar, por outra porta.
     expect(Array.isArray(primeira)).toBe(true)
-    expect(primeira).toHaveLength(3)
+    expect(primeira).toHaveLength(2)
 
-    const [nomePublico, cockpit, tempoMs] = primeira as [unknown, unknown, unknown]
+    const [nomePublico, tempoMs] = primeira as [unknown, unknown]
     expect(typeof nomePublico).toBe('string')
-    expect([1, 2]).toContain(cockpit)
     expect(typeof tempoMs).toBe('number')
 
     // E o que **não** está lá, dito por extenso: não existe posição no documento

@@ -6,16 +6,15 @@ import { comRegistro, falha, instanteDoServidor, responder } from '../_apoio'
 import { formatTempo } from '@/shared/tempo'
 
 /**
- * `GET /api/painel/participante?busca=` — busca global, fora da Fila (RF-22, RF-24).
+ * `GET /api/painel/participante?busca=` — busca global, fora da Fila (RF-22).
  *
  * A Fila mostra só quem ainda não correu, e é isso que a torna útil. Mas
- * corrigir um tempo e incluir alguém num Cockpit adicional tratam justamente de
- * quem **saiu** da Fila — já lançado ou marcado como ausente. Sem esta rota,
- * essas duas operações não teriam como alcançar ninguém.
+ * corrigir um tempo trata justamente de quem **saiu** da Fila — já lançado ou
+ * marcado como ausente. Sem esta rota, a correção não teria como alcançar
+ * ninguém.
  *
- * Devolve as Tentativas de cada pessoa nos dois Cockpits, com estado e Tempo,
- * porque é essa a decisão que o Operador toma em seguida: corrigir esta, ou
- * incluir naquela outra.
+ * Devolve a Tentativa de cada pessoa, com estado e Tempo, porque é essa a
+ * decisão que o Operador toma em seguida: corrigir, ou ver o histórico.
  *
  * Mesma projeção de dado pessoal da Fila: nome, sobrenome e quatro dígitos.
  */
@@ -54,7 +53,6 @@ export function GET(request: NextRequest): Promise<Response> {
             ultimos4Telefone: p.ultimos4Telefone,
             tentativas: p.tentativas.map((t) => ({
               tentativaId: t.tentativaId,
-              cockpit: t.cockpit,
               estado: t.estado,
               tempoMs: t.tempoMs,
               tempo: t.tempoMs === null ? null : formatTempo(t.tempoMs),

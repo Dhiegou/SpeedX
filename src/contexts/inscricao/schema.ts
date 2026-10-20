@@ -1,11 +1,9 @@
 import { z } from 'zod'
-import { COCKPIT } from '@/shared/vocabulario'
-import type { Cockpit } from './contrato'
 import type { CodigoErro } from './erros'
 import { IDADE_MAIORIDADE, IDADE_MAXIMA, IDADE_MINIMA } from './idades'
 
 /**
- * Validação da Inscrição (RF-02 a RF-08, RNF-13, RNF-17).
+ * Validação da Inscrição (RF-02, RF-04 a RF-08, RNF-13, RNF-17).
  *
  * Este é o esquema que vale. O formulário de T06 usa o mesmo módulo, mas isso é
  * conveniência: o servidor revalida sempre, porque a validação de interface não
@@ -95,23 +93,6 @@ const idade = z
     regra('idade_maxima', `Idade acima de ${String(IDADE_MAXIMA)} anos: confira o valor digitado.`),
   )
 
-/** Cockpits declarados (RF-03). Ao menos um, sem repetição, dentro de [1, 2]. */
-const cockpits = z
-  .array(z.number())
-  .refine(
-    (v) => v.length > 0,
-    regra('cockpit_ausente', `Escolha pelo menos um ${COCKPIT.singular}.`),
-  )
-  .refine(
-    (v) => v.every((p) => p === 1 || p === 2),
-    regra('cockpit_invalido', `${COCKPIT.singular} inválido: as opções são 1 e 2.`),
-  )
-  .refine(
-    (v) => new Set(v).size === v.length,
-    regra('cockpit_repetido', `Cada ${COCKPIT.singular} pode ser escolhido uma vez só.`),
-  )
-  .transform((v) => v as Cockpit[])
-
 const consentimento = z
   .boolean()
   .refine(
@@ -134,6 +115,10 @@ const dadosDoResponsavel = z.object({
  * Campos de Responsável entram como opcionais porque o cliente pode legitimamente
  * enviá-los e depois corrigir a idade para 18 (RF-07). O descarte acontece na
  * transformação abaixo.
+ *
+ * Não há campo de Cockpit (D-107). Um `cockpits` que ainda chegue — de uma
+ * aba aberta antes da troca, por exemplo — é descartado pelo `z.object`, como
+ * qualquer chave desconhecida, e a inscrição segue.
  */
 const entrada = z.object({
   nome: nome('O nome'),
@@ -141,7 +126,6 @@ const entrada = z.object({
   email,
   telefone,
   idade,
-  cockpits,
   consentimento,
   /** Repasse à FIAP e ao curso: opcional (D-23). Ausente significa recusa. */
   aceiteCompartilhamento: z.boolean().default(false),
@@ -157,7 +141,6 @@ type Comuns = {
   readonly email: string
   readonly telefone: string
   readonly idade: number
-  readonly cockpits: readonly Cockpit[]
   readonly aceiteCompartilhamento: boolean
 }
 
@@ -180,7 +163,6 @@ function comuns(valor: z.infer<typeof entrada>): Comuns {
     email: valor.email,
     telefone: valor.telefone,
     idade: valor.idade,
-    cockpits: valor.cockpits,
     aceiteCompartilhamento: valor.aceiteCompartilhamento,
   }
 }
