@@ -298,8 +298,11 @@
  * reprovaria; preto dá 4,85. É a inversão que a marca pede, e ela sai de graça
  * porque toda tela lê `--sobre-marca` em vez de escrever `#fff`.
  *
- * O tema escuro **não** é o padrão, e nem segue `prefers-color-scheme`. O porquê
- * está em `src/shared/tema.ts`, junto do cookie que o guarda.
+ * **Vale em dois casos** (D-110): a pessoa escolheu o escuro no botão, ou nunca
+ * escolheu e o celular dela está no escuro. O segundo é o bloco de
+ * `prefers-color-scheme` logo abaixo, e ele repete este token por token porque
+ * CSS não junta seletor e consulta de mídia numa regra só. Quem garante que os
+ * dois não se separam é `tests/sistemaVisual.test.ts`, que os compara.
  * ==================================================================== */
 :root[data-tema='escuro'] {
   --tinta: #f4f4f5;
@@ -352,6 +355,58 @@
   --sombra-alta: none;
 
   color-scheme: dark;
+}
+
+/* O celular no escuro, e nenhuma escolha feita no botão. Cópia exata do bloco
+   acima; os comentários de cada token estão lá. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema]) {
+    --tinta: #f4f4f5;
+    --tinta-suave: #b0b0b8;
+    --tinta-fraca: #8f8f99;
+
+    --fundo: #000000;
+    --superficie: #0a0a0b;
+    --superficie-alt: #17171a;
+    --superficie-tenue: #000000;
+
+    --marca: #ed145b;
+    --marca-forte: #ff5c8f;
+    --marca-clara: #2b0713;
+    --sobre-marca: #000000;
+
+    --acento: #e46124;
+    --acento-claro: #241109;
+    --acento-tinta: #f0a06a;
+
+    --borda: #2e2e33;
+    --borda-forte: #8a8a93;
+
+    --erro: #e93b40;
+    --erro-fundo: #210809;
+    --sucesso: #4ade80;
+    --sucesso-fundo: #0a1f12;
+
+    --desabilitado: #3f3f46;
+    --sobre-desabilitado: #e4e4e7;
+
+    --veu: rgb(0 0 0 / 72%);
+
+    --ouro-marca: #ffe206;
+
+    --prata-fundo: #1f1f23;
+    --prata-tinta: #e4e4e7;
+    --prata-marca: #8a8a93;
+
+    --bronze-fundo: #2a1408;
+    --bronze-tinta: #f0a06a;
+    --bronze-marca: #e46124;
+
+    --sombra: none;
+    --sombra-alta: none;
+
+    color-scheme: dark;
+  }
 }
 
 *,

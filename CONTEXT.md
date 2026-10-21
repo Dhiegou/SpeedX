@@ -1613,7 +1613,7 @@ D-93 escolheu asfalto e brasa porque, na época, a resposta para "existe identid
 
 D-93 tinha fechado a questão em "sem modo escuro", com um argumento correto para a paleta daquele dia: o evento é ao ar livre e paleta escura sob sol lê pior. **A marca reabriu a questão sozinha** — as quatro cores reprovam em branco e passam em preto, então o tema escuro deixou de ser conforto e virou o ambiente em que a identidade é fiel.
 
-**O padrão continua sendo o claro, e de propósito não é `prefers-color-scheme`.** A maioria deixa o aparelho no escuro, mas essa preferência foi formada em ambiente fechado, e o evento é num pátio. Seguir o sistema operacional entregaria o tema pior por padrão para mais da metade das pessoas, exatamente onde ele é pior. O sistema não sabe onde a pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão, e é lembrada.
+**O padrão continua sendo o claro, e de propósito não é `prefers-color-scheme`.** *(Revertido em 2026-10-21: sem escolha, vale o tema do celular — D-110.)* A maioria deixa o aparelho no escuro, mas essa preferência foi formada em ambiente fechado, e o evento é num pátio. Seguir o sistema operacional entregaria o tema pior por padrão para mais da metade das pessoas, exatamente onde ele é pior. O sistema não sabe onde a pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão, e é lembrada.
 
 **A escolha vive num cookie, nunca em `localStorage`**, e isso é decisão técnica:
 
@@ -2010,6 +2010,16 @@ A derivação acontece antes da transação, para os 0,2 s de scrypt não segura
 **O resultado por e-mail ou WhatsApp.** A pedido do organizador, a política diz que o resultado pode ir numa mensagem automática por e-mail ou por WhatsApp. O e-mail está coberto pelo termo; o WhatsApp para todos não está, porque o termo limita o telefone aos ganhadores e ao dia do evento. O organizador decidiu sabendo disso. A política não cria o consentimento que o termo não deu, e o envio automático não existe no sistema.
 
 **O que fica em aberto, e não é código:** o WhatsApp acima; mandá-lo só aos ganhadores estaria coberto. A vaga garantida, com um Cockpit e 2000 inscritos previstos, é promessa por escrito. O procedimento de contestação (no Cockpit no dia, por e-mail até 3/11) é minuta para a equipe confirmar. Registro completo em `docs/conformidade-legal.md`.
+
+### D-110 — O tema segue o celular, e a troca deixa de recarregar a página
+
+**Decidido em 2026-10-21** pelo organizador: quase todo o público se inscreve pelo próprio celular, e quem o deixou no escuro deve entrar no escuro. Reverte o "claro por padrão" de D-95. O argumento do sol continua de pé, mas perdeu para o de quem estranha um site que abre branco num celular escuro. O botão continua por cima do sistema.
+
+**Sem escolha, quem decide é o CSS.** O layout só põe `data-tema` no `<html>` quando existe cookie. Sem ele, `@media (prefers-color-scheme: dark)` aplica a paleta escura em `:root:not([data-tema])`. O servidor não tem como saber o tema do aparelho, e o CSS sabe antes da primeira pintura: continua sem piscada e sem script no `<head>`. O bloco escuro aparece duas vezes em `globals.css`, porque CSS não junta seletor e consulta de mídia numa regra só, e `tests/sistemaVisual.test.ts` recusa os dois diferentes.
+
+**A demora da troca era a viagem inteira:** POST, 303, e a página renderizada de novo no servidor, só para mudar de cor. Agora o botão é `TrocaDeTema.tsx`, de cliente. No clique, ele muda o `data-tema`, o CSS repinta na hora, e o mesmo formulário vai em segundo plano com o cabeçalho `x-tema-sem-recarga`. A rota grava o cookie e responde 204. Sem JavaScript, o formulário faz a viagem completa como antes. São dois botões, um para cada destino, e o CSS mostra o que leva ao outro tema, porque sem escolha feita só o CSS sabe qual está em vigor.
+
+**O que não foi medido:** `npm run orcamento`, que exige `next build`. O botão de cliente e o bloco escuro repetido somam bytes, e a folga da Classificação era de 0,3 KB (D-106).
 
 ---
 

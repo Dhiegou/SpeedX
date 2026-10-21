@@ -193,15 +193,34 @@ describe('os dois temas, e onde a escolha mora (PRD-front §5.1)', () => {
     expect(infratores).toEqual([])
   })
 
-  it('o tema não segue o sistema operacional', () => {
-    // `prefers-color-scheme` decidiria pela pessoa com base em onde ela estava
-    // quando configurou o aparelho, e não em onde ela está agora — que é um
-    // pátio ao sol. A única consulta de preferência que este arquivo respeita é
-    // a de movimento, que não tem esse problema.
-    const consultas = globais.match(/@media \(([^)]+)\)/g) ?? []
+  it('sem escolha feita, o tema segue o celular (D-110)', () => {
+    // Quase todo mundo se inscreve pelo próprio celular: quem o deixou no
+    // escuro precisa entrar no escuro. A consulta vale só sem `data-tema`,
+    // porque a escolha do botão manda sobre a do sistema.
+    expect(globais).toMatch(
+      /@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-tema\]\) \{/,
+    )
+    expect(globais).toContain('@media (prefers-reduced-motion: reduce)')
+  })
 
-    expect(consultas.join(' ')).not.toContain('prefers-color-scheme')
-    expect(consultas.join(' ')).toContain('prefers-reduced-motion')
+  it('o escuro do celular é o mesmo escuro do botão', () => {
+    // São dois blocos porque CSS não junta seletor e consulta de mídia numa
+    // regra só. Um tom ajustado num e esquecido no outro faria o site ter dois
+    // temas escuros, e ninguém veria: quem testa o botão não testa o sistema.
+    const tokens = (inicio: string): string[] => {
+      const corpo = globais.slice(globais.indexOf(inicio))
+      const fim = corpo.indexOf('color-scheme: dark')
+
+      return [...corpo.slice(0, fim).matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].map(
+        (t) => `${t[1] ?? ''}: ${t[2] ?? ''}`,
+      )
+    }
+
+    const doBotao = tokens(":root[data-tema='escuro'] {")
+    const doCelular = tokens(':root:not([data-tema]) {')
+
+    expect(doBotao.length).toBeGreaterThan(20)
+    expect(doCelular).toEqual(doBotao)
   })
 
   it('o tema escuro existe e herda do claro em vez de repeti-lo', () => {
@@ -217,15 +236,18 @@ describe('os dois temas, e onde a escolha mora (PRD-front §5.1)', () => {
     expect(escuro).not.toContain('--amarelo:')
   })
 
-  it('a troca de tema não custa JavaScript', () => {
-    // Um botão de cliente traria React para páginas que hoje não têm nenhum, e
-    // uma Server Action traria o runtime de ações. O formulário comum é HTML
-    // puro, e é a única das três que custa zero no primeiro carregamento.
+  it('a troca de tema funciona sem JavaScript, e com ele não recarrega', () => {
+    // O cabeçalho continua no servidor; só o botão é de cliente. Ele segue
+    // sendo um formulário de verdade, então a troca funciona mesmo quando o
+    // script não baixou — e, quando baixou, troca na hora em vez de buscar a
+    // página de novo (D-110).
     const cabecalho = ler(join(RAIZ, 'app', '_componentes', 'Cabecalho.tsx'))
+    const botao = ler(join(RAIZ, 'app', '_componentes', 'TrocaDeTema.tsx'))
 
     expect(cabecalho).not.toContain("'use client'")
-    expect(cabecalho).toMatch(/method="post"/)
-    expect(cabecalho).toMatch(/action="\/api\/tema"/)
+    expect(botao).toMatch(/method="post"/)
+    expect(botao).toMatch(/action="\/api\/tema"/)
+    expect(botao).toContain('CABECALHO_SEM_RECARGA')
   })
 })
 

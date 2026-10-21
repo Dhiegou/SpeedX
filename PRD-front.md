@@ -103,7 +103,7 @@ Três regras saem daí, e elas não são estilo, são condição de legibilidade
 
 O tema escuro fica fiel à marca, porque a paleta foi feita para preto. Testei os fundos e **use `#000000` ou `#0A0A0B`**: a partir de `#121214` o rosa cai para 4,32 e reprova. Grafite não serve aqui.
 
-O padrão é o claro **sempre**, e não o `prefers-color-scheme`. O motivo é o mesmo argumento do sol: a maioria deixa o aparelho no escuro, mas essa preferência foi formada em ambiente fechado, e o evento é ao ar livre. Seguir o sistema operacional entregaria o tema pior por padrão para mais da metade das pessoas, no exato ambiente em que ele é pior. O sistema não sabe onde a pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão, e é respeitada e lembrada.
+_(Revertido em 2026-10-21: sem escolha feita, vale o tema do celular da pessoa, e o botão manda por cima — [CONTEXT.md](CONTEXT.md) D-110.)_ O padrão é o claro **sempre**, e não o `prefers-color-scheme`. O motivo é o mesmo argumento do sol: a maioria deixa o aparelho no escuro, mas essa preferência foi formada em ambiente fechado, e o evento é ao ar livre. Seguir o sistema operacional entregaria o tema pior por padrão para mais da metade das pessoas, no exato ambiente em que ele é pior. O sistema não sabe onde a pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão, e é respeitada e lembrada.
 
 **A troca é guardada em cookie, não em `localStorage`.** E isso é decisão técnica, não contorno:
 
@@ -286,7 +286,7 @@ Três números deste PRD não sobreviveram à medição, e ficam registrados por
 | O que fazer com as mudezes?            | **São correção, e vêm primeiro** (§5.6)                                                  |
 | O telão é caso próprio?                | **Não.** Vira item de ensaio (§5.3)                                                      |
 | Existe identidade externa?             | **Sim**, e é a paleta do projeto (§5.1). A PrinterX é patrocinador e vive dentro do logo |
-| Claro ou escuro?                       | **Os dois**, com o claro por padrão (§5.1)                                               |
+| Claro ou escuro?                       | **Os dois**; sem escolha, o do celular (§5.1, D-110)                                     |
 | Onde guardar a escolha de tema?        | **Cookie**, nunca `localStorage` (§5.1)                                                  |
 | Quem diz qual linha é a da pessoa?     | **Ninguém, e de propósito.** A busca já responde, e sem guardar nada (fechada em 14/10)  |
 

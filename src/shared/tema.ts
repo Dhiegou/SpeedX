@@ -18,6 +18,10 @@ import { cookies } from 'next/headers'
  * que o navegador guardou. O cookie chega junto com a requisição, então o
  * servidor **já pinta no tema certo** e não existe piscada.
  *
+ * O botão troca o tema na hora, no navegador, e grava o cookie em segundo
+ * plano (`TrocaDeTema.tsx`); sem JavaScript, o formulário faz a viagem
+ * completa ao servidor e chega ao mesmo lugar.
+ *
  * Tema é preferência de interface, não dado pessoal: não esbarra em RNF-08 nem
  * no que o termo de consentimento promete.
  */
@@ -28,17 +32,16 @@ export type Tema = (typeof TEMAS)[number]
 
 export const NOME_DO_COOKIE_DE_TEMA = 'speedx_tema'
 
-/**
- * O padrão é o claro **sempre**, e de propósito não é `prefers-color-scheme`.
+/*
+ * Sem escolha, vale o tema do celular da pessoa (D-110).
  *
- * A maioria das pessoas deixa o aparelho no escuro, mas essa preferência foi
- * formada dentro de casa, e este evento é ao ar livre: seguir o sistema
- * operacional entregaria o tema pior por padrão para mais da metade das
- * pessoas, no exato ambiente em que ele é pior. O sistema não sabe onde a
- * pessoa está; nós sabemos. A escolha continua sendo dela, pelo botão do
- * cabeçalho, e a partir daí é respeitada e lembrada.
+ * Quase todo mundo se inscreve pelo próprio celular, e quem deixou o aparelho
+ * no escuro estranha um site que abre branco. Quem decide isso é o CSS, com
+ * `prefers-color-scheme` em `globals.css`, e não este arquivo: o servidor não
+ * tem como saber o tema do aparelho, e o CSS sabe antes da primeira pintura,
+ * sem script. O botão do cabeçalho continua valendo por cima do sistema, e a
+ * partir dali a escolha é lembrada.
  */
-export const TEMA_PADRAO: Tema = 'claro'
 
 export function ehTema(valor: string | undefined): valor is Tema {
   return valor !== undefined && (TEMAS as readonly string[]).includes(valor)
@@ -49,14 +52,15 @@ export function alternar(tema: Tema): Tema {
 }
 
 /**
- * O tema desta requisição.
+ * O tema que a pessoa escolheu, ou `null` se ela nunca escolheu.
  *
- * Lido no servidor, no layout raiz. Um valor desconhecido no cookie — cookie
- * velho, editado à mão, truncado por proxy — cai no padrão em vez de quebrar a
- * página: preferência de interface não é lugar para erro fatal.
+ * `null` quer dizer "siga o celular". Lido no servidor, no layout raiz. Um
+ * valor desconhecido no cookie — cookie velho, editado à mão, truncado por
+ * proxy — conta como nenhuma escolha em vez de quebrar a página: preferência de
+ * interface não é lugar para erro fatal.
  */
-export async function temaDaRequisicao(): Promise<Tema> {
+export async function temaDaRequisicao(): Promise<Tema | null> {
   const valor = (await cookies()).get(NOME_DO_COOKIE_DE_TEMA)?.value
 
-  return ehTema(valor) ? valor : TEMA_PADRAO
+  return ehTema(valor) ? valor : null
 }

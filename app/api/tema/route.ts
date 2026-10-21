@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { emProducao } from '@/shared/env'
-import { NOME_DO_COOKIE_DE_TEMA, TEMA_PADRAO, alternar, ehTema, type Tema } from '@/shared/tema'
+import { NOME_DO_COOKIE_DE_TEMA, alternar, ehTema, type Tema } from '@/shared/tema'
+import { CABECALHO_SEM_RECARGA } from '@/shared/temaSemRecarga'
 
 /**
  * `/api/tema` — a troca de tema, sem uma linha de JavaScript (PRD-front §5.1).
@@ -14,9 +15,11 @@ import { NOME_DO_COOKIE_DE_TEMA, TEMA_PADRAO, alternar, ehTema, type Tema } from
  * em rede congestionada (RNF-04), por uma preferência que a pessoa muda uma
  * vez no dia, se muito.
  *
- * O preço é uma ida ao servidor por troca. É o preço certo: a página já
- * recarrega a cada navegação por causa da âncora comum, e voltar com o tema já
- * aplicado no HTML é justamente o que elimina a piscada.
+ * O formulário sozinho custa uma ida ao servidor por troca, e foi isso que se
+ * notou como demora: POST, 303 e a página inteira renderizada de novo. Por isso,
+ * com JavaScript, `TrocaDeTema.tsx` troca o tema na hora e manda o mesmo
+ * formulário em segundo plano, com o cabeçalho `CABECALHO_SEM_RECARGA`; aí esta
+ * rota só grava o cookie e responde 204, sem página nenhuma para buscar (D-110).
  */
 
 /**
@@ -35,9 +38,10 @@ function destino(bruto: FormDataEntryValue | null): string {
 }
 
 /**
- * O formulário manda o tema de destino já calculado no servidor. Se vier
- * qualquer outra coisa, alterna a partir do que o navegador tem: a pessoa
- * clicou num botão de troca, e não trocar nada seria o pior desfecho.
+ * O botão clicado manda o tema de destino. Se vier qualquer outra coisa,
+ * alterna a partir do que o navegador tem — e, sem cookie, a partir do claro,
+ * que é o que o servidor tem como chute: a pessoa clicou num botão de troca, e
+ * não trocar nada seria o pior desfecho.
  */
 function proximoTema(bruto: FormDataEntryValue | null, atual: Tema): Tema {
   return typeof bruto === 'string' && ehTema(bruto) ? bruto : alternar(atual)
@@ -47,14 +51,14 @@ export async function POST(requisicao: NextRequest): Promise<Response> {
   const formulario = await requisicao.formData()
 
   const atual = requisicao.cookies.get(NOME_DO_COOKIE_DE_TEMA)?.value
-  const escolhido = proximoTema(formulario.get('tema'), ehTema(atual) ? atual : TEMA_PADRAO)
+  const escolhido = proximoTema(formulario.get('tema'), ehTema(atual) ? atual : 'claro')
 
   // 303 e não 307: depois de um POST o navegador precisa buscar o destino com
   // GET. Com 307 ele repetiria o POST na página de volta.
-  const resposta = NextResponse.redirect(
-    new URL(destino(formulario.get('de')), requisicao.url),
-    303,
-  )
+  const resposta =
+    requisicao.headers.get(CABECALHO_SEM_RECARGA) === null
+      ? NextResponse.redirect(new URL(destino(formulario.get('de')), requisicao.url), 303)
+      : new NextResponse(null, { status: 204 })
 
   // RNF-10: nada aqui é cacheável. Uma borda que guardasse este 303 devolveria a
   // alguém o `Set-Cookie` de outra pessoa — e "é só uma preferência" não atenua

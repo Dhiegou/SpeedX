@@ -1,6 +1,6 @@
 import Logo from './marca/Logo'
+import TrocaDeTema from './TrocaDeTema'
 import estilos from './cabecalho.module.css'
-import { alternar, temaDaRequisicao } from '@/shared/tema'
 
 /**
  * Cabeçalho das páginas públicas (`/`, `/classificacao`, `/termo`).
@@ -11,10 +11,10 @@ import { alternar, temaDaRequisicao } from '@/shared/tema'
  * alterna entre "me inscrever" e "ver meu tempo" o dia inteiro, isso é a
  * navegação principal do produto — não um detalhe de acabamento.
  *
- * **Server Component, sem estado e sem JavaScript.** A rota atual chega por
- * `atual`, e não é lida do navegador; o tema chega do cookie, lido aqui no
- * servidor. Assim o cabeçalho já vem correto na primeira pintura, e nada disto
- * entra no pacote que a rede do evento precisa baixar (RNF-04).
+ * **Server Component, sem estado.** A rota atual chega por `atual`, e não é
+ * lida do navegador. A única peça de cliente é o botão de tema, `TrocaDeTema`,
+ * que troca na hora em vez de recarregar a página (D-110); o resto do cabeçalho
+ * não entra no pacote que a rede do evento precisa baixar (RNF-04).
  *
  * **O painel não usa este cabeçalho.** Lá a altura da tela é orçamento — a Fila
  * precisa caber sem rolagem — e a barra preta própria dele já diz onde o
@@ -52,10 +52,7 @@ const LINKS: readonly { rota: Rota; texto: string }[] = [
   { rota: 'classificacao', texto: 'Classificação' },
 ]
 
-export default async function Cabecalho({ atual }: { atual: Rota }) {
-  const tema = await temaDaRequisicao()
-  const proximo = alternar(tema)
-
+export default function Cabecalho({ atual }: { atual: Rota }) {
   return (
     <header className={estilos.cabecalho}>
       <div className={estilos.interior}>
@@ -82,25 +79,10 @@ export default async function Cabecalho({ atual }: { atual: Rota }) {
           </nav>
 
           {/*
-            A troca de tema é um formulário, e não um botão de JavaScript.
-
-            O destino já vem calculado do servidor, e `de` diz para onde voltar —
-            a rota devolve um 303 para o mesmo lugar, com o cookie novo, e a
-            página seguinte já pinta no tema certo. Zero byte de script para uma
-            preferência que a pessoa mexe uma vez no dia, se mexer.
+            `de` diz para onde voltar quando a troca faz a viagem completa, sem
+            JavaScript. Com JavaScript a página nem sai do lugar (D-110).
           */}
-          <form className={estilos.tema} method="post" action="/api/tema">
-            <input type="hidden" name="de" value={CAMINHOS[atual]} />
-            <input type="hidden" name="tema" value={proximo} />
-            <button
-              type="submit"
-              className={estilos.botaoTema}
-              aria-label={`Trocar para o tema ${proximo}`}
-            >
-              <span className={estilos.glifo} aria-hidden="true" />
-              {proximo === 'escuro' ? 'Escuro' : 'Claro'}
-            </button>
-          </form>
+          <TrocaDeTema de={CAMINHOS[atual]} />
         </div>
       </div>
     </header>

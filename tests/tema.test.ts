@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { describe, expect, it } from 'vitest'
-import { TEMA_PADRAO, alternar, ehTema } from '@/shared/tema'
+import { alternar, ehTema } from '@/shared/tema'
+import { CABECALHO_SEM_RECARGA } from '@/shared/temaSemRecarga'
 
 const { POST } = await import('@/../app/api/tema/route')
 
@@ -9,14 +10,19 @@ const URL_BASE = 'http://localhost:3000/api/tema'
 /**
  * A troca de tema (PRD-front §5.1).
  *
- * **O que estes testes protegem não é a aparência, é a decisão.** O tema abre no
- * claro porque o evento é ao ar livre, a escolha vive num cookie porque as
- * páginas navegam por recarga completa, e o retorno é validado porque um campo
- * de formulário que vira `Location` é a receita clássica do redirecionamento
- * aberto. Nenhuma dessas três sobrevive sozinha a um refactor.
+ * **O que estes testes protegem não é a aparência, é a decisão.** A escolha
+ * vive num cookie porque as páginas navegam por recarga completa, a troca com
+ * JavaScript não busca página nenhuma porque era essa viagem que demorava
+ * (D-110), e o retorno é validado porque um campo de formulário que vira
+ * `Location` é a receita clássica do redirecionamento aberto. Nenhuma dessas
+ * três sobrevive sozinha a um refactor.
  */
 
-function pedido(campos: Record<string, string>, cookie?: string): NextRequest {
+function pedido(
+  campos: Record<string, string>,
+  cookie?: string,
+  extras: Record<string, string> = {},
+): NextRequest {
   const corpo = new URLSearchParams(campos)
 
   return new NextRequest(URL_BASE, {
@@ -25,18 +31,12 @@ function pedido(campos: Record<string, string>, cookie?: string): NextRequest {
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
       ...(cookie === undefined ? {} : { cookie: `speedx_tema=${cookie}` }),
+      ...extras,
     },
   })
 }
 
 describe('o tema como valor', () => {
-  it('o padrão é o claro', () => {
-    // Não é `prefers-color-scheme`, e a diferença importa: a maioria deixa o
-    // aparelho no escuro, mas essa preferência foi formada em ambiente fechado.
-    // Seguir o sistema entregaria o tema pior por padrão, no pátio, ao sol.
-    expect(TEMA_PADRAO).toBe('claro')
-  })
-
   it('a alternância é uma volta completa', () => {
     expect(alternar('claro')).toBe('escuro')
     expect(alternar(alternar('claro'))).toBe('claro')
@@ -71,6 +71,20 @@ describe('POST /api/tema', () => {
     expect(cabecalho).toContain('Max-Age=31536000')
     expect(cabecalho).toContain('HttpOnly')
     expect(cabecalho).toMatch(/SameSite=lax/i)
+  })
+
+  it('a troca em segundo plano só grava o cookie, sem página para buscar', async () => {
+    // Era a viagem POST → 303 → página inteira renderizada de novo que se
+    // notava como demora. Com o cabeçalho, a tela já trocou no navegador, e o
+    // que falta é só lembrar (D-110).
+    const resposta = await POST(
+      pedido({ tema: 'escuro' }, undefined, { [CABECALHO_SEM_RECARGA]: '1' }),
+    )
+
+    expect(resposta.status).toBe(204)
+    expect(resposta.headers.get('location')).toBeNull()
+    expect(resposta.headers.get('set-cookie')).toContain('speedx_tema=escuro')
+    expect(resposta.headers.get('cache-control')).toBe('no-store')
   })
 
   it('sem tema no formulário, alterna a partir do que o navegador tem', async () => {

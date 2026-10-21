@@ -45,14 +45,14 @@ export const viewport: Viewport = {
  * piscar, e ainda abriria divergência de hidratação, porque o servidor não tem
  * como saber o que o navegador guardou (PRD-front §5.1).
  *
- * O padrão é o claro, e não `prefers-color-scheme`: o porquê está em
- * `src/shared/tema.ts`.
+ * Sem cookie, o atributo não sai, e quem decide é o `prefers-color-scheme` do
+ * celular, no CSS (D-110): o porquê está em `src/shared/tema.ts`.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const tema = await temaDaRequisicao()
 
   return (
-    <html lang="pt-BR" data-tema={tema}>
+    <html lang="pt-BR" data-tema={tema ?? undefined}>
       {/*
         `suppressHydrationWarning` cobre extensões de navegador que injetam
         atributos no <body> antes do React hidratar — ColorZilla escreve

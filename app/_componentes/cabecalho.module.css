@@ -118,6 +118,28 @@
 }
 
 /*
+ * Qual dos dois botões aparece (D-110).
+ *
+ * Sempre o que leva ao outro tema. Sem escolha feita, o tema em vigor é o do
+ * celular, e só o CSS sabe qual é — daí a consulta de mídia, com as mesmas
+ * duas condições do bloco escuro de `globals.css`.
+ */
+:global(:root:not([data-tema='escuro'])) .paraClaro,
+:global(:root[data-tema='escuro']) .paraEscuro {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-tema])) .paraEscuro {
+    display: none;
+  }
+
+  :global(:root:not([data-tema])) .paraClaro {
+    display: inline-flex;
+  }
+}
+
+/*
  * O disco meio cheio: o mesmo glifo nos dois temas, porque o que ele representa
  * é a troca, e não o estado. Desenhado em CSS a partir de `currentColor` — uma
  * biblioteca de ícones custaria 10 KB para resolver isto (PRD-front §2).
