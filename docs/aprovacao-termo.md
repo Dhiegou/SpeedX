@@ -3,13 +3,13 @@
 Registro da revisão e da aprovação por escrito do texto de consentimento (T03, RF-09, PE-04).
 
 **Este arquivo é a prova documental da base legal do evento.** A versão vigente é a
-`v1.1-2026-10-14`, aprovada em 2026-10-14, e `assegurarTermoAprovado()` deixa o cadastro passar
+`v1.2-2026-10-21`, aprovada em 2026-10-21, e `assegurarTermoAprovado()` deixa o cadastro passar
 por causa disso. Se algum dia a versão vigente voltar a ser rascunho, o guard volta a recusar.
 
-**Duas versões, e as duas valem.** A `v1.0-2026-08-19` continua publicada e inalterada: quem se
-cadastrou sob ela tem `consentimento.versao_termo` apontando para o texto que leu de verdade, e
-isso não pode ser reescrito depois. O que muda com a versão nova é só qual delas o formulário
-apresenta de agora em diante.
+**Três versões, e as três valem.** A `v1.0-2026-08-19` e a `v1.1-2026-10-14` continuam publicadas
+e inalteradas: quem se cadastrou sob elas tem `consentimento.versao_termo` apontando para o texto
+que leu de verdade, e isso não pode ser reescrito depois. O que muda com a versão nova é só qual
+delas o formulário apresenta de agora em diante.
 
 ---
 
@@ -17,11 +17,24 @@ apresenta de agora em diante.
 
 | Campo                      | Valor                                                                                             |
 | -------------------------- | ------------------------------------------------------------------------------------------------- |
+| Identificador              | `v1.2-2026-10-21`                                                                                 |
+| Situação                   | **aprovada** em 2026-10-21                                                                        |
+| Publicada em               | 2026-10-21                                                                                        |
+| Texto                      | [`src/contexts/inscricao/consentimento/v1-2.ts`](../src/contexts/inscricao/consentimento/v1-2.ts) |
+| Rota pública               | `/termo`                                                                                          |
+| Hash do conteúdo (SHA-256) | `43f42f5a8b2527a0efd868220df2ae1ce60ef75bdb3cf1ab3f12d2d0c89cafdb`                                |
+
+---
+
+## Versão `v1.1-2026-10-14` — superada, e ainda publicada
+
+| Campo                      | Valor                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
 | Identificador              | `v1.1-2026-10-14`                                                                                 |
 | Situação                   | **aprovada** em 2026-10-14                                                                        |
 | Publicada em               | 2026-10-14                                                                                        |
 | Texto                      | [`src/contexts/inscricao/consentimento/v1-1.ts`](../src/contexts/inscricao/consentimento/v1-1.ts) |
-| Rota pública               | `/termo`                                                                                          |
+| Rota pública               | nenhuma: `/termo` publica a versão vigente                                                        |
 | Hash do conteúdo (SHA-256) | `eb93b14a7e24c5566262cbb083e7ad926251e3f535b4b845cd1b42617695b753`                                |
 
 ---
@@ -196,3 +209,48 @@ As seções do termo não foram tocadas, então os itens 1 a 7 e 9 a 11 valem co
 ### O material impresso foi refeito
 
 `npm run fichas` regenerou a ficha de inscrição e o termo impresso contra a `v1.1`, e há teste que falha se o papel e a tela divergirem (RNF-07). **O que estiver impresso em papel com a `v1.0` não serve mais** e precisa ser reimpresso antes do evento.
+
+---
+
+## Aprovação da `v1.2-2026-10-21`
+
+| Campo                              | Valor                                                                  |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| Versão aprovada                    | `v1.2-2026-10-21`                                                      |
+| Hash conferido                     | `43f42f5a8b2527a0efd868220df2ae1ce60ef75bdb3cf1ab3f12d2d0c89cafdb`     |
+| Nome do responsável pela aprovação | Dhiego (`dhiegodev@hotmail.com`)                                       |
+| Papel                              | Responsável pelo sistema de inscrição e classificação do evento        |
+| Data                               | 2026-10-21                                                             |
+| Meio da aprovação por escrito      | Instrução registrada na sessão de trabalho, materializada neste commit |
+
+### O que foi aprovado, nas palavras de quem aprovou
+
+O PRD do termo `v1.2`, escrito pelo aprovador, trazia o texto proposto "para você aprovar ou reescrever". A instrução que veio em seguida foi, literalmente:
+
+> leia o PRD.md e execute-o
+
+O texto foi publicado como proposto, sem reescrita:
+
+| seção        | antes (`v1.1`)                                                                                                                                                                                    | agora (`v1.2`)                                                                                                                                                                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `finalidade` | Telefone: entrar em contato com os ganhadores depois da corrida e localizar você no dia do evento, inclusive em caso de emergência. Na tela da organização aparecem só os quatro últimos dígitos. | Telefone: entrar em contato com os ganhadores depois da corrida, localizar você no dia do evento, inclusive em caso de emergência, e mandar o seu resultado numa mensagem automática por WhatsApp. Na tela da organização aparecem só os quatro últimos dígitos. |
+
+### O que mudou, e o que explicitamente não mudou
+
+Uma frase, numa seção. A política de privacidade já declarava o envio do resultado por WhatsApp, e o termo não o cobria; como a base legal é o consentimento, o termo foi alinhado à política (D-111). Todas as outras seções, as três caixas e o `obrigatorio` de cada uma são os da `v1.1`, conferido por diff entre `v1-1.ts` e `v1-2.ts`.
+
+**Quem se inscreveu sob a `v1.0` ou a `v1.1` não autorizou o WhatsApp**, e não pode receber a mensagem.
+
+**Autorizar não é entregar.** O envio por WhatsApp não existe no sistema, e o termo diz "mandar", como finalidade autorizada, não como promessa de envio.
+
+### Checklist de RF-09, relido para a versão nova
+
+Só a seção `finalidade` mudou, então os itens 1, 2 e 4 a 12 valem como estão nas tabelas acima. O item 3 foi relido:
+
+| #   | Exigência                                       | Situação na `v1.2`                                                                             |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 3   | Informa a **finalidade** de cada grupo de dados | ✅ um item por grupo; o telefone ganha o envio do resultado por WhatsApp, sem travessão (D-24) |
+
+### O material impresso
+
+`npm run fichas` regenerou a ficha e o termo impresso contra a `v1.2`, para o teste de RNF-07 continuar valendo. Não haverá papel neste evento, então nada precisa ser reimpresso.

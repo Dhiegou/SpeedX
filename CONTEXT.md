@@ -2021,6 +2021,26 @@ A derivação acontece antes da transação, para os 0,2 s de scrypt não segura
 
 **O que não foi medido:** `npm run orcamento`, que exige `next build`. O botão de cliente e o bloco escuro repetido somam bytes, e a folga da Classificação era de 0,3 KB (D-106).
 
+### D-111 — Termo `v1.2`: o telefone passa a autorizar o resultado por WhatsApp
+
+**Decidido em 2026-10-21**, a três dias do evento. Pedido em `PRD-termo-v1-2.md`, que substitui a ideia de tirar o WhatsApp da política.
+
+**A política prometia um uso que o termo não cobria.** D-109 deixou isso registrado: a política diz que o resultado pode ir por e-mail ou por WhatsApp, e a `v1.1` limitava o telefone aos ganhadores e ao dia do evento. Como a base legal é o consentimento, quem manda é o termo. A decisão foi alinhar o termo à política, e não o contrário.
+
+**Uma frase, numa seção.** A `v1.2-2026-10-21` é cópia da `v1.1` com a finalidade do telefone acrescida de "mandar o seu resultado numa mensagem automática por WhatsApp". Hash gerado por `hashDoConteudo` e registrado ao lado dos anteriores; `v1.0` e `v1.1` continuam em `TERMOS_PUBLICADOS`. O texto foi publicado como o PRD o propunha. O e-mail não mudou: "falar com você sobre a sua inscrição e sobre o seu resultado" já cobria o envio.
+
+**A base não estava limpa como o PRD supunha.** O levantamento de 2026-10-21 achou 3 consentimentos sob a `v1.1` (de 20/10 e 21/10) e 1 sob a `v1.0` (03/09). Quem consentiu sob elas **não** autorizou WhatsApp. Se forem testes, o caminho é apagá-los antes do evento; se forem reais, ficam fora de qualquer envio.
+
+**Autorizar não é entregar.** Não existe envio no sistema, a API oficial exige conta Meta Business verificada, e o limite inicial (250 ou 1.000 destinatários por dia) não cobre 2000 participantes.
+
+**Varredura da política (§3.5 do PRD): onde ela ainda diz mais que o termo.** Nada disso foi alterado, porque a decisão é de quem aprova:
+
+1. **WhatsApp para o telefone do responsável.** A política fala em "o telefone informados na inscrição", e para menor de 18 isso inclui o do responsável. A `v1.2` autoriza o WhatsApp no telefone de quem corre; o do responsável continua limitado ao contato no dia do evento.
+2. **Prazo de resposta de 15 dias.** Só a política o declara. É obrigação da organização, não uso de dado, mas é promessa que o termo não faz.
+3. **Hospedagem na Vercel e na Neon, em São Paulo.** Só a política declara; já registrado em D-109 como informação, não repasse.
+
+**Fora do escopo, mas visto:** o termo ainda fala em "a pista" duas vezes, de antes de D-107. Uma mudança por versão; fica para a próxima, se houver.
+
 ---
 
 ## 4. Premissas assumidas

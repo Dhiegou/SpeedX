@@ -1,6 +1,7 @@
 import type { Aceite, AceiteId, TermoConsentimento } from './modelo'
 import { TERMO_V1_0 } from './v1-0'
 import { TERMO_V1_1 } from './v1-1'
+import { TERMO_V1_2 } from './v1-2'
 
 /**
  * Termo de consentimento — fachada do módulo (T03, RF-08, RF-09).
@@ -26,6 +27,7 @@ export type {
 export { SECOES_OBRIGATORIAS } from './modelo'
 export { TERMO_V1_0 } from './v1-0'
 export { TERMO_V1_1 } from './v1-1'
+export { TERMO_V1_2 } from './v1-2'
 
 /**
  * Todas as versões já publicadas, indexadas pelo identificador gravado em
@@ -43,13 +45,14 @@ export { TERMO_V1_1 } from './v1-1'
 export const TERMOS_PUBLICADOS: Readonly<Record<string, TermoConsentimento>> = {
   [TERMO_V1_0.versao]: TERMO_V1_0,
   [TERMO_V1_1.versao]: TERMO_V1_1,
+  [TERMO_V1_2.versao]: TERMO_V1_2,
 }
 
 /**
  * Versão vigente — a que T04 grava em `consentimento.versao_termo` a cada
  * cadastro, e a que `/termo` publica.
  */
-export const TERMO_VIGENTE: TermoConsentimento = TERMO_V1_1
+export const TERMO_VIGENTE: TermoConsentimento = TERMO_V1_2
 
 /** Rota pública com o texto integral (T03, item 5 do escopo). */
 export const ROTA_TERMO = '/termo'
