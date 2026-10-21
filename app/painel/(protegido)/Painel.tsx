@@ -312,7 +312,8 @@ export default function Painel({ operador }: Props) {
   }
 
   /**
-   * Enter no campo de tempo: abre a confirmação, ou **diz por que não abriu**.
+   * Enter no campo de tempo, ou o botão Continuar: abre a confirmação, ou **diz
+   * por que não abriu**.
    *
    * As três recusas aqui eram silenciosas, e a do meio era a pior: a máscara
    * mostra `00:99.99` de propósito, para o Operador ver que errou a digitação
@@ -323,13 +324,21 @@ export default function Painel({ operador }: Props) {
    * Cada recusa nomeia o que fazer, e não só o que está errado (RNF-17). A
    * validação de verdade continua sendo do servidor; isto evita gastar uma ida
    * à rede com um valor que já se sabe recusado.
+   *
+   * O botão existe para quem opera com o dedo: sem ele, o tablet só avançava
+   * pelo Enter do teclado virtual. Ele leva à mesma confirmação que o Enter —
+   * nunca direto à gravação (RF-18).
    */
-  function confirmarTempo(evento: React.KeyboardEvent<HTMLInputElement>): void {
-    if (evento.key !== 'Enter') return
-    evento.preventDefault()
+  function confirmarTempo(): void {
+    // Numa recusa vinda do clique, o foco ficaria no botão; devolvê-lo ao campo
+    // é o que deixa o Operador corrigir a digitação sem tocar de novo no campo.
+    function recusar(motivo: string): void {
+      setRecusa(motivo)
+      campoTempo.current?.focus()
+    }
 
     if (!pareceCompleto(digitos)) {
-      setRecusa(
+      recusar(
         digitos === ''
           ? 'Digite o tempo antes de confirmar. Só números: 12345 vira 01:23.45.'
           : 'Tempo incompleto. Faltam números — o campo preenche da direita para a esquerda.',
@@ -345,7 +354,7 @@ export default function Painel({ operador }: Props) {
       const [s, c] = (resto ?? '').split('.')
 
       if (Number(s) > 59) {
-        setRecusa(
+        recusar(
           `${tempoTexto} tem mais de 59 segundos, o que nenhum relógio marca. Confira: os dois últimos números são centésimos.`,
         )
         return
@@ -353,7 +362,7 @@ export default function Painel({ operador }: Props) {
 
       tempoMs = Number(m) * 60_000 + Number(s) * 1_000 + Number(c) * 10
     } catch {
-      setRecusa('Não consegui ler este tempo. Apague com Esc e digite de novo, só números.')
+      recusar('Não consegui ler este tempo. Apague com Esc e digite de novo, só números.')
       return
     }
 
@@ -445,23 +454,40 @@ export default function Painel({ operador }: Props) {
             Tempo de {nomeCompleto(estado.alvo)}
             {estado.tempoAnterior !== null && ` (atual: ${estado.tempoAnterior})`}
           </label>
-          <input
-            ref={campoTempo}
-            className={`${estilos.entrada} ${estilos.entradaTempo}`}
-            id="tempo"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="mm:ss.cc"
-            value={tempoTexto}
-            onChange={(e) => {
-              setDigitos(digitosDoCampo(e.target.value))
-              // A recusa morre na primeira tecla: ela falava do valor anterior.
-              setRecusa(null)
-            }}
-            onKeyDown={confirmarTempo}
-            aria-invalid={recusa !== null}
-            aria-describedby={recusa === null ? 'tempo-dica' : 'tempo-recusa'}
-          />
+          <div className={estilos.linhaTempo}>
+            <input
+              ref={campoTempo}
+              className={`${estilos.entrada} ${estilos.entradaTempo}`}
+              id="tempo"
+              inputMode="numeric"
+              enterKeyHint="next"
+              autoComplete="off"
+              placeholder="mm:ss.cc"
+              value={tempoTexto}
+              onChange={(e) => {
+                setDigitos(digitosDoCampo(e.target.value))
+                // A recusa morre na primeira tecla: ela falava do valor anterior.
+                setRecusa(null)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                confirmarTempo()
+              }}
+              aria-invalid={recusa !== null}
+              aria-describedby={recusa === null ? 'tempo-dica' : 'tempo-recusa'}
+            />
+            <button type="button" className={estilos.botao} onClick={confirmarTempo}>
+              Continuar
+            </button>
+            <button
+              type="button"
+              className={`${estilos.botao} ${estilos.botaoSecundario}`}
+              onClick={voltarAoInicio}
+            >
+              Cancelar
+            </button>
+          </div>
           {/*
             A recusa ocupa o lugar da dica, e não some sozinha.
 
@@ -473,7 +499,7 @@ export default function Painel({ operador }: Props) {
           */}
           {recusa === null ? (
             <p className={estilos.dica} id="tempo-dica">
-              Digite só os números. Enter confirma, Esc cancela.
+              Digite só os números. Enter ou Continuar confirma, Esc ou Cancelar volta à fila.
             </p>
           ) : (
             <p className={estilos.recusa} id="tempo-recusa" role="alert">

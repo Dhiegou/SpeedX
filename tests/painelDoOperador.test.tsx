@@ -210,6 +210,50 @@ describe('RF-18 — a confirmação com o nome em destaque', () => {
     })
     expect(enviados).toHaveLength(0)
   })
+
+  it('o botão Continuar leva à mesma confirmação, sem gravar', async () => {
+    const teclado = montar()
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+
+    await teclado.keyboard('{Enter}')
+    await screen.findByLabelText(/^Tempo de/)
+    await teclado.keyboard('12345')
+    await teclado.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /confirmar lançamento/i })
+    expect(within(dialogo).getByText('01:23.45')).toBeTruthy()
+    expect(enviados).toHaveLength(0)
+  })
+
+  it('o botão Cancelar volta à fila sem gravar nada', async () => {
+    const teclado = montar()
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+
+    await teclado.keyboard('{Enter}')
+    await screen.findByLabelText(/^Tempo de/)
+    await teclado.keyboard('12345')
+    await teclado.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/^Tempo de/)).toBeNull()
+    })
+    expect(document.activeElement).toBe(screen.getByLabelText(/Buscar na fila/))
+    expect(enviados).toHaveLength(0)
+  })
+
+  it('Continuar com tempo incompleto recusa e devolve o foco ao campo', async () => {
+    const teclado = montar()
+    await screen.findByRole('button', { name: /Bruno Souza/ })
+
+    await teclado.keyboard('{Enter}')
+    const campo = await screen.findByLabelText(/^Tempo de/)
+    await teclado.keyboard('12')
+    await teclado.click(screen.getByRole('button', { name: 'Continuar' }))
+
+    expect((await screen.findByRole('alert')).textContent).toMatch(/incompleto/i)
+    expect(document.activeElement).toBe(campo)
+    expect(screen.queryByRole('dialog', { name: /confirmar lançamento/i })).toBeNull()
+  })
 })
 
 describe('a Fila (RF-15)', () => {

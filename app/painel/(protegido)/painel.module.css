@@ -171,6 +171,24 @@
   letter-spacing: 0.05em;
 }
 
+/*
+ * Campo de tempo, Continuar e Cancelar lado a lado.
+ *
+ * Os botões ficam colados ao campo, e não no fim da tela: são o próximo toque
+ * de quem acabou de digitar, e no tablet o teclado virtual cobre a metade de
+ * baixo. Em tela estreita eles descem para baixo do campo, inteiros.
+ */
+.linhaTempo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.linhaTempo .entrada {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
 .entrada:focus-visible,
 .item:focus-visible,
 .botao:focus-visible {
