@@ -37,12 +37,14 @@ import { alternar, temaDaRequisicao } from '@/shared/tema'
  * instantânea entre abas é conforto; peso é o requisito.
  */
 
-type Rota = 'inscricao' | 'classificacao' | 'termo'
+export type Rota = 'inscricao' | 'classificacao' | 'termo' | 'privacidade' | 'termos'
 
 const CAMINHOS: Readonly<Record<Rota, string>> = {
   inscricao: '/',
   classificacao: '/classificacao',
   termo: '/termo',
+  privacidade: '/privacidade',
+  termos: '/termos',
 }
 
 const LINKS: readonly { rota: Rota; texto: string }[] = [

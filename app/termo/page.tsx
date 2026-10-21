@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import estilos from './termo.module.css'
 import Cabecalho from '../_componentes/Cabecalho'
+import Rodape from '../_componentes/Rodape'
 import { TERMO_VIGENTE } from '@/contexts/inscricao/consentimento'
 import type { Bloco, Secao } from '@/contexts/inscricao/consentimento'
 
@@ -147,6 +148,8 @@ export default function TermoPage() {
           </a>
         </footer>
       </main>
+
+      <Rodape />
     </>
   )
 }

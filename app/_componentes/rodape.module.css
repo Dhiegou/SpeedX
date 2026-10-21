@@ -1,0 +1,39 @@
+/*
+ * Rodapé das páginas públicas (D-109).
+ *
+ * Discreto de propósito: quem está na fila veio se inscrever, e estes links
+ * existem para quem procura os documentos, não para disputar atenção.
+ */
+
+.rodape {
+  border-top: 1px solid var(--borda);
+}
+
+.interior {
+  max-width: var(--largura-site);
+  margin: 0 auto;
+  padding: var(--espaco-4) var(--margem-site);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espaco-1) var(--espaco-4);
+}
+
+.link {
+  /* 44px de alvo de toque, como o resto da interface (RNF-18). */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--tinta-suave);
+  font-size: var(--texto-apoio);
+  font-weight: 600;
+}
+
+.link:hover {
+  color: var(--marca);
+}
+
+.link:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-recuo);
+}

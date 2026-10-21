@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { connection } from 'next/server'
 import Cabecalho from './_componentes/Cabecalho'
 import FormularioInscricao from './_componentes/FormularioInscricao'
+import Rodape from './_componentes/Rodape'
 import { LINK_TERMO, TERMO_VIGENTE } from '@/contexts/inscricao/consentimento'
 import { emitirTokenFormulario } from '@/contexts/inscricao/tokenFormulario'
 import { registrarOperacao } from '@/shared/log'
@@ -45,6 +46,7 @@ export default async function Home() {
         versaoTermo={TERMO_VIGENTE.versao}
         linkTermo={LINK_TERMO}
       />
+      <Rodape />
     </>
   )
 }

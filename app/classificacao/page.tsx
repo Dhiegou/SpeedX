@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Classificacao from './Classificacao'
 import Cabecalho from '../_componentes/Cabecalho'
+import Rodape from '../_componentes/Rodape'
 import { documentoDaClassificacao } from '@/contexts/classificacao/projecao'
 
 /**
@@ -47,6 +48,7 @@ export default async function PaginaDaClassificacao() {
     <>
       <Cabecalho atual="classificacao" />
       <Classificacao inicial={documento} />
+      <Rodape />
     </>
   )
 }

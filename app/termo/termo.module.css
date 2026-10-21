@@ -126,6 +126,12 @@
   margin-bottom: 0.25rem;
 }
 
+/* A remissão ao termo, dentro do texto da política e dos termos de uso. */
+.linkEmTexto {
+  color: var(--marca);
+  font-weight: 600;
+}
+
 /* Aviso de rascunho: visível ao público de propósito (ver o componente). */
 .rascunho {
   border: 1px solid var(--acento);

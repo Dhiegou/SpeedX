@@ -1993,6 +1993,24 @@ A derivação acontece antes da transação, para os 0,2 s de scrypt não segura
 
 **Testes.** `tests/identidade.test.ts` ganhou o caminho completo (a senha velha para de entrar, a nova entra, a sessão anterior morre), o destravamento junto, o usuário inexistente, a senha curta e a conta desativada. `tests/formularioLogin.test.tsx` cobre o botão.
 
+### D-109 — Política de privacidade e termos de uso, sem tocar no termo
+
+**Decidido em 2026-10-20**, a quatro dias do evento. Pedido em `PRD-conformidade-legal.md`.
+
+**Duas páginas novas, `/privacidade` e `/termos`, e um rodapé** com os três documentos em todas as páginas públicas. O termo `v1.1` não mudou: versão nova nasce rascunho e bloqueia o cadastro (D-18).
+
+**Decisões do organizador nesta sessão:** o controlador é **Dhiego Ferreira, pessoa física**; o canal é **dhiegodev@hotmail.com**, o mesmo do termo, sem encarregado à parte; a inscrição **garante** a vez de correr; o foro é **São Paulo/SP**.
+
+**A política remete ao termo em vez de reescrevê-lo.** Os textos ficam em `src/contexts/inscricao/documentos/`, com um modelo próprio (`DocumentoLegal`), e não no de `TermoConsentimento`: são documentos informativos, sem aceite, sem rascunho, sem hash, e não bloqueiam nada. O bloco `remissao` existe para a frase que termina num link para a seção do termo. `tests/documentosLegais.test.ts` lê o termo vigente e recusa e-mail diferente, prazo diferente, repasse diferente e remissão para seção que não existe.
+
+**A página reaproveita `termo.module.css`.** Os três documentos são texto para ler, com a mesma medida e o mesmo índice. A única classe nova é `.linkEmTexto`, curta de propósito: o CSS do `/termo` vai embutido na página (D-106), e a folga de peso ali era de 0,8 KB.
+
+**Uma informação está na política e não no termo:** a Vercel e a Neon guardam os dados por conta da organização, em São Paulo. Não é repasse, e a política diz isso, mas é o único ponto em que ela acrescenta algo ao termo em vez de remeter a ele.
+
+**O resultado por e-mail ou WhatsApp.** A pedido do organizador, a política diz que o resultado pode ir numa mensagem automática por e-mail ou por WhatsApp. O e-mail está coberto pelo termo; o WhatsApp para todos não está, porque o termo limita o telefone aos ganhadores e ao dia do evento. O organizador decidiu sabendo disso. A política não cria o consentimento que o termo não deu, e o envio automático não existe no sistema.
+
+**O que fica em aberto, e não é código:** o WhatsApp acima; mandá-lo só aos ganhadores estaria coberto. A vaga garantida, com um Cockpit e 2000 inscritos previstos, é promessa por escrito. O procedimento de contestação (no Cockpit no dia, por e-mail até 3/11) é minuta para a equipe confirmar. Registro completo em `docs/conformidade-legal.md`.
+
 ---
 
 ## 4. Premissas assumidas
