@@ -45,9 +45,23 @@ export const participante = pgTable(
     /** Somente dígitos. Os últimos quatro são derivados na leitura (RF-15). */
     telefone: text('telefone').notNull(),
     idade: smallint('idade').notNull(),
+    /**
+     * Número de inscrição: 1, 2, 3… e na tela 0001, 0002, 0003 (D-112).
+     *
+     * Coluna, e não a ordem de `criado_em`, por causa da exclusão a pedido que
+     * o termo promete: com número derivado, apagar uma pessoa renumeraria todo
+     * mundo depois dela, e o número que alguém anotou deixaria de ser o seu.
+     *
+     * `GENERATED ALWAYS` é o que sustenta as invariantes sem depender de código:
+     * o banco atribui no `insert`, recusa valor escrito à mão e recusa `UPDATE`;
+     * a sequência nunca devolve um número já entregue, então o de quem foi
+     * excluído fica vago para sempre.
+     */
+    numero: integer('numero').generatedAlwaysAsIdentity(),
     criadoEm: timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    unique('participante_numero_unico').on(t.numero),
     // RF-04: idade inferior a 13 não produz Participante. No banco, porque é
     // requisito legal — não pode depender de qual caminho de código gravou.
     check('participante_idade_minima', sql`${t.idade} >= 13`),

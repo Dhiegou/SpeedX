@@ -2041,6 +2041,33 @@ A derivação acontece antes da transação, para os 0,2 s de scrypt não segura
 
 **Fora do escopo, mas visto:** o termo ainda fala em "a pista" duas vezes, de antes de D-107. Uma mudança por versão; fica para a próxima, se houver.
 
+### D-112 — Número de inscrição: coluna no banco, e não a ordem de inscrição
+
+**Decidido em 2026-10-21**, a três dias do evento. Pedido em `PRD-numero-de-inscricao.md`: com 2000 participantes, dois "Dhiego Ferreira" na classificação são indistinguíveis, e entre menores é pior, porque "João S." colide fácil.
+
+**O número não é derivado, e o motivo é a LGPD.** Calculá-lo pela ordem de `criado_em` evitaria a migração, e quebraria na primeira exclusão a pedido: todo mundo depois de quem saiu mudaria de número. Por isso `participante.numero` é identity `GENERATED ALWAYS` (migração `0005`), com `UNIQUE`. O banco atribui no `insert`, recusa valor escrito à mão e recusa `UPDATE`, e a sequência nunca devolve um número já entregue. `tests/numeroDeInscricao.test.ts` exclui alguém pelo caminho de produção (`excluirParticipante`) e confere que ninguém mudou de número e que o vago não volta.
+
+**Onde aparece:** em destaque na confirmação, com quatro dígitos (`formatarNumero`, em `src/shared/numeroDeInscricao.ts`); na exportação, como `numero_inscricao`, inteiro; e na busca da classificação e do painel. Termo só de dígitos (com zeros ou `#`) é número e casa por igualdade. O resto é nome, por trecho. Nenhum nome tem dígito, então as buscas não se confundem.
+
+**Na classificação, buscável e não exibido.** Uma quinta coluna apertaria 360px (RNF-18). Como a busca roda no navegador, o número viaja no documento: a linha passou de `[nome, tempo]` a `[nome, tempo, numero]`, com o número no fim para que uma aba antiga continue lendo os dois primeiros. Ele fica visível a quem abrir as ferramentas do navegador. É arbitrário, não deriva de nada da pessoa e está ao lado de um nome que já é público. Revela só a ordem de inscrição. **Não é privado, e ninguém deve prometer que é.**
+
+**Peso, medido sobre o seed de 2000 inscritos**, no documento que vai embutido em `/classificacao` e servido por `/api/classificacao`:
+
+| massa | antes | depois | acréscimo |
+| --- | --- | --- | --- |
+| seed, 1628 com tempo | 7,0 KB gzip | 10,8 KB gzip | +3,9 KB |
+| fim do evento, 2000 com tempo | 11,3 KB gzip | 16,2 KB gzip | +4,9 KB |
+
+O plano B do PRD (número só onde o nome público se repete) economizaria 0,2 KB no seed, porque lá 1923 das 2000 linhas têm nome repetido. Com nomes reais a conta é outra, mas não há como medi-la antes do evento. **`npm run orcamento` e o teste de carga não foram rodados:** os dois pedem a aplicação de pé contra o banco, e a rede desta sessão bloqueia a porta 5432 do Neon.
+
+**A migração não foi aplicada.** Pelo mesmo bloqueio, e porque `npm run db:migrate` com `DATABASE_URL_UNPOOLED` declarada já escolhe a string direta (`docs/deploy.md` §3). As linhas que já existem recebem número na própria migração, porque a coluna é `NOT NULL`. **O código novo não pode ir ao ar antes da migração:** ele lê `participante.numero`, e sem a coluna a inscrição e a classificação quebram.
+
+### D-113 — Não haverá material impresso
+
+**Decidido em 2026-10-21** pelo organizador. O material de contingência de T20 existia para um cenário nomeado: a internet cai no local e o cadastro para. Sem papel, esse cenário não tem plano B, e o mesmo vale para o painel: se cair durante a corrida, não há onde anotar tempo.
+
+**A documentação foi alinhada para não mandar ninguém procurar ficha:** `docs/contingencia.md` foi reescrito (o procedimento em papel continua no git), `docs/plano-do-dia.md` deixou de pedir impressão, e `docs/checklist-pre-evento.md` riscou o ensaio de fichas. **O gerador fica** (`npm run fichas`, com os testes de RNF-06 e RNF-07): removê-lo a três dias é risco sem retorno, e ele serve a um próximo evento.
+
 ---
 
 ## 4. Premissas assumidas

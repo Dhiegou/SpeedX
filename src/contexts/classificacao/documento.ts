@@ -30,15 +30,19 @@ import type { DocumentoClassificacao, LinhaClassificacao } from './modelo'
  */
 
 /**
- * `[nomePublico, tempoMs]`. A posição no array é a classificação.
+ * `[nomePublico, tempoMs, numero]`. A posição no array é a classificação.
  *
  * Até D-107 havia o Cockpit no meio, `[nomePublico, cockpit, tempoMs]`. A
  * página e a rota mudam no mesmo deploy; o que fica descasado é uma aba aberta
  * antes dele (ou uma resposta ainda nos 15 s da borda), que lê a forma errada
  * até recarregar. O deploy acontece antes do evento, sem público na página, e
  * é por isso que o custo foi aceito em vez de manter uma coluna constante.
+ *
+ * O número de inscrição entrou no fim em D-112, e não no meio, por isso: uma
+ * aba antiga que lê `[nome, tempo]` continua lendo certo, só não acha número.
+ * Ele viaja para a busca no navegador e não é desenhado na tabela.
  */
-export type LinhaCompacta = readonly [string, number]
+export type LinhaCompacta = readonly [string, number, number]
 
 export type DocumentoTransmitido = {
   /** Instante em que a projeção foi gerada (RF-32). */
@@ -55,6 +59,7 @@ export function compactar(documento: DocumentoClassificacao): DocumentoTransmiti
     linhas: documento.linhas.map((l: LinhaClassificacao): LinhaCompacta => [
       l.nomePublico,
       l.tempoMs,
+      l.numero,
     ]),
   }
 }

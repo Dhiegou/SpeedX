@@ -183,9 +183,9 @@ pessoas.
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | Termo aprovado por escrito                 | `v1.0-2026-08-19`, registro em `docs/aprovacao-termo.md`. Sob rascunho o cadastro é impossível por construção |
 | Prazo de retenção acordado e datado        | `docs/retencao.md`: vence em **04/11/2026, 00:00** em São Paulo                                               |
-| Material de contingência gerado            | `npm run fichas` — ficha, termo impresso e folha de tempos, do mesmo termo que a tela (T20)                   |
+| Material de contingência                   | **Não haverá papel** (D-113, 21/10). `npm run fichas` continua gerando, para um próximo evento                |
 | Relatório de pendências para o organizador | `GET /api/exportacao?tipo=pendencias` (T14), com sessão                                                       |
-| Plano de resposta do dia                   | `docs/plano-do-dia.md`, uma página, para imprimir                                                             |
+| Plano de resposta do dia                   | `docs/plano-do-dia.md`, uma página, salva no celular de quem responde                                         |
 
 ### O que falta, com dono e consequência
 
@@ -200,7 +200,7 @@ pessoas.
 | 3.7  | Restauração de backup testada em homologação                                          | time técnico               | Backup não testado não é backup                                                                                              |
 | 3.8  | Deploys congelados no dia; reversão distribuída                                       | responsável técnico        | Publicação às pressas no único dia sem segunda chance                                                                        |
 | 3.9  | QR impresso e testado com **três leitores**                                           | time do evento             | Resíduo de RF-01; a fila no ponto do QR é contraindicador do PRD §7                                                          |
-| 3.10 | **Ensaio da contingência**: 5 fichas preenchidas, digitadas, conferidas               | time do evento             | Procedimento nunca ensaiado falha na hora                                                                                    |
+| 3.10 | ~~Ensaio da contingência em papel~~: **saiu em 21/10**, não haverá papel (D-113)      | —                          | Sem papel, internet fora para o cadastro e o lançamento até voltar; ver `docs/contingencia.md`                               |
 | 3.11 | Ensaio do expurgo total contra banco real                                             | time técnico               | T15 deixou aberto para não apagar a massa de T18                                                                             |
 | 3.12 | Quem executa o expurgo saber que **apagar o banco não tira o site do ar**             | responsável técnico        | O termo prometeu as duas coisas (`deploy.md` §6)                                                                             |
 | 3.19 | **Disparador de 1 a 3 minutos** contra `/api/saude`, com confirmação antes de alertar | time técnico               | O banco suspende em 5 min e um monitor de 5 min empata com ele; sem isso o primeiro do dia leva 503 (D-91)                   |

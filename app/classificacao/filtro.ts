@@ -1,4 +1,5 @@
 import type { LinhaCompacta } from '@/contexts/classificacao'
+import { lerNumero } from '@/shared/numeroDeInscricao'
 import { normalizar } from '@/shared/texto'
 
 /**
@@ -23,6 +24,8 @@ export type LinhaExibida = {
   readonly posicao: number
   readonly nomePublico: string
   readonly tempoMs: number
+  /** Número de inscrição: a busca o encontra, a tabela não o desenha (D-112). */
+  readonly numero: number
   /** Índice no documento. Serve de chave estável de renderização. */
   readonly indice: number
 }
@@ -34,16 +37,25 @@ export type LinhaExibida = {
  * Desde D-107 não há filtro que a renumere: a posição de cada pessoa é uma só.
  */
 export function classificar(linhas: readonly LinhaCompacta[]): readonly LinhaExibida[] {
-  return linhas.map(([nomePublico, tempoMs], indice) => ({
+  return linhas.map(([nomePublico, tempoMs, numero], indice) => ({
     posicao: indice + 1,
     nomePublico,
     tempoMs,
+    numero,
     indice,
   }))
 }
 
-/** Índices das linhas que casam o termo, sem acento e sem caixa (RF-30). */
+/**
+ * Índices das linhas que casam o termo (RF-30).
+ *
+ * Termo só de dígitos é número de inscrição, e casa por igualdade: "84" não
+ * pode destacar o 0840 e o 0841, porque quem digita o número quer uma linha, a
+ * sua (D-112). O resto é nome, por trecho, sem acento e sem caixa. Nenhum nome
+ * tem dígito, então as duas buscas não se confundem.
+ */
 export function encontrar(linhas: readonly LinhaExibida[], termo: string): ReadonlySet<number> {
+  const numero = lerNumero(termo)
   const alvo = normalizar(termo.trim())
 
   if (alvo === '') return new Set()
@@ -51,7 +63,10 @@ export function encontrar(linhas: readonly LinhaExibida[], termo: string): Reado
   const achados = new Set<number>()
 
   for (const linha of linhas) {
-    if (normalizar(linha.nomePublico).includes(alvo)) achados.add(linha.indice)
+    const casa =
+      numero === null ? normalizar(linha.nomePublico).includes(alvo) : linha.numero === numero
+
+    if (casa) achados.add(linha.indice)
   }
 
   return achados

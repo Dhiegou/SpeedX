@@ -161,8 +161,8 @@ describe('BC-05 — o registro pessoal completo mora num contexto só', () => {
   })
 })
 
-describe('RNF-08 — o documento público tem duas posições, e só', () => {
-  it('a linha transmitida é [nomePublico, tempoMs]', () => {
+describe('RNF-08 — o documento público tem três posições, e só', () => {
+  it('a linha transmitida é [nomePublico, tempoMs, numero]', () => {
     const documento = compactar({
       geradoEm: '2026-10-24T12:00:00.000Z',
       linhas: [
@@ -171,18 +171,23 @@ describe('RNF-08 — o documento público tem duas posições, e só', () => {
           nomePublico: 'Marina C.',
           tempoMs: 83_450,
           registradoEm: '2026-10-24T11:59:00.000Z',
+          numero: 847,
         },
       ],
     })
 
     const [linha] = documento.linhas
 
-    expect(linha).toEqual(['Marina C.', 83_450])
-    // Um terceiro campo é barato de acrescentar e caro de perceber. O `id` e o
+    expect(linha).toEqual(['Marina C.', 83_450, 847])
+    // Um quarto campo é barato de acrescentar e caro de perceber. O `id` e o
     // `registradoEm` ficaram de fora de propósito (T12): o instante exato em
     // que uma pessoa nomeada esteve num lugar é exposição por outra porta. O
     // Cockpit saiu em D-107, por valer sempre o mesmo.
-    expect(linha).toHaveLength(2)
+    //
+    // O número de inscrição entrou em D-112, e entrou sabendo: a busca roda no
+    // navegador, então ele precisa estar no documento. É arbitrário, não deriva
+    // de nada da pessoa e não é segredo. Revela só a ordem de inscrição.
+    expect(linha).toHaveLength(3)
     expect(Object.keys(documento).sort()).toEqual(['geradoEm', 'linhas', 'total'])
   })
 

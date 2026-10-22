@@ -21,11 +21,11 @@ function documento(linhas: readonly LinhaCompacta[]): DocumentoTransmitido {
 }
 
 const BASE: readonly LinhaCompacta[] = [
-  ['Ana Lima', 80_000],
-  ['Bruno Souza', 81_000],
-  ['Carla Dias', 82_000],
-  ['Diego Ferreira', 83_000],
-  ['Fábio Assunção', 84_450],
+  ['Ana Lima', 80_000, 412],
+  ['Bruno Souza', 81_000, 7],
+  ['Carla Dias', 82_000, 847],
+  ['Diego Ferreira', 83_000, 1203],
+  ['Fábio Assunção', 84_450, 84],
 ]
 
 beforeEach(() => {
@@ -36,7 +36,7 @@ beforeEach(() => {
     return Promise.resolve({
       ok: true,
       status: 200,
-      json: () => Promise.resolve(documento([...BASE, ['Gabriel Novo', 85_000]])),
+      json: () => Promise.resolve(documento([...BASE, ['Gabriel Novo', 85_000, 1900]])),
     } as Response)
   })
 })
@@ -131,6 +131,45 @@ describe('busca por nome (RF-30)', () => {
   })
 })
 
+describe('busca por número de inscrição (D-112)', () => {
+  it('digitar o número destaca a linha da pessoa, com as vizinhas', async () => {
+    const teclado = montar()
+
+    await teclado.type(screen.getByRole('searchbox'), '0847')
+
+    const destacadas = screen
+      .getAllByRole('row')
+      .filter((l) => l.getAttribute('aria-current') === 'true')
+
+    expect(destacadas).toHaveLength(1)
+    expect(destacadas[0]?.textContent).toContain('Carla Dias')
+    expect(screen.getByText('Bruno Souza')).toBeTruthy()
+    expect(chamadas).toHaveLength(0)
+  })
+
+  it('o número está no documento, e não na tabela', () => {
+    montar()
+
+    // Uma quinta coluna apertaria 360px (RNF-18). O número existe para a
+    // busca, e quem olha a tabela não o vê em lugar nenhum.
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual([
+      '#',
+      'Nome',
+      'Tempo',
+    ])
+    expect(screen.getByRole('table').textContent).not.toMatch(/0847|847/)
+  })
+
+  it('número sem tempo explica o motivo, e não fala em grafia', async () => {
+    const teclado = montar()
+
+    await teclado.type(screen.getByRole('searchbox'), '9999')
+
+    expect(screen.getByText(/Nenhum tempo registrado para o número 9999/)).toBeTruthy()
+    expect(screen.queryByText(/Confira a grafia/)).toBeNull()
+  })
+})
+
 describe('atualização (RF-32)', () => {
   it('mostra há quanto tempo, com o instante exato no title', () => {
     montar()
@@ -169,6 +208,7 @@ describe('volume (RF-33)', () => {
   const muitas: readonly LinhaCompacta[] = Array.from({ length: 250 }, (_, i): LinhaCompacta => [
     `Pessoa ${String(i + 1)}`,
     80_000 + i,
+    i + 1,
   ])
 
   it('as 100 primeiras aparecem sem interação nenhuma', () => {

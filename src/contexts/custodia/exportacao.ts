@@ -43,6 +43,7 @@ export function ehTipoValido(valor: unknown): valor is TipoDeExportacao {
 
 const CABECALHO_COMPLETO = [
   'participante_id',
+  'numero_inscricao',
   'nome',
   'sobrenome',
   'email',
@@ -70,6 +71,9 @@ const sn = (b: boolean | null): string => (b === null ? '' : b ? 'sim' : 'nao')
 function linhaCompleta(l: LinhaDaExportacao): string {
   return linha([
     l.participanteId,
+    // Inteiro, sem os zeros da tela (D-112): a planilha os tiraria de qualquer
+    // jeito, e o número continua o mesmo para ordenar e procurar.
+    l.numero,
     l.nome,
     l.sobrenome,
     l.email,

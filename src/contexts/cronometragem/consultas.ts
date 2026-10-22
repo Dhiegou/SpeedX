@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, or, sql } from 'drizzle-orm'
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import { COCKPIT_UNICO } from '@/contexts/inscricao/contrato'
 import * as schema from '@/db/schema'
+import { lerNumero } from '@/shared/numeroDeInscricao'
 import { normalizarNoBanco, padraoDeBusca } from './busca'
 import type {
   EstadoDaTentativa,
@@ -58,6 +59,22 @@ function casaONome(padrao: string) {
 }
 
 /**
+ * O filtro da busca, ou `undefined` quando não há o que buscar.
+ *
+ * Termo só de dígitos é número de inscrição, e casa por igualdade (D-112): a
+ * pessoa chega dizendo "sou o 847", e o Operador lança sem conferir homônimo
+ * pelos quatro dígitos do telefone. O resto é nome, por trecho. Nenhum nome tem
+ * dígito, então as duas buscas não se confundem.
+ */
+function casaABusca(termo: string | undefined) {
+  const numero = lerNumero(termo ?? '')
+  if (numero !== null) return eq(schema.participante.numero, numero)
+
+  const padrao = padraoDeBusca(termo)
+  return padrao === null ? undefined : casaONome(padrao)
+}
+
+/**
  * Pendentes do único Cockpit.
  *
  * Com `cockpit` sempre 1 (D-107), a condição não filtra nada, e fica mesmo
@@ -85,7 +102,6 @@ export async function listarFila(
   filtro: { busca?: string; limite?: number } = {},
 ): Promise<Pagina<ItemDaFila>> {
   const limite = filtro.limite ?? LIMITE_DA_FILA
-  const padrao = padraoDeBusca(filtro.busca)
 
   const linhas = await db
     .select({
@@ -100,7 +116,7 @@ export async function listarFila(
     })
     .from(schema.tentativa)
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
-    .where(and(PENDENTE, padrao === null ? undefined : casaONome(padrao)))
+    .where(and(PENDENTE, casaABusca(filtro.busca)))
     .orderBy(asc(schema.tentativa.inscritoEm))
     .limit(limite + 1)
 
@@ -132,11 +148,11 @@ export async function buscarParticipantes(
   filtro: { busca: string; limite?: number },
 ): Promise<Pagina<ParticipanteEncontrado>> {
   const limite = filtro.limite ?? LIMITE_DA_BUSCA
-  const padrao = padraoDeBusca(filtro.busca)
+  const condicao = casaABusca(filtro.busca)
 
   // Busca vazia devolve vazio, e não a base inteira. Na Fila o campo em branco
   // significa "mostre a fila"; aqui significaria "despeje os 2000 cadastros".
-  if (padrao === null) return { itens: [], truncado: false }
+  if (condicao === undefined) return { itens: [], truncado: false }
 
   const pessoas = await db
     .select({
@@ -146,7 +162,7 @@ export async function buscarParticipantes(
       ultimos4Telefone: ULTIMOS_4,
     })
     .from(schema.participante)
-    .where(casaONome(padrao))
+    .where(condicao)
     .orderBy(asc(schema.participante.nome), asc(schema.participante.sobrenome))
     .limit(limite + 1)
 

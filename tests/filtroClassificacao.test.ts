@@ -17,14 +17,16 @@ import type { LinhaCompacta } from '@/contexts/classificacao'
  * RF-29 saiu com D-107: a posição de cada pessoa agora é uma só.
  */
 
+// O número de inscrição não acompanha a posição: inscrever-se cedo não é
+// correr bem. Por isso os números aqui vêm fora de ordem (D-112).
 const DOC: readonly LinhaCompacta[] = [
-  ['Ana Lima', 80_000],
-  ['Bruno Souza', 81_000],
-  ['Carla Dias', 82_000],
-  ['Diego Ferreira', 83_000],
-  ['Elisa Marinho', 84_000],
-  ['Fábio Assunção', 85_000],
-  ['Gabriela Nunes', 86_000],
+  ['Ana Lima', 80_000, 412],
+  ['Bruno Souza', 81_000, 7],
+  ['Carla Dias', 82_000, 847],
+  ['Diego Ferreira', 83_000, 1203],
+  ['Elisa Marinho', 84_000, 84],
+  ['Fábio Assunção', 85_000, 840],
+  ['Gabriela Nunes', 86_000, 33],
 ]
 
 describe('numeração (D-107)', () => {
@@ -45,6 +47,7 @@ describe('numeração (D-107)', () => {
     expect(Object.keys(classificar(DOC)[0] ?? {}).sort()).toEqual([
       'indice',
       'nomePublico',
+      'numero',
       'posicao',
       'tempoMs',
     ])
@@ -80,6 +83,34 @@ describe('busca por nome (RF-30)', () => {
   })
 })
 
+describe('busca por número de inscrição (D-112)', () => {
+  const linhas = classificar(DOC)
+
+  it('acha a linha do número, com ou sem os zeros e o #', () => {
+    for (const termo of ['847', '0847', '#0847', ' 847 ']) {
+      expect(encontrar(linhas, termo), termo).toEqual(new Set([2]))
+    }
+  })
+
+  it('casa por igualdade, e não por trecho', () => {
+    // "84" é o 0084, e não o 0840 nem o 0847. Quem digita o número quer uma
+    // linha só, a sua.
+    expect(encontrar(linhas, '84')).toEqual(new Set([4]))
+  })
+
+  it('número sem tempo registrado não acha nada', () => {
+    expect(encontrar(linhas, '9999')).toEqual(new Set())
+    expect(encontrar(linhas, '0')).toEqual(new Set())
+  })
+
+  it('o número segue para a vizinhança como a busca por nome (RF-30)', () => {
+    const blocos = montarBlocos(linhas, encontrar(linhas, '1203'), 100)
+
+    if (blocos[0]?.tipo !== 'linhas') throw new Error('esperava bloco de linhas')
+    expect(blocos[0].linhas.map((l) => l.posicao)).toEqual([2, 3, 4, 5, 6])
+  })
+})
+
 describe('o que a tabela mostra (RF-30, RF-33)', () => {
   const linhas = classificar(DOC)
 
@@ -92,7 +123,11 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
 
   it('as posições 1 a 100 aparecem sem interação (RF-33)', () => {
     const muitas = classificar(
-      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 80_000 + i]),
+      Array.from({ length: 500 }, (_, i): LinhaCompacta => [
+        `Pessoa ${String(i)}`,
+        80_000 + i,
+        i + 1,
+      ]),
     )
 
     const blocos = montarBlocos(muitas, new Set(), 100)
@@ -141,7 +176,11 @@ describe('o que a tabela mostra (RF-30, RF-33)', () => {
     // Quem está em 400º precisa se achar mesmo com só 100 linhas carregadas —
     // senão a busca só serviria para quem já estava visível.
     const muitas = classificar(
-      Array.from({ length: 500 }, (_, i): LinhaCompacta => [`Pessoa ${String(i)}`, 80_000 + i]),
+      Array.from({ length: 500 }, (_, i): LinhaCompacta => [
+        `Pessoa ${String(i)}`,
+        80_000 + i,
+        i + 1,
+      ]),
     )
 
     const blocos = montarBlocos(muitas, encontrar(muitas, 'Pessoa 400'), 100)

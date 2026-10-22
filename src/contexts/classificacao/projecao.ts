@@ -52,6 +52,7 @@ export async function projetarClassificacao(
       // Lida para decidir o formato do nome, e só. Não há campo para ela no
       // modelo de saída — ver o cabeçalho deste arquivo.
       idade: schema.participante.idade,
+      numero: schema.participante.numero,
     })
     .from(schema.tentativa)
     .innerJoin(schema.participante, eq(schema.participante.id, schema.tentativa.participanteId))
@@ -79,6 +80,7 @@ export async function projetarClassificacao(
       }),
       tempoMs: l.tempoMs ?? 0,
       registradoEm: (l.resolvidoEm ?? agora).toISOString(),
+      numero: l.numero,
     })),
   }
 }

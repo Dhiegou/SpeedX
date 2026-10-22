@@ -50,6 +50,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export type RespostaInscricao = {
   readonly nome: string
   readonly sobrenome: string
+  /**
+   * O número de inscrição (D-112). Opcional no tipo porque um reenvio
+   * idempotente devolve o corpo guardado na primeira vez, e o que foi guardado
+   * antes desta coluna existir não o tem.
+   */
+  readonly numero?: number
 }
 
 export type ComandoInscricao = {
@@ -105,6 +111,9 @@ function respostaDeFachada(corpo: unknown): RespostaInscricao {
   return {
     nome: texto('nome'),
     sobrenome: texto('sobrenome'),
+    // Sem número, a resposta denunciaria a armadilha. Qualquer um na faixa de
+    // um evento de 2000 pessoas serve: nada foi gravado, e ninguém o procura.
+    numero: 1 + Math.floor(Math.random() * 2000),
   }
 }
 
@@ -181,19 +190,27 @@ export async function submeterInscricao(
     return { situacao: 'limite_excedido', esperarSegundos: veredito.esperarSegundos }
   }
 
-  const resposta: RespostaInscricao = {
-    nome: inscricao.nome,
-    sobrenome: inscricao.sobrenome,
-  }
+  let resposta: RespostaInscricao
 
   try {
-    await db.transaction(async (tx) => {
+    resposta = await db.transaction(async (tx) => {
       // Cadastro, cota e chave na mesma transação. Se qualquer um falhar, os
       // três somem: é isso que faz o reenvio devolver a resposta original em
       // vez de um segundo Participante (SDD §4.3, FL-03).
-      await registrarInscricao(tx, comando.corpo)
+      const registrada = await registrarInscricao(tx, comando.corpo)
+
+      // Montada depois do `insert`, porque o número é o banco quem dá. E vai
+      // para o efeito guardado: o reenvio mostra o mesmo número, e não outro.
+      const efeito: RespostaInscricao = {
+        nome: inscricao.nome,
+        sobrenome: inscricao.sobrenome,
+        numero: registrada.numero,
+      }
+
       await consumirLimite(tx, ESCOPO_CADASTRO, identificador)
-      await guardarEfeito(tx, chave, ESCOPO_CADASTRO, digestao, resposta)
+      await guardarEfeito(tx, chave, ESCOPO_CADASTRO, digestao, efeito)
+
+      return efeito
     })
   } catch (erro) {
     if (!violouUnicidade(erro)) throw erro

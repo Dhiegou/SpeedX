@@ -1,10 +1,13 @@
 # Plano de resposta — 24 de outubro de 2026
 
-Uma página. **Para imprimir e levar**, porque o dia em que ela é necessária pode
-ser o dia em que a rede do local não abre um site (T19 §7, RNF-05).
+Uma página. **Salve no celular antes do dia** (PDF ou captura de tela), porque
+o dia em que ela é necessária pode ser o dia em que a rede do local não abre um
+site (T19 §7, RNF-05).
 
-Contingência em papel do cadastro é outro documento — é T20, e vale quando o
-problema é a internet, não o sistema.
+**Não haverá material impresso** (D-113, decidido em 21/10). Se a internet cair,
+cadastro e lançamento de tempo param até ela voltar: não há ficha nem folha de
+tempo para onde passar. O que fazer nesse caso está em
+[`contingencia.md`](contingencia.md).
 
 ---
 
@@ -106,6 +109,7 @@ Se passar disso, o problema não é o cache. Confira `/api/saude` e o log.
 | classificação parada há mais de 1 min    | `/api/classificacao` direto no navegador — se responde, é a tela      |
 | Operador não consegue entrar             | sessão expirada, ou limite de login por senha errada — esperar 15 min |
 | tudo de pé e a fila parada               | não é o sistema. Falar com o organizador                              |
+| internet do local caiu                   | sem papel: avisar, pausar a fila, seguir `contingencia.md`            |
 
 ---
 

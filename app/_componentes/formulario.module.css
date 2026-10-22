@@ -465,6 +465,35 @@
  * "consegui" — e é a única confirmação que ela leva da tela. Entrelinha curta
  * para que um nome composto continue lendo como um bloco só.
  */
+/*
+ * O número de inscrição (D-112): a informação principal da tela.
+ *
+ * Maior que o nome, porque é o que a pessoa precisa anotar ou fotografar, e
+ * tabular para os quatro dígitos não dançarem de largura.
+ */
+.numeroInscricao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-1);
+  margin: 0 0 var(--espaco-3);
+}
+
+.numeroRotulo {
+  font-size: var(--texto-apoio);
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.numeroValor {
+  font-size: var(--texto-heroi);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--marca);
+}
+
 .nomeConfirmado {
   font-size: var(--texto-maior);
   font-weight: 800;

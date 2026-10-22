@@ -11,6 +11,7 @@ import {
 import type { Aceite, AceiteId } from '@/contexts/inscricao/consentimento'
 import { paraErrosDeValidacao, type ErroDeValidacao } from '@/contexts/inscricao/erros'
 import { IDADE_MAIORIDADE, IDADE_MINIMA } from '@/contexts/inscricao/idades'
+import { formatarNumero } from '@/shared/numeroDeInscricao'
 import estilos from './formulario.module.css'
 
 /**
@@ -55,7 +56,7 @@ export type PropsFormulario = {
   readonly linkTermo: { readonly href: string; readonly target: string; readonly rel: string }
 }
 
-type Confirmacao = { nome: string; sobrenome: string }
+type Confirmacao = { nome: string; sobrenome: string; numero?: number }
 
 /** Falhas que não são de campo: rede, limite, servidor. */
 type Contratempo =
@@ -631,7 +632,14 @@ function Aviso({ contratempo }: { contratempo: Contratempo }) {
   )
 }
 
-/** Tela de sucesso (RF-10): o nome registrado. */
+/**
+ * Tela de sucesso (RF-10): o número de inscrição e o nome registrado.
+ *
+ * O número vem antes do nome porque é o que a pessoa precisa levar daqui
+ * (D-112): com 2000 inscritos, o nome dela pode se repetir na classificação, e
+ * o número não. Um reenvio guardado antes da coluna existir chega sem ele, e aí
+ * a tela mostra só o nome, como antes.
+ */
 function Confirmado({ dados }: { dados: Confirmacao }) {
   return (
     <main className={estilos.confirmacao}>
@@ -647,10 +655,24 @@ function Confirmado({ dados }: { dados: Confirmacao }) {
 
         <h1 className={estilos.tituloSucesso}>Inscrição concluída</h1>
 
+        {dados.numero !== undefined && (
+          <p className={estilos.numeroInscricao}>
+            <span className={estilos.numeroRotulo}>Seu número de inscrição</span>
+            <span className={estilos.numeroValor}>{formatarNumero(dados.numero)}</span>
+          </p>
+        )}
+
         <p className={estilos.nomeConfirmado}>
           {dados.nome} {dados.sobrenome}
         </p>
       </div>
+
+      {dados.numero !== undefined && (
+        <p className={estilos.proximoPasso}>
+          <strong>Guarde este número.</strong> Diga-o na hora de correr, e digite-o na busca da
+          classificação para achar a sua linha.
+        </p>
+      )}
 
       <p className={estilos.proximoPasso}>
         <strong>Agora:</strong> procure a organização no ponto de inscrição para saber o horário da

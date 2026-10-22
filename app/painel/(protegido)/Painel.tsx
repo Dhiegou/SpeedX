@@ -427,8 +427,8 @@ export default function Painel({ operador }: Props) {
       <div className={estilos.campo}>
         <label className={estilos.rotulo} htmlFor="busca">
           {foraDaFila
-            ? 'Buscar em todos os inscritos (F3 volta à fila)'
-            : 'Buscar na fila (F3 busca em todos)'}
+            ? 'Buscar em todos os inscritos, por nome ou número (F3 volta à fila)'
+            : 'Buscar na fila por nome ou número (F3 busca em todos)'}
         </label>
         <input
           ref={campoBusca}

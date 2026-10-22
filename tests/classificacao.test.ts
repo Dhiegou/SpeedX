@@ -204,14 +204,18 @@ describe('RNF-09 — o sobrenome do menor não aparece inteiro', () => {
 })
 
 describe('RNF-08 — o que atravessa a rede', () => {
-  it('cada linha tem exatamente dois valores, e nenhum é dado pessoal', async () => {
+  it('cada linha tem exatamente três valores, e nenhum é dado pessoal', async () => {
     await criar({ nome: 'Marina', sobrenome: 'Costa', idade: 34 })
+    const [p] = await banco.db
+      .select({ numero: schema.participante.numero })
+      .from(schema.participante)
 
     const documento = compactar(await projetarClassificacao(banco.db, AGORA))
 
     expect(documento.linhas).toHaveLength(1)
-    expect(documento.linhas[0]).toHaveLength(2)
-    expect(documento.linhas[0]).toEqual(['Marina Costa', 83_450])
+    // O terceiro é o número de inscrição (D-112): para a busca, não para a tela.
+    expect(documento.linhas[0]).toHaveLength(3)
+    expect(documento.linhas[0]).toEqual(['Marina Costa', 83_450, p?.numero])
     expect(Object.keys(documento).sort()).toEqual(['geradoEm', 'linhas', 'total'])
   })
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import estilos from './classificacao.module.css'
 import { classificar, contarLinhas, encontrar, montarBlocos } from './filtro'
 import type { DocumentoTransmitido } from '@/contexts/classificacao'
+import { formatarNumero, lerNumero } from '@/shared/numeroDeInscricao'
 import { formatDataHoraDoEvento, formatHoraDoEvento, formatTempo } from '@/shared/tempo'
 
 /**
@@ -125,6 +126,7 @@ export default function Classificacao({ inicial }: Props) {
 
   const mostradas = contarLinhas(blocos)
   const buscando = busca.trim() !== ''
+  const numeroBuscado = lerNumero(busca)
   const haMais = !buscando && mostradas < linhas.length
 
   /**
@@ -168,18 +170,19 @@ export default function Classificacao({ inicial }: Props) {
     <main className={estilos.pagina}>
       <h1 className={estilos.titulo}>Classificação</h1>
       <p className={estilos.subtitulo}>
-        Os tempos aparecem conforme as corridas terminam. Procure seu nome abaixo.
+        Os tempos aparecem conforme as corridas terminam. Procure seu nome ou seu número de
+        inscrição abaixo.
       </p>
 
       <div className={estilos.controles}>
         <label className="visually-hidden" htmlFor="busca">
-          Buscar por nome
+          Buscar por nome ou número de inscrição
         </label>
         <input
           className={estilos.entrada}
           id="busca"
           type="search"
-          placeholder="Buscar por nome"
+          placeholder="Buscar por nome ou número"
           autoComplete="off"
           autoCapitalize="none"
           autoCorrect="off"
@@ -250,7 +253,9 @@ export default function Classificacao({ inicial }: Props) {
 
       {linhas.length > 0 && buscando && achados.size === 0 && (
         <p className={estilos.vazio}>
-          Nenhum nome com “{busca.trim()}”. Confira a grafia — a busca ignora acentos e maiúsculas.
+          {numeroBuscado === null
+            ? `Nenhum nome com “${busca.trim()}”. Confira a grafia — a busca ignora acentos e maiúsculas.`
+            : `Nenhum tempo registrado para o número ${formatarNumero(numeroBuscado)}. Ele aparece aqui depois que a pessoa corre.`}
         </p>
       )}
 

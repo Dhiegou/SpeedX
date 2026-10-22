@@ -1,24 +1,29 @@
-# Contingência offline — o evento não para
+# Contingência — quando a internet cai, e não há papel
 
-**Imprima esta página e deixe junto das fichas** (T20, RNF-06).
+**Decidido em 21/10/2026: não haverá material impresso neste evento** (D-113).
 
-Se a internet cair, o cadastro continua no papel e as corridas continuam sendo
-cronometradas. O sistema entra depois. O que não pode acontecer é a fila parar
-enquanto alguém tenta descobrir o que fazer.
+Até esse dia, esta página descrevia o plano B em papel de T20 (RNF-06): fichas
+numeradas para o cadastro, folha de tempos para o Cockpit e digitação depois.
+Esse plano saiu, e **ninguém deve procurar ficha no dia**. O procedimento antigo
+continua no histórico do git deste arquivo, e `npm run fichas` continua gerando
+o material, para um próximo evento.
 
 ---
 
-## Antes do evento — checar uma vez
+## O que a decisão custa
 
-- [ ] **Fichas impressas**, ao menos 200 (`docs/contingencia/ficha-inscricao.html`)
-- [ ] **Termo integral impresso**, 5 cópias, no balcão (`termo-impresso.html`)
-- [ ] **Folhas de tempo**, 10 cópias da folha única (`planilha-tempos.html`) — eram 5 por Cockpit; o total de linhas não mudou (D-107)
-- [ ] **Canetas** — mais do que parece necessário
-- [ ] Fichas e folhas guardadas em **um lugar só**, e o time inteiro sabe qual
-- [ ] Ensaio feito: cinco fichas preenchidas, digitadas e conferidas
+O papel existia para um cenário nomeado: **a internet cai no local**. Sem ele,
+esse cenário não tem plano B:
 
-O material sai de `npm run fichas`. Abrir no navegador, Ctrl+P, A4, sem
-cabeçalho nem rodapé do navegador.
+- **Cadastro.** Quem não tem sinal no próprio celular não consegue se inscrever
+  até a rede voltar.
+- **Lançamento de tempo.** Se o painel do Operador perder a conexão durante a
+  corrida, não há onde anotar o tempo. O painel guarda **o lançamento em curso**
+  e o reenvia sem duplicar quando a rede volta (FL-06), mas guarda só um.
+
+É decisão do organizador, registrada. O que esta página faz é dizer o que fazer
+quando acontecer, para ninguém perder tempo procurando um procedimento que não
+existe.
 
 ---
 
@@ -26,83 +31,24 @@ cabeçalho nem rodapé do navegador.
 
 ### 1. Avise, não espere
 
-Quem percebe fala em voz alta com o ponto de inscrição e com o Cockpit.
-Não confira, não teste, não tente reiniciar nada antes de avisar. O procedimento
-custa nada e desfazer custa nada; a fila parada custa o evento.
+Quem percebe fala em voz alta com o ponto de inscrição e com o Cockpit. Não
+confira, não teste, não tente reiniciar nada antes de avisar.
 
-### 2. Inscrição passa para a ficha
+### 2. Pause a fila do Cockpit
 
-- Uma ficha por pessoa, **na ordem numérica**. Não pule número.
-- Escreva em letra de forma. Um e-mail ilegível é um cadastro perdido.
-- **Menos de 18 anos: o bloco do responsável é obrigatório**, com assinatura.
-  Sem ele, o cadastro não pode ser digitado — o sistema recusa, e está certo.
-- Antes de assinar, ofereça o termo impresso. Ele está no balcão.
-- Ficha preenchida vai para a **pilha de pendentes**, virada para baixo.
+**Não deixe ninguém correr sem conseguir lançar.** Uma volta corrida sem
+lançamento é um tempo que se perde, e não há onde anotá-lo. Quem está na vez
+espera a rede voltar.
 
-### 3. Tempos passam para a folha
+Se o Operador estava no meio de um lançamento, **não cancele**: o painel mostra
+o erro com o botão Repetir, e o tempo digitado continua ali.
 
-Uma folha só, uma linha por pessoa. A coluna de tempo é a **melhor volta**: a
-pessoa corre três voltas no simulador, e anota-se a melhor delas, o mesmo número
-que o Operador digitaria no painel.
+### 3. Confira antes de retomar
 
-**Escreva o horário real da corrida.** Quando esses tempos forem digitados, o
-sistema vai registrar a hora da digitação, não a da corrida — e o desempate por
-ordem de lançamento fica prejudicado nesse intervalo (RF-31). Se dois tempos
-empatarem, é o horário escrito à mão que decide. Sem ele não há como arbitrar.
+Quando a rede voltar, abra `/api/saude`. Se responder `ok`, retome a fila. Se o
+painel mostrava Repetir, aperte Repetir primeiro.
 
-### 4. Quando a internet volta
+### 4. Quem decide estender a pausa é o organizador
 
-**Não digite nada antes de conferir se o sistema está de pé.** Abra
-`/api/saude`: se responder `ok`, pode começar.
-
----
-
-## Digitação posterior
-
-**Quem digita:** uma pessoa só, do começo ao fim, sem revezar. Duas pessoas na
-mesma pilha é a receita para cadastro duplicado.
-
-**Por onde:** pelo **formulário normal do sistema**, o mesmo que o participante
-usaria. Não existe via alternativa de entrada, e é de propósito: a validação que
-protege o cadastro de campo mal preenchido é a mesma que precisa proteger a
-digitação (RNF-13).
-
-**Em que ordem:** pela numeração das fichas, da menor para a maior. Depois as
-folhas de tempo, na ordem das corridas.
-
-**Como marcar:** ao terminar uma ficha, preencha o rodapé dela — nome de quem
-digitou, data, hora — e marque `conferido`. **Ficha sem rodapé preenchido é
-ficha não digitada.** Passe-a para a pilha de prontas, virada para baixo.
-
-**Se o sistema recusar uma ficha:** separe-a numa terceira pilha e siga. Recusa
-comum é idade de menor sem bloco de responsável assinado, e-mail ilegível ou
-telefone com dígitos faltando. Resolva as separadas no fim, com calma, não no
-meio da digitação.
-
-**Ao terminar:** confira que a última ficha da pilha de prontas tem o número da
-última ficha usada. Número faltando é ficha perdida, e é melhor descobrir na
-mesma noite.
-
----
-
-## O que este procedimento não resolve
-
-- **O desempate do período offline** (RF-31). O sistema grava a hora da
-  digitação. Empates daquele intervalo se resolvem pelo horário escrito na folha
-  de tempo, à mão, por decisão de quem organiza.
-- **A ordem de inscrição na fila** (RF-14). Fichas digitadas em bloco entram no
-  sistema com carimbos próximos, então a fila do painel não reproduz a ordem em
-  que as pessoas chegaram. Use a numeração da ficha para saber quem veio antes.
-- **Cadastro duplicado** de quem preencheu ficha e depois se cadastrou sozinho
-  quando a internet voltou. O sistema recusa e-mail repetido, então o segundo
-  cadastro é o que falha — se acontecer, é sinal de que a ficha já foi digitada.
-
----
-
-## Uma decisão que é de quem organiza, não de quem digita
-
-Se a queda for longa e as fichas acabarem, **o evento continua**: anote os dados
-em papel comum, com os mesmos campos, e transcreva para uma ficha numerada
-depois. O que **não** pode faltar em nenhuma hipótese é a assinatura do termo —
-sem ela não existe base legal para o cadastro, e o dado não pode ser digitado
-nem guardado.
+Se a queda for longa, a decisão de esperar, adiar ou encerrar é de quem
+organiza (ver [`plano-do-dia.md`](plano-do-dia.md), "Quem é acionado").

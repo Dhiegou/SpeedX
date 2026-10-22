@@ -23,6 +23,8 @@ type Db = PgDatabase<PgQueryResultHKT, typeof schema>
 /** O que a tela de confirmação precisa mostrar (RF-10). */
 export type InscricaoRegistrada = {
   readonly participanteId: string
+  /** O número de inscrição, atribuído pelo banco neste `insert` (D-112). */
+  readonly numero: number
   readonly nome: string
   readonly sobrenome: string
   readonly versaoTermo: string
@@ -71,7 +73,7 @@ export async function registrarInscricao(db: Db, entrada: unknown): Promise<Insc
         telefone: inscricao.telefone,
         idade: inscricao.idade,
       })
-      .returning({ id: schema.participante.id })
+      .returning({ id: schema.participante.id, numero: schema.participante.numero })
 
     if (participante === undefined) {
       throw new Error('Inserção do Participante não retornou identificador.')
@@ -108,6 +110,7 @@ export async function registrarInscricao(db: Db, entrada: unknown): Promise<Insc
 
     return {
       participanteId: participante.id,
+      numero: participante.numero,
       nome: inscricao.nome,
       sobrenome: inscricao.sobrenome,
       versaoTermo: TERMO_VIGENTE.versao,

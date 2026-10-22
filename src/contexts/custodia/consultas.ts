@@ -26,6 +26,7 @@ export const TAMANHO_DO_LOTE = 500
 /** Uma linha da exportação completa: uma Tentativa, com o Participante junto. */
 export type LinhaDaExportacao = {
   participanteId: string
+  numero: number
   nome: string
   sobrenome: string
   email: string
@@ -65,6 +66,7 @@ export async function* lerExportacaoCompleta(db: Db): AsyncGenerator<LinhaDaExpo
     const lote: LinhaDaExportacao[] = await db
       .select({
         participanteId: schema.participante.id,
+        numero: schema.participante.numero,
         nome: schema.participante.nome,
         sobrenome: schema.participante.sobrenome,
         email: schema.participante.email,

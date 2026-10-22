@@ -401,6 +401,31 @@ describe('RF-10 — confirmação', () => {
       expect.stringContaining('/classificacao'),
     )
   })
+
+  it('mostra o número de inscrição, com quatro dígitos (D-112)', async () => {
+    const user = userEvent.setup()
+    enviado.mockResolvedValue(resposta({ ...SUCESSO, numero: 847 }))
+    montar()
+
+    await preencherAdulto(user)
+    await concluir(user)
+
+    expect(await screen.findByText('0847')).toBeDefined()
+    expect(screen.getByText(/Seu número de inscrição/)).toBeDefined()
+    expect(screen.getByText(/Guarde este número/)).toBeDefined()
+  })
+
+  it('um reenvio guardado sem número mostra só o nome', async () => {
+    // O efeito idempotente gravado antes da coluna existir não tem o campo.
+    const user = userEvent.setup()
+    montar()
+
+    await preencherAdulto(user)
+    await concluir(user)
+
+    expect(await screen.findByText('Marina Costa')).toBeDefined()
+    expect(screen.queryByText(/Seu número de inscrição/)).toBeNull()
+  })
 })
 
 describe('RNF-12 e T03 — armadilha e termo', () => {

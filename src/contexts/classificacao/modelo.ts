@@ -27,6 +27,14 @@ export type LinhaClassificacao = {
   tempoMs: number
   /** Instante do Lançamento original. Serve ao desempate (RF-31), não à exibição. */
   registradoEm: string
+  /**
+   * Número de inscrição (D-112). Vai para a busca, não para a tabela.
+   *
+   * Não é dado pessoal: é arbitrário, não deriva de nada da pessoa e está ao
+   * lado de um nome que já é público. Também não é segredo: quem abrir as
+   * ferramentas do navegador o vê no documento.
+   */
+  numero: number
 }
 
 /**
