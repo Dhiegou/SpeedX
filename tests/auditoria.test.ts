@@ -140,13 +140,11 @@ describe('BC-05 — o registro pessoal completo mora num contexto só', () => {
     expect(infratores).toEqual([])
   })
 
-  it('RF-15 — o telefone inteiro não sai da Cronometragem; só os quatro últimos', () => {
-    // Derivado no banco (`right(telefone, 4)`), então o número completo não
-    // chega nem a trafegar até a aplicação.
+  it('RF-15 — a Cronometragem não lê o telefone; distingue homônimos pelo número (D-114)', () => {
     const fonte = ler('src', 'contexts', 'cronometragem', 'consultas.ts')
 
-    expect(fonte).toMatch(/right\(\$\{schema\.participante\.telefone\}, 4\)/)
-    expect(fonte).not.toMatch(/telefone: schema\.participante\.telefone/)
+    expect(fonte).toContain('numero: schema.participante.numero')
+    expect(fonte).not.toContain('schema.participante.telefone')
   })
 
   it('a Custódia continua sendo quem reúne o registro completo', () => {

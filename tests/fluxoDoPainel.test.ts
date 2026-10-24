@@ -30,7 +30,7 @@ const ALVO: Alvo = {
   participanteId: '22222222-2222-4222-8222-222222222222',
   nome: 'Marina',
   sobrenome: 'Costa',
-  ultimos4Telefone: '4321',
+  numero: 847,
 }
 
 const CHAVE = '33333333-3333-4333-8333-333333333333'

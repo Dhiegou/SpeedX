@@ -30,7 +30,7 @@ export type Alvo = {
   readonly participanteId: string
   readonly nome: string
   readonly sobrenome: string
-  readonly ultimos4Telefone: string
+  readonly numero: number
 }
 
 /**

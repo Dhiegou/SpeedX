@@ -15,14 +15,14 @@ import Painel from '@/../app/painel/(protegido)/Painel'
  * os testes de T10 já provam que ela devolve isso mesmo.
  */
 
-type Pessoa = { nome: string; sobrenome: string; ultimos4Telefone: string }
+type Pessoa = { nome: string; sobrenome: string; numero: number }
 
 const FILA: Pessoa[] = [
-  { nome: 'Marina', sobrenome: 'Costa', ultimos4Telefone: '4321' },
-  { nome: 'Marina', sobrenome: 'Costa', ultimos4Telefone: '8765' },
-  { nome: 'João', sobrenome: 'Assumpção Neto', ultimos4Telefone: '1122' },
-  { nome: 'Bruno', sobrenome: 'Souza', ultimos4Telefone: '3344' },
-  { nome: 'Ana', sobrenome: 'Lima', ultimos4Telefone: '5566' },
+  { nome: 'Marina', sobrenome: 'Costa', numero: 847 },
+  { nome: 'Marina', sobrenome: 'Costa', numero: 1203 },
+  { nome: 'João', sobrenome: 'Assumpção Neto', numero: 12 },
+  { nome: 'Bruno', sobrenome: 'Souza', numero: 34 },
+  { nome: 'Ana', sobrenome: 'Lima', numero: 56 },
 ]
 
 const enviados: { url: string; metodo: string; corpo: Record<string, unknown> }[] = []
@@ -191,7 +191,7 @@ describe('RF-18 — a confirmação com o nome em destaque', () => {
 
     expect(within(dialogo).getByText('Marina Costa')).toBeTruthy()
     expect(within(dialogo).getByText('01:23.45')).toBeTruthy()
-    expect(within(dialogo).getByText(/4321/)).toBeTruthy()
+    expect(within(dialogo).getByText('#0847')).toBeTruthy()
   })
 
   it('Esc cancela sem gravar nada', async () => {
@@ -263,9 +263,10 @@ describe('a Fila (RF-15)', () => {
     const itens = await screen.findAllByRole('button', { name: /Marina Costa/ })
 
     expect(itens).toHaveLength(2)
-    // O que os separa são os quatro dígitos — RF-15 existe exatamente para isto.
-    expect(itens[0]?.textContent).toContain('4321')
-    expect(itens[1]?.textContent).toContain('8765')
+    // O que os separa é o número de inscrição (D-114), e o telefone não aparece.
+    expect(itens[0]?.textContent).toContain('#0847')
+    expect(itens[1]?.textContent).toContain('#1203')
+    expect(itens[0]?.textContent).not.toContain('····')
   })
 })
 
@@ -300,7 +301,7 @@ describe('D-107 — uma Fila só', () => {
         participanteId: 'participante-x',
         nome: 'Marina',
         sobrenome: 'Costa',
-        ultimos4Telefone: '4321',
+        numero: 847,
         tentativas: [
           {
             tentativaId: 'tentativa-x',

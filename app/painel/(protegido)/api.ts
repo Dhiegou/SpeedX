@@ -79,7 +79,7 @@ export type ItemDaFila = {
   participanteId: string
   nome: string
   sobrenome: string
-  ultimos4Telefone: string
+  numero: number
   inscritoEm: string
 }
 
@@ -108,7 +108,7 @@ export type ParticipanteEncontrado = {
   participanteId: string
   nome: string
   sobrenome: string
-  ultimos4Telefone: string
+  numero: number
   tentativas: TentativaEncontrada[]
 }
 

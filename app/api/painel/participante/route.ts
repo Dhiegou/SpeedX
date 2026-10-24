@@ -16,7 +16,7 @@ import { formatTempo } from '@/shared/tempo'
  * Devolve a Tentativa de cada pessoa, com estado e Tempo, porque é essa a
  * decisão que o Operador toma em seguida: corrigir, ou ver o histórico.
  *
- * Mesma projeção de dado pessoal da Fila: nome, sobrenome e quatro dígitos.
+ * Mesma projeção de dado pessoal da Fila: nome, sobrenome e número de inscrição.
  */
 
 export function GET(request: NextRequest): Promise<Response> {
@@ -50,7 +50,7 @@ export function GET(request: NextRequest): Promise<Response> {
             participanteId: p.participanteId,
             nome: p.nome,
             sobrenome: p.sobrenome,
-            ultimos4Telefone: p.ultimos4Telefone,
+            numero: p.numero,
             tentativas: p.tentativas.map((t) => ({
               tentativaId: t.tentativaId,
               estado: t.estado,

@@ -11,11 +11,11 @@ import { comRegistro, falha, instanteDoServidor, responder } from '../_apoio'
  * chegue na consulta é ignorado como qualquer parâmetro desconhecido.
  *
  * **O que cada item carrega, e por quê tão pouco:** identificador, nome,
- * sobrenome, os quatro últimos dígitos do telefone e o instante da inscrição.
+ * sobrenome, o número de inscrição e o instante da inscrição.
  * Nada mais. RF-15 pede o suficiente para distinguir dois homônimos, não para
- * conhecer a pessoa — e-mail, idade, telefone completo e dado de Responsável
- * não têm uso nenhum no painel, então não atravessam a fronteira do contexto
- * (SDD §2). A derivação dos quatro dígitos acontece no banco, em `consultas.ts`.
+ * conhecer a pessoa — e-mail, idade, telefone e dado de Responsável não têm
+ * uso nenhum no painel, então não atravessam a fronteira do contexto (SDD §2).
+ * Desde D-114 nem os quatro últimos dígitos do telefone: o número basta.
  *
  * `truncado` diz à tela que o teto cortou resultados. Sem esse aviso, uma lista
  * de 200 pareceria a fila inteira, e o Operador procuraria no lugar errado a
@@ -57,7 +57,7 @@ export function GET(request: NextRequest): Promise<Response> {
             participanteId: i.participanteId,
             nome: i.nome,
             sobrenome: i.sobrenome,
-            ultimos4Telefone: i.ultimos4Telefone,
+            numero: i.numero,
             inscritoEm: i.inscritoEm.toISOString(),
           })),
         },

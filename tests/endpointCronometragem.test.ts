@@ -219,12 +219,12 @@ describe('GET /fila (RF-14, RF-15, RF-16)', () => {
     expect(Object.keys(corpo.itens[0] ?? {}).sort()).toEqual([
       'inscritoEm',
       'nome',
+      'numero',
       'participanteId',
       'sobrenome',
       'tentativaId',
-      'ultimos4Telefone',
     ])
-    expect(corpo.itens[0]?.ultimos4Telefone).toBe('4321')
+    expect(corpo.itens[0]?.numero).toEqual(expect.any(Number))
 
     // A promessa de RF-15 é sobre o que **não** sai. Um `select` distraído em
     // `consultas.ts` passaria por todos os outros testes e falharia aqui.
@@ -503,7 +503,8 @@ describe('GET /participante (RF-22)', () => {
 
     expect(texto).not.toContain('marina.costa@exemplo.com')
     expect(texto).not.toContain('11987654321')
-    expect(texto).toContain('4321')
+    expect(JSON.parse(texto).itens[0]).toHaveProperty('numero')
+    expect(JSON.parse(texto).itens[0]).not.toHaveProperty('ultimos4Telefone')
   })
 })
 

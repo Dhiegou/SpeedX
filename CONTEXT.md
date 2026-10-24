@@ -2068,6 +2068,14 @@ O plano B do PRD (número só onde o nome público se repete) economizaria 0,2 K
 
 **A documentação foi alinhada para não mandar ninguém procurar ficha:** `docs/contingencia.md` foi reescrito (o procedimento em papel continua no git), `docs/plano-do-dia.md` deixou de pedir impressão, e `docs/checklist-pre-evento.md` riscou o ensaio de fichas. **O gerador fica** (`npm run fichas`, com os testes de RNF-06 e RNF-07): removê-lo a três dias é risco sem retorno, e ele serve a um próximo evento.
 
+### D-114 — No painel, o número de inscrição substitui os quatro dígitos do telefone
+
+**Decidido em 2026-10-24**, no dia do evento, pelo organizador, depois de ver D-112 no ar. O painel mostrava `····1234` ao lado do nome para o Operador distinguir homônimos (RF-15). Com o número de inscrição a pessoa já chega dizendo "sou o 847", e é esse o número que ela viu na confirmação: o painel passa a mostrar `#0847` na Fila, na busca global e no diálogo de confirmação.
+
+**O telefone saiu da projeção, não só da tela.** `listarFila` e `buscarParticipantes` deixaram de ler `right(telefone, 4)`, e `/api/painel/fila` e `/api/painel/participante` não devolvem mais `ultimos4Telefone`. O painel passa a receber menos dado pessoal do que antes (RNF-08). **A exportação de custódia e o expurgo não mudaram:** continuam com os quatro dígitos, que ali servem a outra conferência.
+
+**Publicado sob o congelamento de 24/10** (`docs/deploy.md` §6), por decisão do organizador. O código anterior ao deploy é compatível com o banco atual, então a reversão na Vercel continua valendo.
+
 ---
 
 ## 4. Premissas assumidas

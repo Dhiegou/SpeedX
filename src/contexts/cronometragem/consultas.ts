@@ -16,9 +16,9 @@ import type {
  * As leituras do contexto: a Fila, a busca global e a trilha de auditoria.
  *
  * Ficam aqui, e não em T10, porque são domínio: a Fila **é** a definição de
- * "quem ainda não tem tempo" (RF-14), e a derivação dos quatro
- * últimos dígitos do telefone (RF-15) é uma regra de fronteira — o número
- * completo não atravessa o contexto (SDD §2). A rota apenas serializa.
+ * "quem ainda não tem tempo" (RF-14), e o que distingue homônimos (RF-15) é
+ * uma regra de fronteira: o número de inscrição atravessa, o telefone não
+ * (SDD §2, D-114). A rota apenas serializa.
  */
 
 type Db = PgDatabase<PgQueryResultHKT, typeof schema>
@@ -48,8 +48,6 @@ function paginar<T>(linhas: readonly T[], limite: number): Pagina<T> {
   return { itens: linhas.slice(0, limite), truncado: linhas.length > limite }
 }
 
-const ULTIMOS_4 = sql<string>`right(${schema.participante.telefone}, 4)`
-
 /** `nome` ou `sobrenome` casam o trecho buscado, sem acento e sem caixa. */
 function casaONome(padrao: string) {
   return or(
@@ -62,8 +60,8 @@ function casaONome(padrao: string) {
  * O filtro da busca, ou `undefined` quando não há o que buscar.
  *
  * Termo só de dígitos é número de inscrição, e casa por igualdade (D-112): a
- * pessoa chega dizendo "sou o 847", e o Operador lança sem conferir homônimo
- * pelos quatro dígitos do telefone. O resto é nome, por trecho. Nenhum nome tem
+ * pessoa chega dizendo "sou o 847", e o Operador lança sem conferir homônimo.
+ * O resto é nome, por trecho. Nenhum nome tem
  * dígito, então as duas buscas não se confundem.
  */
 function casaABusca(termo: string | undefined) {
@@ -109,9 +107,9 @@ export async function listarFila(
       participanteId: schema.participante.id,
       nome: schema.participante.nome,
       sobrenome: schema.participante.sobrenome,
-      // Derivados no banco: assim o telefone completo não chega nem a trafegar
-      // para dentro do processo da aplicação (RNF-08).
-      ultimos4Telefone: ULTIMOS_4,
+      // O telefone fica de fora da consulta: nem chega ao processo da
+      // aplicação (RNF-08). Quem distingue homônimos é o número (D-114).
+      numero: schema.participante.numero,
       inscritoEm: schema.tentativa.inscritoEm,
     })
     .from(schema.tentativa)
@@ -159,7 +157,7 @@ export async function buscarParticipantes(
       participanteId: schema.participante.id,
       nome: schema.participante.nome,
       sobrenome: schema.participante.sobrenome,
-      ultimos4Telefone: ULTIMOS_4,
+      numero: schema.participante.numero,
     })
     .from(schema.participante)
     .where(condicao)

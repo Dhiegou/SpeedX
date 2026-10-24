@@ -35,16 +35,16 @@ export type TentativaResolvida = {
 /**
  * Uma linha da Fila (RF-14, RF-15).
  *
- * Carrega o mínimo para o Operador distinguir dois homônimos e nada além disso.
- * Os quatro últimos dígitos do telefone são derivados **aqui, no servidor** — o
- * número completo não atravessa a fronteira do contexto (SDD §2).
+ * Carrega o mínimo para o Operador distinguir dois homônimos e nada além disso:
+ * o número de inscrição, o mesmo que a pessoa viu na confirmação (D-114). O
+ * telefone não atravessa a fronteira do contexto (SDD §2).
  */
 export type ItemDaFila = {
   readonly tentativaId: string
   readonly participanteId: string
   readonly nome: string
   readonly sobrenome: string
-  readonly ultimos4Telefone: string
+  readonly numero: number
   readonly inscritoEm: Date
 }
 
@@ -75,13 +75,13 @@ export type TentativaDoParticipante = {
  *
  * Existe porque a Fila só mostra quem ainda não correu — e RF-22 trata
  * justamente de quem saiu dela. Carrega o mesmo tanto de dado pessoal que a
- * Fila: nome, sobrenome e quatro dígitos. Nada mais atravessa daqui para o
+ * Fila: nome, sobrenome e número de inscrição. Nada mais atravessa daqui para o
  * painel.
  */
 export type ParticipanteEncontrado = {
   readonly participanteId: string
   readonly nome: string
   readonly sobrenome: string
-  readonly ultimos4Telefone: string
+  readonly numero: number
   readonly tentativas: readonly TentativaDoParticipante[]
 }

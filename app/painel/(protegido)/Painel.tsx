@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { formatarNumero } from '@/shared/numeroDeInscricao'
 import * as api from './api'
 import { focoDe, INICIAL, nomeCompleto, reduzir, type Alvo, type Estado } from './fluxo'
 import { digitosDoCampo, formatarDigitacao, pareceCompleto } from './mascaraDeTempo'
@@ -211,7 +212,7 @@ export default function Painel({ operador }: Props) {
       participanteId: item.participanteId,
       nome: item.nome,
       sobrenome: item.sobrenome,
-      ultimos4Telefone: item.ultimos4Telefone,
+      numero: item.numero,
     }
     setDigitos('')
     setRecusa(null)
@@ -228,7 +229,7 @@ export default function Painel({ operador }: Props) {
         participanteId: p.participanteId,
         nome: p.nome,
         sobrenome: p.sobrenome,
-        ultimos4Telefone: p.ultimos4Telefone,
+        numero: p.numero,
       },
       tempoAnterior: t.tempo,
     })
@@ -243,7 +244,7 @@ export default function Painel({ operador }: Props) {
         participanteId: item.participanteId,
         nome: item.nome,
         sobrenome: item.sobrenome,
-        ultimos4Telefone: item.ultimos4Telefone,
+        numero: item.numero,
       },
     })
   }, [])
@@ -524,7 +525,7 @@ export default function Painel({ operador }: Props) {
                 <span className={estilos.nome}>
                   {item.nome} {item.sobrenome}
                 </span>
-                <span className={estilos.digitos}>····{item.ultimos4Telefone}</span>
+                <span className={estilos.digitos}>#{formatarNumero(item.numero)}</span>
               </button>
             </li>
           ))}
@@ -546,7 +547,7 @@ export default function Painel({ operador }: Props) {
                 <span className={estilos.nome}>
                   {p.nome} {p.sobrenome}
                 </span>{' '}
-                <span className={estilos.digitos}>····{p.ultimos4Telefone}</span>
+                <span className={estilos.digitos}>#{formatarNumero(p.numero)}</span>
                 <div className={estilos.historico}>
                   {p.tentativas.map((t) => (
                     <span key={t.tentativaId}>
@@ -623,7 +624,7 @@ export default function Painel({ operador }: Props) {
 
             {/* O nome em destaque que RF-18 exige, antes de qualquer gravação. */}
             <p className={estilos.nomeDestaque}>{nomeCompleto(estado.comando.alvo)}</p>
-            <p className={estilos.digitos}>····{estado.comando.alvo.ultimos4Telefone}</p>
+            <p className={estilos.digitos}>#{formatarNumero(estado.comando.alvo.numero)}</p>
 
             {estado.comando.tipo !== 'ausentar' && (
               <p className={estilos.tempoDestaque}>

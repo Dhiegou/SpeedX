@@ -615,13 +615,14 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
     expect(await contarPendentes(banco.db)).toBe(1)
   })
 
-  it('mostra os quatro últimos dígitos do telefone, e só eles (RF-15)', async () => {
+  it('mostra o número de inscrição, e nada do telefone (RF-15, D-114)', async () => {
     const participanteId = await criarParticipante({ telefone: '11987654321' })
     await banco.db.insert(schema.tentativa).values({ participanteId, cockpit: 1 })
 
     const [item] = (await listarFila(banco.db)).itens
 
-    expect(item?.ultimos4Telefone).toBe('4321')
+    expect(item?.numero).toEqual(expect.any(Number))
+    expect(Object.keys(item ?? {})).not.toContain('ultimos4Telefone')
     expect(JSON.stringify(item)).not.toContain('11987654321')
   })
 
@@ -632,7 +633,7 @@ describe('a Fila (RF-14, RF-15, RF-16)', () => {
     }
 
     const fila = (await listarFila(banco.db)).itens
-    const marcas = fila.map((i) => i.ultimos4Telefone)
+    const marcas = fila.map((i) => i.numero)
 
     expect(new Set(marcas).size).toBe(2)
   })
